@@ -7,33 +7,32 @@ import {
   Param,
   Delete,
   Inject,
-  HttpException,
   Put,
   HttpCode,
-  HttpStatus, UseGuards, SetMetadata, UsePipes, NotFoundException, ForbiddenException, UnauthorizedException,
+  HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
 import {I_USER_SERVICE, IUsersService} from '../../../../core/interface/i-users-service.interface';
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {
-  ApiBasicAuth,
+  ApiBadRequestResponse,
   ApiBearerAuth, ApiBody,
-  ApiCreatedResponse, ApiExtraModels, ApiForbiddenResponse,
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiParamOptions,
-  ApiQuery,
-  ApiResponse, ApiResponseProperty,
   ApiTags, ApiUnauthorizedResponse,
-  ApiUnprocessableEntityResponse, getSchemaPath, refs,
+  ApiUnprocessableEntityResponse,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import {FindUserInputDto} from './dto/find-user-input.dto';
 import {ValidateExceptionDto} from '../../dto/validate-exception.dto';
-import {ApiResponseModelProperty} from '@nestjs/swagger/dist/decorators/api-model-property.decorator';
 import {DefaultExceptionDto} from '../../dto/default-exception.dto';
 import {NoBodySuccessDto} from '../../dto/no-body-success.dto';
 import {RolesGuard} from '../../guard/roles.guard';
@@ -52,6 +51,7 @@ import {NotFoundExceptionDto} from '../../dto/not-found-exception.dto';
 @ApiExtraModels(DefaultSuccessDto, FindUserInputDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
+@ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 export class UsersHttpController {
   constructor(
     @Inject(I_USER_SERVICE.DEFAULT)
@@ -111,9 +111,7 @@ export class UsersHttpController {
     description: 'Forbidden access when fill attribute property and user need access to this field',
     type: ForbiddenExceptionDto,
   })
-  create(@Body() createUserDto: CreateUserInputDto) {
-    console.log(CreateUserInputDto.toModel(createUserDto));
-
+  async create(@Body() createUserDto: CreateUserInputDto) {
     return this._usersService.create(CreateUserInputDto.toModel(createUserDto));
   }
 
@@ -163,7 +161,7 @@ export class UsersHttpController {
     },
   })
   @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
-  findOne(@Param('userId') userId: string) {
+  async findOne(@Param('userId') userId: string) {
     return this._usersService.findOne(userId);
   }
 
@@ -174,7 +172,7 @@ export class UsersHttpController {
   @ApiBearerAuth()
   @ApiOkResponse({type: NoBodySuccessDto})
   @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
-  updateAdmin(@Param('userId') userId: string, @Body() updateUserDto: UpdateUserAdminInputDto) {
+  async updateAdmin(@Param('userId') userId: string, @Body() updateUserDto: UpdateUserAdminInputDto) {
     return this._usersService.update(UpdateUserAdminInputDto.toModel(updateUserDto));
   }
 
@@ -185,7 +183,7 @@ export class UsersHttpController {
   @ApiBearerAuth()
   @ApiOkResponse({type: NoBodySuccessDto})
   @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
-  updatePassword(@Param('userId') userId: string, @Body() updateUserDto: UpdatePasswordInputDto) {
+  async updatePassword(@Param('userId') userId: string, @Body() updateUserDto: UpdatePasswordInputDto) {
     return this._usersService.update(UpdatePasswordInputDto.toModel(updateUserDto));
   }
 
@@ -197,7 +195,7 @@ export class UsersHttpController {
   @ApiBearerAuth()
   @ApiNoContentResponse({description: 'The user has been successfully deleted.', type: ''})
   @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
-  remove(@Param('userId') userId: string) {
+  async remove(@Param('userId') userId: string) {
     return this._usersService.remove(userId);
   }
 }

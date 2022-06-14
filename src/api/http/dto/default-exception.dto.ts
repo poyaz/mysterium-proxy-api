@@ -1,5 +1,6 @@
 import {HttpStatus} from '@nestjs/common';
 import {ApiResponseProperty} from '@nestjs/swagger';
+import {ExceptionEnum} from '../../../core/enum/exception.enum';
 
 export class DefaultExceptionDto {
   @ApiResponseProperty({type: Number, example: 400})
@@ -7,6 +8,9 @@ export class DefaultExceptionDto {
 
   @ApiResponseProperty({type: String, example: 'Error message'})
   message?: string;
+
+  @ApiResponseProperty({type: String, example: ExceptionEnum.UNKNOWN_ERROR})
+  action?: string;
 
   @ApiResponseProperty({type: String})
   error?: string;

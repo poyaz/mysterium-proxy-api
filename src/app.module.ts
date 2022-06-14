@@ -9,11 +9,12 @@ import {ConfigModule, ConfigService} from '@nestjs/config';
 import {resolve} from 'path';
 import {envValidate} from './loader/configure/validate/env.validation';
 import serverConfig from './loader/configure/config/server.config';
-import {APP_GUARD, Reflector} from '@nestjs/core';
+import {APP_GUARD, APP_INTERCEPTOR, Reflector} from '@nestjs/core';
 import {AuthGuard} from './api/http/guard/auth.guard';
 import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
 import {EnvironmentEnv} from './loader/configure/enum/environment.env';
 import {CommandModule} from './command.module';
+import {ErrorTransferInterceptor} from './api/http/interceptor/error.transfer.interceptor';
 
 @Module({
   imports: [
@@ -30,6 +31,10 @@ import {CommandModule} from './command.module';
   ],
   providers: [
     ConfigService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErrorTransferInterceptor,
+    },
     {
       provide: APP_GUARD,
       inject: [ConfigService, Reflector],
