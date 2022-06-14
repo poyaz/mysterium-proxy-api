@@ -1,10 +1,8 @@
-import {ApiHideProperty, ApiProperty} from '@nestjs/swagger';
+import {ApiProperty} from '@nestjs/swagger';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {UserRoleEnum} from '../../../../../core/enum/user-role.enum';
 import {UsersModel} from '../../../../../core/model/users-model';
 import {IsBoolean, IsDefined, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
 import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
-import {AccessField} from '../../../decorator/access-field.decorator';
 
 export class CreateUserInputDto {
   @ApiProperty({
