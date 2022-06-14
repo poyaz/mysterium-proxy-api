@@ -12,11 +12,13 @@ const DEFAULT_STORE_PATH = resolve('storage', 'tmp');
 export class SwaggerCommandController implements CommandRunner {
   async run(passedParams: string[], options?: Record<string, any>): Promise<void> {
     const app = await NestFactory.create(AppModule);
+    app.setGlobalPrefix('api/v1');
 
     const swaggerConf = new DocumentBuilder()
       .setTitle('Mysterium proxy api')
       .setDescription('The proxy API description')
       .setVersion('1.0')
+      .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConf);
 

@@ -1,8 +1,11 @@
-import {Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus} from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {Observable} from 'rxjs';
 import {Reflector} from '@nestjs/core';
-import {ApiHeader} from '@nestjs/swagger';
-import {UserRoleEnum} from '../../../core/enum/user-role.enum';
 
 @Injectable()
 export class FakeAuthGuard implements CanActivate {
@@ -33,6 +36,6 @@ export class FakeAuthGuard implements CanActivate {
       return true;
     }
 
-    throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    throw new UnauthorizedException();
   }
 }

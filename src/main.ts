@@ -21,6 +21,7 @@ async function bootstrap() {
     .setTitle('Mysterium proxy api')
     .setDescription('The proxy API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConf);
   SwaggerModule.setup('api', app, document);

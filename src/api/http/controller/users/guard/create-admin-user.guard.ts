@@ -1,6 +1,10 @@
-import {CanActivate, ExecutionContext, Injectable} from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {Observable} from 'rxjs';
-import {Reflector} from '@nestjs/core';
 import {UserRoleEnum} from '../../../../../core/enum/user-role.enum';
 
 @Injectable()
@@ -12,7 +16,7 @@ export class CreateAdminUserGuard implements CanActivate {
 
     if (Object.hasOwnProperty.call(request.body, 'isEnable')) {
       if (!request.user) {
-        return false;
+        throw new UnauthorizedException();
       }
 
       if (request.user && request.user.role !== UserRoleEnum.ADMIN) {
