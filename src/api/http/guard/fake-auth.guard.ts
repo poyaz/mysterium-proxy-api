@@ -1,4 +1,4 @@
-import {Injectable, CanActivate, ExecutionContext} from '@nestjs/common';
+import {Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus} from '@nestjs/common';
 import {Observable} from 'rxjs';
 import {Reflector} from '@nestjs/core';
 import {ApiHeader} from '@nestjs/swagger';
@@ -29,7 +29,10 @@ export class FakeAuthGuard implements CanActivate {
     }
 
     const disableCheckAuth = this.reflector.get<string[]>('disableCheckAuth', context.getHandler());
+    if (disableCheckAuth) {
+      return true;
+    }
 
-    return !!disableCheckAuth;
+    throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
   }
 }
