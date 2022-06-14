@@ -13,6 +13,7 @@ import {APP_GUARD, Reflector} from '@nestjs/core';
 import {AuthGuard} from './api/http/guard/auth.guard';
 import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
 import {EnvironmentEnv} from './loader/configure/enum/environment.env';
+import {CommandModule} from './command.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import {EnvironmentEnv} from './loader/configure/enum/environment.env';
       validate: envValidate,
       load: [serverConfig],
     }),
+    CommandModule,
   ],
   controllers: [
     UsersHttpController,
