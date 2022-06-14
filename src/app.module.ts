@@ -14,7 +14,9 @@ import {AuthGuard} from './api/http/guard/auth.guard';
 import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
 import {EnvironmentEnv} from './loader/configure/enum/environment.env';
 import {CommandModule} from './command.module';
-import {ErrorTransferInterceptor} from './api/http/interceptor/error.transfer.interceptor';
+import {OutputTransferInterceptor} from './api/http/interceptor/output.transfer.interceptor';
+import {I_DATE_TIME} from './core/interface/i-date-time.interface';
+import {DateTime} from './infrastructure/system/date-time';
 
 @Module({
   imports: [
@@ -33,7 +35,7 @@ import {ErrorTransferInterceptor} from './api/http/interceptor/error.transfer.in
     ConfigService,
     {
       provide: APP_INTERCEPTOR,
-      useClass: ErrorTransferInterceptor,
+      useClass: OutputTransferInterceptor,
     },
     {
       provide: APP_GUARD,
@@ -59,6 +61,10 @@ import {ErrorTransferInterceptor} from './api/http/interceptor/error.transfer.in
     {
       provide: I_USER_SERVICE.DEFAULT,
       useClass: UsersService,
+    },
+    {
+      provide: I_DATE_TIME.DEFAULT,
+      useClass: DateTime,
     },
   ],
 })

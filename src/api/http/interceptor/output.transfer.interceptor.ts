@@ -1,9 +1,24 @@
-import {CallHandler, ExecutionContext, HttpException, HttpStatus, Injectable, NestInterceptor} from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
 import {map, Observable} from 'rxjs';
 import {ExceptionEnum} from '../../../core/enum/exception.enum';
+import {I_DATE_TIME} from '../../../core/interface/i-date-time.interface';
 
 @Injectable()
-export class ErrorTransferInterceptor implements NestInterceptor {
+export class OutputTransferInterceptor implements NestInterceptor {
+  constructor(
+    @Inject(I_DATE_TIME.DEFAULT)
+    private readonly _dateTime,
+  ) {
+  }
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       map(([err, result]) => {
@@ -34,11 +49,31 @@ export class ErrorTransferInterceptor implements NestInterceptor {
           }, statusCode);
         }
 
+        if (typeof result !== undefined && result !== undefined && result !== null) {
+          if (Array.isArray(result)) {
+            result.map((v) => {
+              v.insertDate = this._convertDateToString(v.insertDate);
+              v.updateDate = this._convertDateToString(v.updateDate);
+            });
+          } else {
+            result.insertDate = this._convertDateToString(result.insertDate);
+            result.updateDate = this._convertDateToString(result.updateDate);
+          }
+        }
+
         return {
           data: result,
           status: 'success',
         };
       }),
     );
+  }
+
+  private _convertDateToString(date) {
+    if (!date) {
+      return null;
+    }
+
+    return this._dateTime.gregorianWithTimezoneString(date);
   }
 }

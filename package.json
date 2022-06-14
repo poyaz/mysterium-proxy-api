@@ -29,6 +29,8 @@
     "@nestjs/swagger": "^5.2.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
+    "moment": "^2.29.3",
+    "moment-timezone": "^0.5.34",
     "nest-commander": "^2.5.0",
     "pg": "^8.7.3",
     "reflect-metadata": "^0.1.13",
