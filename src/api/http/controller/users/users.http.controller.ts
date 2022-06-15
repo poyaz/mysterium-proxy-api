@@ -10,7 +10,7 @@ import {
   Put,
   HttpCode,
   HttpStatus,
-  UseGuards,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
@@ -31,7 +31,7 @@ import {
   ApiUnprocessableEntityResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
-import {FindUserInputDto} from './dto/find-user-input.dto';
+import {FindUserOutputDto} from './dto/find-user-output.dto';
 import {ValidateExceptionDto} from '../../dto/validate-exception.dto';
 import {DefaultExceptionDto} from '../../dto/default-exception.dto';
 import {NoBodySuccessDto} from '../../dto/no-body-success.dto';
@@ -44,11 +44,12 @@ import {DefaultSuccessDto} from '../../dto/default-success.dto';
 import {UnauthorizedExceptionDto} from '../../dto/unauthorized-exception.dto';
 import {ForbiddenExceptionDto} from '../../dto/forbidden-exception.dto';
 import {NotFoundExceptionDto} from '../../dto/not-found-exception.dto';
+import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-password-field-of-user.interceptor';
 
 @Controller('users')
 @UseGuards(RolesGuard)
 @ApiTags('users')
-@ApiExtraModels(DefaultSuccessDto, FindUserInputDto)
+@ApiExtraModels(DefaultSuccessDto, FindUserOutputDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
@@ -95,7 +96,7 @@ export class UsersHttpController {
           properties: {
             data: {
               type: 'object',
-              $ref: getSchemaPath(FindUserInputDto),
+              $ref: getSchemaPath(FindUserOutputDto),
             },
           },
         },
@@ -117,6 +118,7 @@ export class UsersHttpController {
 
   @Get()
   @Roles(UserRoleEnum.ADMIN)
+  @UseInterceptors(RemovePasswordFieldOfUserInterceptor)
   @ApiOperation({description: 'Get all users', operationId: 'Get all users'})
   @ApiBearerAuth()
   @ApiOkResponse({
@@ -128,7 +130,7 @@ export class UsersHttpController {
             data: {
               type: 'array',
               items: {
-                $ref: getSchemaPath(FindUserInputDto),
+                $ref: getSchemaPath(FindUserOutputDto),
               },
             },
           },
@@ -142,6 +144,7 @@ export class UsersHttpController {
 
   @Get(':userId')
   @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
+  @UseInterceptors(RemovePasswordFieldOfUserInterceptor)
   @ApiOperation({description: 'Get info of one user with ID', operationId: 'Get user'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
@@ -153,7 +156,7 @@ export class UsersHttpController {
           properties: {
             data: {
               type: 'object',
-              $ref: getSchemaPath(FindUserInputDto),
+              $ref: getSchemaPath(FindUserOutputDto),
             },
           },
         },
