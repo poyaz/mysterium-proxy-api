@@ -1,4 +1,4 @@
-import {UsersModel} from '../model/users-model';
+import {UsersModel} from '../model/users.model';
 
 export enum I_USER_SERVICE {
   DEFAULT = 'USERS_SERVICE_DEFAULT',

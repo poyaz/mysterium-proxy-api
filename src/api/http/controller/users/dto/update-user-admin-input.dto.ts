@@ -1,7 +1,6 @@
-import {UsersModel} from '../../../../../core/model/users-model';
+import {UsersModel} from '../../../../../core/model/users.model';
 import {instanceToPlain, plainToClass} from 'class-transformer';
-import {ApiHideProperty, ApiProperty, OmitType} from '@nestjs/swagger';
-import {UserRoleEnum} from '../../../../../core/enum/user-role.enum';
+import {ApiProperty} from '@nestjs/swagger';
 import {IsBoolean, IsDefined, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
 import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
 

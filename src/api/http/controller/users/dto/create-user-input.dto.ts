@@ -1,6 +1,6 @@
 import {ApiProperty} from '@nestjs/swagger';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {UsersModel} from '../../../../../core/model/users-model';
+import {UsersModel} from '../../../../../core/model/users.model';
 import {IsBoolean, IsDefined, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
 import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
 

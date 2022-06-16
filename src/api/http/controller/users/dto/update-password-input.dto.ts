@@ -1,5 +1,5 @@
-import {ApiProperty, ApiResponse, ApiResponseProperty} from '@nestjs/swagger';
-import {UsersModel} from '../../../../../core/model/users-model';
+import {ApiProperty} from '@nestjs/swagger';
+import {UsersModel} from '../../../../../core/model/users.model';
 import {instanceToPlain, plainToClass} from 'class-transformer';
 import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
 import {IsDefined, IsString, MaxLength, MinLength} from 'class-validator';
