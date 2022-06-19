@@ -1,4 +1,4 @@
-import {ApiProperty} from '@nestjs/swagger';
+import {ApiBearerAuth, ApiProperty} from '@nestjs/swagger';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {UsersModel} from '../../../../../core/model/users.model';
 import {IsBoolean, IsDefined, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
@@ -51,9 +51,8 @@ export class CreateUserInputDto {
   confirmPassword: string;
 
   @ApiProperty({
-    description: 'The status of user',
+    description: 'The status of user (Use for admin roles)',
     required: false,
-    readOnly: true,
     default: true,
   })
   @IsOptional()
