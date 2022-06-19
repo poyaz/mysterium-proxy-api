@@ -37,7 +37,7 @@ describe('UsersController', () => {
     jest.resetAllMocks();
   });
 
-  it(`should be defined`, () => {
+  it(`Should be defined`, () => {
     expect(controller).toBeDefined();
   });
 
@@ -72,7 +72,7 @@ describe('UsersController', () => {
       outputUserAdminModel.isEnable = inputCreateUserAdminDto.isEnable;
     });
 
-    it(`should error add new user`, async () => {
+    it(`Should error add new user`, async () => {
       usersService.create.mockResolvedValue([new UnknownException()]);
 
       const [error] = await controller.create(inputCreateUserDto);
@@ -85,7 +85,7 @@ describe('UsersController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`should successfully add new user`, async () => {
+    it(`Should successfully add new user`, async () => {
       usersService.create.mockResolvedValue([null, outputUserModel]);
 
       const [error, result] = await controller.create(inputCreateUserDto);
@@ -101,7 +101,7 @@ describe('UsersController', () => {
       expect(result['password']).toEqual(outputUserModel.password);
     });
 
-    it(`should successfully add new user for admin`, async () => {
+    it(`Should successfully add new user for admin`, async () => {
       usersService.create.mockResolvedValue([null, outputUserAdminModel]);
 
       const [error, result] = await controller.create(inputCreateUserAdminDto);
@@ -148,7 +148,7 @@ describe('UsersController', () => {
       outputUserModel.isEnable = true;
     });
 
-    it(`should error get all users without filter`, async () => {
+    it(`Should error get all users without filter`, async () => {
       usersService.findAll.mockResolvedValue([new UnknownException()]);
 
       const [error] = await controller.findAll(inputEmptyFindUserQueryDto);
@@ -158,7 +158,7 @@ describe('UsersController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`should error get all users with filter`, async () => {
+    it(`Should error get all users with filter`, async () => {
       usersService.findAll.mockResolvedValue([new UnknownException()]);
 
       const [error] = await controller.findAll(inputFindUserQueryDto);
@@ -168,7 +168,7 @@ describe('UsersController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`should successfully get all users with empty record`, async () => {
+    it(`Should successfully get all users with empty record`, async () => {
       usersService.findAll.mockResolvedValue([null, []]);
 
       const [error, result] = await controller.findAll(inputEmptyFindUserQueryDto);
@@ -179,7 +179,7 @@ describe('UsersController', () => {
       expect(result).toHaveLength(0);
     });
 
-    it(`should successfully get all users`, async () => {
+    it(`Should successfully get all users`, async () => {
       usersService.findAll.mockResolvedValue([null, [outputUserModel]]);
 
       const [error, result] = await controller.findAll(inputEmptyFindUserQueryDto);
@@ -205,7 +205,7 @@ describe('UsersController', () => {
       outputUserModel.isEnable = true;
     });
 
-    it(`should error get one user by id`, async () => {
+    it(`Should error get one user by id`, async () => {
       const userId = identifierMock.generateId();
       usersService.findOne.mockResolvedValue([new UnknownException()]);
 
@@ -216,7 +216,7 @@ describe('UsersController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`should error get one user by id when user not found`, async () => {
+    it(`Should error get one user by id when user not found`, async () => {
       const userId = identifierMock.generateId();
       usersService.findOne.mockResolvedValue([new NotFoundUserException()]);
 
@@ -227,7 +227,7 @@ describe('UsersController', () => {
       expect(error).toBeInstanceOf(NotFoundUserException);
     });
 
-    it(`should successfully get one user`, async () => {
+    it(`Should successfully get one user`, async () => {
       const userId = identifierMock.generateId();
       usersService.findOne.mockResolvedValue([null, outputUserModel]);
 
