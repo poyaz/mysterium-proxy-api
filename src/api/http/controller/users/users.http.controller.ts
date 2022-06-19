@@ -263,7 +263,9 @@ export class UsersHttpController {
   @ApiOperation({description: 'Delete user with ID', operationId: 'Remove user'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
-  @ApiNoContentResponse({description: 'The user has been successfully deleted.', type: ''})
+  @ApiNoContentResponse({
+    description: 'The user has been successfully deleted.',
+  })
   @ApiNotFoundResponse({
     description: 'The user id not found.',
     schema: {
