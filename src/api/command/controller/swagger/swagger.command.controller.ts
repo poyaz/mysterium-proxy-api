@@ -5,6 +5,7 @@ import {AppModule} from '../../../../app.module';
 import {resolve} from 'path';
 import {writeFileSync} from 'fs';
 import * as yaml from 'yaml';
+import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 const DEFAULT_STORE_PATH = resolve('storage', 'tmp');
 
@@ -18,7 +19,14 @@ export class SwaggerCommandController implements CommandRunner {
       .setTitle('Mysterium proxy api')
       .setDescription('The proxy API description')
       .setVersion('1.0')
-      .addBearerAuth()
+      .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'JWT token header',
+        in: 'header',
+      } as SecuritySchemeObject)
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConf);
 

@@ -5,6 +5,7 @@ import {DocumentBuilder, SwaggerDocumentOptions, SwaggerModule} from '@nestjs/sw
 import {ServerConfigInterface} from './loader/configure/interface/server-config.interface';
 import {ConfigService} from '@nestjs/config';
 import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
+import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,7 +23,14 @@ async function bootstrap() {
     .setTitle('Mysterium proxy api')
     .setDescription('The proxy API description')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'Authorization',
+      description: 'JWT token header',
+      in: 'header',
+    } as SecuritySchemeObject)
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConf);
   SwaggerModule.setup('api', app, document);
