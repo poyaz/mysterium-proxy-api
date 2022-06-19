@@ -8,6 +8,7 @@ import {IIdentifier} from '../../../../core/interface/i-identifier.interface';
 import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {UsersModel} from '../../../../core/model/users.model';
 import {FilterInterface, FilterModel} from '../../../../core/model/filter.model';
+import {NotFoundUserException} from '../../../../core/exception/not-found-user.exception';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -36,11 +37,11 @@ describe('UsersController', () => {
     jest.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  it(`should be defined`, () => {
     expect(controller).toBeDefined();
   });
 
-  describe('Add new user', () => {
+  describe(`Add new user`, () => {
     let inputCreateUserDto;
     let inputCreateUserAdminDto;
     let outputUserModel;
@@ -71,7 +72,7 @@ describe('UsersController', () => {
       outputUserAdminModel.isEnable = inputCreateUserAdminDto.isEnable;
     });
 
-    it('should error add new user', async () => {
+    it(`should error add new user`, async () => {
       usersService.create.mockResolvedValue([new UnknownException()]);
 
       const [error] = await controller.create(inputCreateUserDto);
@@ -112,18 +113,19 @@ describe('UsersController', () => {
         isEnable: inputCreateUserAdminDto.isEnable,
       }));
       expect(error).toBeNull();
-      expect(result['id']).toEqual(identifierMock.generateId());
-      expect(result['username']).toEqual(outputUserAdminModel.username);
-      expect(result['password']).toEqual(outputUserAdminModel.password);
-      expect(result['isEnable']).toEqual(outputUserAdminModel.isEnable);
+      expect((result as UsersModel).id).toEqual(identifierMock.generateId());
+      expect((result as UsersModel).username).toEqual(outputUserAdminModel.username);
+      expect((result as UsersModel).password).toEqual(outputUserAdminModel.password);
+      expect((result as UsersModel).isEnable).toEqual(outputUserAdminModel.isEnable);
     });
   });
 
-  describe('Find all users', () => {
+  describe(`Find all users`, () => {
     let inputFindUserQueryDto;
     let inputEmptyFindUserQueryDto;
     let matchFindUserFilter;
     let matchEmptyFindUserFilter;
+    let outputUserModel;
 
     beforeEach(() => {
       inputFindUserQueryDto = new FindUserQueryDto();
@@ -139,6 +141,11 @@ describe('UsersController', () => {
       } as FilterInterface);
 
       matchEmptyFindUserFilter = new FilterModel();
+
+      outputUserModel = new UsersModel();
+      outputUserModel.id = identifierMock.generateId();
+      outputUserModel.username = 'my-user';
+      outputUserModel.isEnable = true;
     });
 
     it(`should error get all users without filter`, async () => {
@@ -159,6 +166,80 @@ describe('UsersController', () => {
       expect(usersService.findAll).toHaveBeenCalled();
       expect(usersService.findAll).toBeCalledWith(matchFindUserFilter);
       expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`should successfully get all users with empty record`, async () => {
+      usersService.findAll.mockResolvedValue([null, []]);
+
+      const [error, result] = await controller.findAll(inputEmptyFindUserQueryDto);
+
+      expect(usersService.findAll).toHaveBeenCalled();
+      expect(usersService.findAll).toBeCalledWith(matchEmptyFindUserFilter);
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+    });
+
+    it(`should successfully get all users`, async () => {
+      usersService.findAll.mockResolvedValue([null, [outputUserModel]]);
+
+      const [error, result] = await controller.findAll(inputEmptyFindUserQueryDto);
+
+      expect(usersService.findAll).toHaveBeenCalled();
+      expect(usersService.findAll).toBeCalledWith(matchEmptyFindUserFilter);
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect((result[0] as UsersModel).id).toEqual(identifierMock.generateId());
+      expect((result[0] as UsersModel).username).toEqual(outputUserModel.username);
+      expect((result[0] as UsersModel).password).toEqual(outputUserModel.password);
+      expect((result[0] as UsersModel).isEnable).toEqual(outputUserModel.isEnable);
+    });
+  });
+
+  describe(`Find one user`, () => {
+    let outputUserModel;
+
+    beforeEach(() => {
+      outputUserModel = new UsersModel();
+      outputUserModel.id = identifierMock.generateId();
+      outputUserModel.username = 'my-user';
+      outputUserModel.isEnable = true;
+    });
+
+    it(`should error get one user by id`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.findOne.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findOne(userId);
+
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toBeCalledWith(userId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`should error get one user by id when user not found`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.findOne.mockResolvedValue([new NotFoundUserException()]);
+
+      const [error] = await controller.findOne(userId);
+
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toBeCalledWith(userId);
+      expect(error).toBeInstanceOf(NotFoundUserException);
+    });
+
+    it(`should successfully get one user`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.findOne.mockResolvedValue([null, outputUserModel]);
+
+      const [error, result] = await controller.findOne(userId);
+
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toBeCalledWith(userId);
+      expect(error).toBeNull();
+      expect((result as UsersModel).id).toEqual(identifierMock.generateId());
+      expect((result as UsersModel).username).toEqual(outputUserModel.username);
+      expect((result as UsersModel).password).toEqual(outputUserModel.password);
+      expect((result as UsersModel).isEnable).toEqual(outputUserModel.isEnable);
     });
   });
 });

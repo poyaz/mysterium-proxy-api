@@ -32,6 +32,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
               error = 'Bad Request';
               break;
             case ExceptionEnum.NOT_FOUND_ERROR:
+            case ExceptionEnum.NOT_FOUND_USER_ERROR:
             case ExceptionEnum.MODEL_ID_NOT_EXIST_ERROR:
               statusCode = HttpStatus.NOT_FOUND;
               error = 'Not Found';

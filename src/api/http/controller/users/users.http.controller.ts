@@ -46,11 +46,12 @@ import {ForbiddenExceptionDto} from '../../dto/forbidden-exception.dto';
 import {NotFoundExceptionDto} from '../../dto/not-found-exception.dto';
 import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-password-field-of-user.interceptor';
 import {FindUserQueryDto} from './dto/find-user-query.dto';
+import {ExceptionEnum} from '../../../../core/enum/exception.enum';
 
 @Controller('users')
 @UseGuards(RolesGuard)
 @ApiTags('users')
-@ApiExtraModels(DefaultSuccessDto, FindUserOutputDto)
+@ApiExtraModels(DefaultSuccessDto, FindUserOutputDto, NotFoundExceptionDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
@@ -187,7 +188,21 @@ export class UsersHttpController {
       ],
     },
   })
-  @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
+  @ApiNotFoundResponse({
+    description: 'The user id not found.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(NotFoundExceptionDto)},
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_USER_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
   async findOne(@Param('userId') userId: string) {
     return this._usersService.findOne(userId);
   }
@@ -198,7 +213,21 @@ export class UsersHttpController {
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
   @ApiOkResponse({type: NoBodySuccessDto})
-  @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
+  @ApiNotFoundResponse({
+    description: 'The user id not found.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(NotFoundExceptionDto)},
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_USER_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
   async updateAdmin(@Param('userId') userId: string, @Body() updateUserDto: UpdateUserAdminInputDto) {
     return this._usersService.update(UpdateUserAdminInputDto.toModel(updateUserDto));
   }
@@ -209,7 +238,21 @@ export class UsersHttpController {
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
   @ApiOkResponse({type: NoBodySuccessDto})
-  @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
+  @ApiNotFoundResponse({
+    description: 'The user id not found.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(NotFoundExceptionDto)},
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_USER_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
   async updatePassword(@Param('userId') userId: string, @Body() updateUserDto: UpdatePasswordInputDto) {
     return this._usersService.update(UpdatePasswordInputDto.toModel(updateUserDto));
   }
@@ -221,7 +264,21 @@ export class UsersHttpController {
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
   @ApiNoContentResponse({description: 'The user has been successfully deleted.', type: ''})
-  @ApiNotFoundResponse({description: 'The user id not found.', type: NotFoundExceptionDto})
+  @ApiNotFoundResponse({
+    description: 'The user id not found.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(NotFoundExceptionDto)},
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_USER_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
   async remove(@Param('userId') userId: string) {
     return this._usersService.remove(userId);
   }
