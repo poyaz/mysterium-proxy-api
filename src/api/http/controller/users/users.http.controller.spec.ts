@@ -3,10 +3,11 @@ import {mock, MockProxy} from 'jest-mock-extended';
 import {UsersHttpController} from './users.http.controller';
 import {I_USER_SERVICE, IUsersService} from '../../../../core/interface/i-users-service.interface';
 import {UnknownException} from '../../../../core/exception/unknown.exception';
-import {HttpException, HttpStatus} from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
-import {UsersModel} from '../../../../core/model/users-model';
 import {IIdentifier} from '../../../../core/interface/i-identifier.interface';
+import {FindUserQueryDto} from './dto/find-user-query.dto';
+import {UsersModel} from '../../../../core/model/users.model';
+import {FilterInterface, FilterModel} from '../../../../core/model/filter.model';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -115,6 +116,49 @@ describe('UsersController', () => {
       expect(result['username']).toEqual(outputUserAdminModel.username);
       expect(result['password']).toEqual(outputUserAdminModel.password);
       expect(result['isEnable']).toEqual(outputUserAdminModel.isEnable);
+    });
+  });
+
+  describe('Find all users', () => {
+    let inputFindUserQueryDto;
+    let inputEmptyFindUserQueryDto;
+    let matchFindUserFilter;
+    let matchEmptyFindUserFilter;
+
+    beforeEach(() => {
+      inputFindUserQueryDto = new FindUserQueryDto();
+      inputFindUserQueryDto.username = 'my-user';
+
+      inputEmptyFindUserQueryDto = new FindUserQueryDto();
+
+      matchFindUserFilter = new FilterModel();
+      matchFindUserFilter.push({
+        name: 'username',
+        condition: 'eq',
+        value: 'my-user',
+      } as FilterInterface);
+
+      matchEmptyFindUserFilter = new FilterModel();
+    });
+
+    it(`should error get all users without filter`, async () => {
+      usersService.findAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findAll(inputEmptyFindUserQueryDto);
+
+      expect(usersService.findAll).toHaveBeenCalled();
+      expect(usersService.findAll).toBeCalledWith(matchEmptyFindUserFilter);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`should error get all users with filter`, async () => {
+      usersService.findAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findAll(inputFindUserQueryDto);
+
+      expect(usersService.findAll).toHaveBeenCalled();
+      expect(usersService.findAll).toBeCalledWith(matchFindUserFilter);
+      expect(error).toBeInstanceOf(UnknownException);
     });
   });
 });

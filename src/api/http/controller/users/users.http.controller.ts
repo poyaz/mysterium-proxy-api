@@ -10,7 +10,7 @@ import {
   Put,
   HttpCode,
   HttpStatus,
-  UseGuards, UseInterceptors,
+  UseGuards, UseInterceptors, Query,
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
@@ -45,6 +45,7 @@ import {UnauthorizedExceptionDto} from '../../dto/unauthorized-exception.dto';
 import {ForbiddenExceptionDto} from '../../dto/forbidden-exception.dto';
 import {NotFoundExceptionDto} from '../../dto/not-found-exception.dto';
 import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-password-field-of-user.interceptor';
+import {FindUserQueryDto} from './dto/find-user-query.dto';
 
 @Controller('users')
 @UseGuards(RolesGuard)
@@ -123,23 +124,46 @@ export class UsersHttpController {
   @ApiBearerAuth()
   @ApiOkResponse({
     schema: {
-      allOf: [
-        {$ref: getSchemaPath(DefaultSuccessDto)},
+      anyOf: [
         {
-          properties: {
-            data: {
-              type: 'array',
-              items: {
-                $ref: getSchemaPath(FindUserOutputDto),
+          allOf: [
+            {
+              title: 'With data',
+            },
+            {$ref: getSchemaPath(DefaultSuccessDto)},
+            {
+              properties: {
+                data: {
+                  type: 'array',
+                  items: {
+                    $ref: getSchemaPath(FindUserOutputDto),
+                  },
+                },
               },
             },
-          },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: 'Without data',
+            },
+            {$ref: getSchemaPath(DefaultSuccessDto)},
+            {
+              properties: {
+                data: {
+                  type: 'array',
+                  example: [],
+                },
+              },
+            },
+          ],
         },
       ],
     },
   })
-  findAll() {
-    return this._usersService.findAll();
+  findAll(@Query('filter') queryFilterDto: FindUserQueryDto) {
+    return this._usersService.findAll(FindUserQueryDto.toModel(queryFilterDto));
   }
 
   @Get(':userId')
