@@ -107,11 +107,11 @@ export class UsersHttpController {
   })
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
   @ApiUnauthorizedResponse({
-    description: 'Unauthorized access when fill attribute property and user need authenticate',
+    description: 'Unauthorized access when you filled attributes properties which need authentication',
     type: UnauthorizedExceptionDto,
   })
   @ApiForbiddenResponse({
-    description: 'Forbidden access when fill attribute property and user need access to this field',
+    description: 'Forbidden access when you filled attributes properties which need access to this field',
     type: ForbiddenExceptionDto,
   })
   async create(@Body() createUserDto: CreateUserInputDto) {
