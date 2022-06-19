@@ -15,6 +15,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new ValidationPipe({
     errorHttpStatusCode: 422,
+    transform: true,
   }));
 
   const swaggerConf = new DocumentBuilder()
