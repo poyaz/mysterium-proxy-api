@@ -7,6 +7,7 @@ import {UsersModel} from '../model/users.model';
 import {InterfaceRepositoryEnum} from '../enum/interface-repository.enum';
 import {UnknownException} from '../exception/unknown.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
+import {FilterModel} from '../model/filter.model';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -83,6 +84,76 @@ describe('UsersService', () => {
         isEnable: outputCreateUserModel.isEnable,
         role: outputCreateUserModel.role,
         insertDate: outputCreateUserModel.insertDate,
+      });
+    });
+  });
+
+  describe(`Find all users`, () => {
+    let inputFilterModel: FilterModel;
+    let outputFindUserModel: UsersModel;
+
+    beforeEach(() => {
+      inputFilterModel = new FilterModel();
+      inputFilterModel.push({name: 'username', condition: 'eq', value: 'my-username'});
+
+      outputFindUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error find all users`, async () => {
+      usersRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.findAll();
+
+      expect(usersRepository.getAll).toHaveBeenCalled();
+      expect(usersRepository.getAll).toBeCalledWith(undefined);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully find all users without filter and return empty records`, async () => {
+      usersRepository.getAll.mockResolvedValue([null, []]);
+
+      const [error, result] = await service.findAll();
+
+      expect(usersRepository.getAll).toHaveBeenCalled();
+      expect(usersRepository.getAll).toBeCalledWith(undefined);
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+    });
+
+    it(`Should successfully find all users with filter and return empty records`, async () => {
+      usersRepository.getAll.mockResolvedValue([null, []]);
+
+      const [error, result] = await service.findAll(inputFilterModel);
+
+      expect(usersRepository.getAll).toHaveBeenCalled();
+      expect(usersRepository.getAll).toBeCalledWith(inputFilterModel);
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+    });
+
+    it(`Should successfully find all users`, async () => {
+      usersRepository.getAll.mockResolvedValue([null, [outputFindUserModel]]);
+
+      const [error, result] = await service.findAll();
+
+      expect(usersRepository.getAll).toHaveBeenCalled();
+      expect(usersRepository.getAll).toBeCalledWith(undefined);
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect<UsersModel>(result[0]).toMatchObject({
+        id: outputFindUserModel.id,
+        username: outputFindUserModel.username,
+        password: outputFindUserModel.password,
+        isEnable: outputFindUserModel.isEnable,
+        role: outputFindUserModel.role,
+        insertDate: outputFindUserModel.insertDate,
       });
     });
   });

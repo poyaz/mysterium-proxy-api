@@ -20,7 +20,7 @@ export class UsersService implements IUsersService {
   }
 
   findAll(filter?: FilterModel): Promise<AsyncReturn<Error, Array<UsersModel>>> {
-    return Promise.resolve(undefined);
+    return this._userRepository.getAll(filter);
   }
 
   findOne(id: string): Promise<AsyncReturn<Error, UsersModel>> {
