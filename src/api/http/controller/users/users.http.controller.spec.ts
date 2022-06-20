@@ -12,6 +12,7 @@ import {NotFoundUserException} from '../../../../core/exception/not-found-user.e
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {UpdateModel} from '../../../../core/model/update.model';
 import {UserRoleEnum} from '../../../../core/enum/user-role.enum';
+import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -290,6 +291,41 @@ describe('UsersController', () => {
       usersService.update.mockResolvedValue([null]);
 
       const [error] = await controller.updateAdmin(userId, inputUpdateUserAdminDto);
+
+      expect(usersService.update).toHaveBeenCalled();
+      expect(usersService.update).toBeCalledWith(matchUpdateUser);
+      expect(error).toBeNull();
+    });
+  });
+
+  describe(`Update password`, () => {
+    let inputUpdatePasswordDto: UpdatePasswordInputDto;
+    let matchUpdateUser: UpdateModel<UsersModel>;
+
+    beforeEach(() => {
+      inputUpdatePasswordDto = new UpdatePasswordInputDto();
+      inputUpdatePasswordDto.password = '123456';
+      inputUpdatePasswordDto.confirmPassword = '123456';
+
+      matchUpdateUser = new UpdateModel<UsersModel>(identifierMock.generateId(), {password: '123456'});
+    });
+
+    it(`Should error update user by id with admin access`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.updatePassword(userId, inputUpdatePasswordDto);
+
+      expect(usersService.update).toHaveBeenCalled();
+      expect(usersService.update).toBeCalledWith(matchUpdateUser);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update user by id with admin access`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.update.mockResolvedValue([null]);
+
+      const [error] = await controller.updatePassword(userId, inputUpdatePasswordDto);
 
       expect(usersService.update).toHaveBeenCalled();
       expect(usersService.update).toBeCalledWith(matchUpdateUser);

@@ -234,7 +234,7 @@ export class UsersHttpController {
 
   @Patch(':userId')
   @Roles(UserRoleEnum.USER)
-  @ApiOperation({description: 'Update password of user', operationId: 'Update password of user'})
+  @ApiOperation({description: 'Change password of user', operationId: 'Change password of user'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
   @ApiOkResponse({type: NoBodySuccessDto})
@@ -254,7 +254,7 @@ export class UsersHttpController {
     },
   })
   async updatePassword(@Param('userId') userId: string, @Body() updateUserDto: UpdatePasswordInputDto) {
-    return this._usersService.update(UpdatePasswordInputDto.toModel(updateUserDto));
+    return this._usersService.update(UpdatePasswordInputDto.toModel(userId, updateUserDto));
   }
 
   @Delete(':userId')
