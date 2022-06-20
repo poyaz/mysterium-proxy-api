@@ -1,7 +1,7 @@
 import {AsyncReturn} from '../utility';
 
 export interface IGenericRepositoryInterface<T> {
-  getAll<F>(model: F): Promise<AsyncReturn<Error, Array<T>>>;
+  getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<T>>>;
 
   getById(id: string): Promise<AsyncReturn<Error, T | null>>;
 
