@@ -332,4 +332,28 @@ describe('UsersController', () => {
       expect(error).toBeNull();
     });
   });
+
+  describe(`Delete user`, () => {
+    it(`Should error delete user by id`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.remove(userId);
+
+      expect(usersService.remove).toHaveBeenCalled();
+      expect(usersService.remove).toBeCalledWith(userId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully delete user by id`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.remove.mockResolvedValue([null]);
+
+      const [error] = await controller.remove(userId);
+
+      expect(usersService.remove).toHaveBeenCalled();
+      expect(usersService.remove).toBeCalledWith(userId);
+      expect(error).toBeNull();
+    });
+  });
 });
