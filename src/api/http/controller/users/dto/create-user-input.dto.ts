@@ -60,9 +60,9 @@ export class CreateUserInputDto {
   isEnable?: boolean;
 
   static toModel(dto: CreateUserInputDto): UsersModel {
-    const data = instanceToPlain(dto);
+    const data = instanceToPlain(dto, {excludePrefixes: ['confirmPassword']});
     delete data['role'];
 
-    return plainToInstance(UsersModel, data, {excludePrefixes: ['confirmPassword']});
+    return plainToInstance(UsersModel, data);
   }
 }
