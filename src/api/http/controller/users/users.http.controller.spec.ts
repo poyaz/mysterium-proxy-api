@@ -284,5 +284,16 @@ describe('UsersController', () => {
       expect(usersService.update).toBeCalledWith(matchUpdateUser);
       expect(error).toBeInstanceOf(UnknownException);
     });
+
+    it(`Should successfully update user by id with admin access`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.update.mockResolvedValue([null]);
+
+      const [error] = await controller.updateAdmin(userId, inputUpdateUserAdminDto);
+
+      expect(usersService.update).toHaveBeenCalled();
+      expect(usersService.update).toBeCalledWith(matchUpdateUser);
+      expect(error).toBeNull();
+    });
   });
 });
