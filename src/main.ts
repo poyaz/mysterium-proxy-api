@@ -17,6 +17,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     errorHttpStatusCode: 422,
     transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
   }));
 
   const swaggerConf = new DocumentBuilder()
