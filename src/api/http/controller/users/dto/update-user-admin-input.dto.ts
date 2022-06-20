@@ -1,8 +1,9 @@
 import {UsersModel} from '../../../../../core/model/users.model';
-import {instanceToPlain, plainToClass} from 'class-transformer';
+import {instanceToPlain, plainToClass, plainToInstance} from 'class-transformer';
 import {ApiProperty} from '@nestjs/swagger';
 import {IsBoolean, IsDefined, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
 import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
+import {UpdateModel} from '../../../../../core/model/update.model';
 
 export class UpdateUserAdminInputDto {
   @ApiProperty({
@@ -42,9 +43,10 @@ export class UpdateUserAdminInputDto {
   @IsOptional()
   isEnable?: boolean;
 
-  static toModel(dto: UpdateUserAdminInputDto): UsersModel {
-    const data = instanceToPlain(dto);
+  static toModel(userId: string, dto: UpdateUserAdminInputDto): UpdateModel<UsersModel> {
+    const data = instanceToPlain(dto, {excludePrefixes: ['confirmPassword']});
+    const usersModel = plainToInstance(UsersModel, data);
 
-    return plainToClass(UsersModel, data);
+    return new UpdateModel<UsersModel>(userId, usersModel);
   }
 }

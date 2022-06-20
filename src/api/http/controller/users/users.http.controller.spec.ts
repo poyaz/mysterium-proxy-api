@@ -9,6 +9,9 @@ import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {UsersModel} from '../../../../core/model/users.model';
 import {FilterInterface, FilterModel} from '../../../../core/model/filter.model';
 import {NotFoundUserException} from '../../../../core/exception/not-found-user.exception';
+import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
+import {UpdateModel} from '../../../../core/model/update.model';
+import {UserRoleEnum} from '../../../../core/enum/user-role.enum';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -59,17 +62,23 @@ describe('UsersController', () => {
       inputCreateUserAdminDto.confirmPassword = 'my-password';
       inputCreateUserAdminDto.isEnable = false;
 
-      outputUserModel = new UsersModel();
-      outputUserModel.id = identifierMock.generateId();
-      outputUserModel.username = inputCreateUserDto.username;
-      outputUserModel.password = inputCreateUserDto.password;
-      outputUserModel.isEnable = true;
+      outputUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
 
-      outputUserAdminModel = new UsersModel();
-      outputUserAdminModel.id = identifierMock.generateId();
-      outputUserAdminModel.username = inputCreateUserAdminDto.username;
-      outputUserAdminModel.password = inputCreateUserAdminDto.password;
-      outputUserAdminModel.isEnable = inputCreateUserAdminDto.isEnable;
+      outputUserAdminModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: false,
+        insertDate: new Date(),
+      });
     });
 
     it(`Should error add new user`, async () => {
@@ -142,10 +151,14 @@ describe('UsersController', () => {
 
       matchEmptyFindUserFilter = new FilterModel();
 
-      outputUserModel = new UsersModel();
-      outputUserModel.id = identifierMock.generateId();
-      outputUserModel.username = 'my-user';
-      outputUserModel.isEnable = true;
+      outputUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
     });
 
     it(`Should error get all users without filter`, async () => {
@@ -199,7 +212,14 @@ describe('UsersController', () => {
     let outputUserModel;
 
     beforeEach(() => {
-      outputUserModel = new UsersModel();
+      outputUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
       outputUserModel.id = identifierMock.generateId();
       outputUserModel.username = 'my-user';
       outputUserModel.isEnable = true;
@@ -240,6 +260,29 @@ describe('UsersController', () => {
       expect((result as UsersModel).username).toEqual(outputUserModel.username);
       expect((result as UsersModel).password).toEqual(outputUserModel.password);
       expect((result as UsersModel).isEnable).toEqual(outputUserModel.isEnable);
+    });
+  });
+
+  describe(`Update admin`, () => {
+    let inputUpdateUserAdminDto: UpdateUserAdminInputDto;
+    let matchUpdateUser: UpdateModel<UsersModel>;
+
+    beforeEach(() => {
+      inputUpdateUserAdminDto = new UpdateUserAdminInputDto();
+      inputUpdateUserAdminDto.isEnable = true;
+
+      matchUpdateUser = new UpdateModel<UsersModel>(identifierMock.generateId(), {isEnable: true});
+    });
+
+    it(`Should error update user by id with admin access`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.updateAdmin(userId, inputUpdateUserAdminDto);
+
+      expect(usersService.update).toHaveBeenCalled();
+      expect(usersService.update).toBeCalledWith(matchUpdateUser);
+      expect(error).toBeInstanceOf(UnknownException);
     });
   });
 });

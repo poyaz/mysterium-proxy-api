@@ -1,5 +1,6 @@
 import {UsersModel} from '../model/users.model';
 import {FilterModel} from '../model/filter.model';
+import {UpdateModel} from '../model/update.model';
 
 export enum I_USER_SERVICE {
   DEFAULT = 'USERS_SERVICE_DEFAULT',
@@ -12,7 +13,7 @@ export interface IUsersService {
 
   create(model: UsersModel): Promise<(Error | UsersModel)[]>;
 
-  update(model: UsersModel): Promise<(Error)[]>;
+  update(model: UpdateModel<UsersModel>): Promise<(Error)[]>;
 
   remove(id: string): Promise<(Error)[]>;
 }

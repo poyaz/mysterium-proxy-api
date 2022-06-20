@@ -229,7 +229,7 @@ export class UsersHttpController {
     },
   })
   async updateAdmin(@Param('userId') userId: string, @Body() updateUserDto: UpdateUserAdminInputDto) {
-    return this._usersService.update(UpdateUserAdminInputDto.toModel(updateUserDto));
+    return this._usersService.update(UpdateUserAdminInputDto.toModel(userId, updateUserDto));
   }
 
   @Patch(':userId')
