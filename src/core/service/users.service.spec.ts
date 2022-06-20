@@ -246,7 +246,7 @@ describe('UsersService', () => {
       findOneMock.mockClear();
     });
 
-    it(`Should error update users when find user`, async () => {
+    it(`Should error update users when trying find user`, async () => {
       findOneMock.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.update(inputUpdateModel);
@@ -279,6 +279,57 @@ describe('UsersService', () => {
       expect(findOneMock).toBeCalledWith(inputUpdateModel.id);
       expect(usersRepository.update).toHaveBeenCalled();
       expect(usersRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeNull();
+    });
+  });
+
+  describe(`Delete user`, () => {
+    let findOneMock;
+
+    beforeEach(() => {
+      findOneMock = service.findOne = jest.fn();
+    });
+
+    afterEach(() => {
+      findOneMock.mockClear();
+    });
+
+    it(`Should error delete user when trying find user`, async () => {
+      const inputId = identifierMock.generateId();
+      findOneMock.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(findOneMock).toHaveBeenCalled();
+      expect(findOneMock).toBeCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error delete user`, async () => {
+      const inputId = identifierMock.generateId();
+      findOneMock.mockResolvedValue([null]);
+      usersRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(findOneMock).toHaveBeenCalled();
+      expect(findOneMock).toBeCalledWith(inputId);
+      expect(usersRepository.remove).toHaveBeenCalled();
+      expect(usersRepository.remove).toBeCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update users`, async () => {
+      const inputId = identifierMock.generateId();
+      findOneMock.mockResolvedValue([null]);
+      usersRepository.remove.mockResolvedValue([null]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(findOneMock).toHaveBeenCalled();
+      expect(findOneMock).toBeCalledWith(inputId);
+      expect(usersRepository.remove).toHaveBeenCalled();
+      expect(usersRepository.remove).toBeCalledWith(inputId);
       expect(error).toBeNull();
     });
   });

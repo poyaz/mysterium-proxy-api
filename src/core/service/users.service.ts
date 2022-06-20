@@ -46,7 +46,12 @@ export class UsersService implements IUsersService {
     return this._userRepository.update(model);
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    const [error] = await this.findOne(id);
+    if (error) {
+      return [error];
+    }
+
+    return this._userRepository.remove(id);
   }
 }
