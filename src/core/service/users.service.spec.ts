@@ -8,6 +8,7 @@ import {InterfaceRepositoryEnum} from '../enum/interface-repository.enum';
 import {UnknownException} from '../exception/unknown.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
 import {FilterModel} from '../model/filter.model';
+import {NotFoundUserException} from '../exception/not-found-user.exception';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -148,6 +149,73 @@ describe('UsersService', () => {
       expect(error).toBeNull();
       expect(result).toHaveLength(1);
       expect<UsersModel>(result[0]).toMatchObject({
+        id: outputFindUserModel.id,
+        username: outputFindUserModel.username,
+        password: outputFindUserModel.password,
+        isEnable: outputFindUserModel.isEnable,
+        role: outputFindUserModel.role,
+        insertDate: outputFindUserModel.insertDate,
+      });
+    });
+  });
+
+  describe(`Find one user`, () => {
+    let outputFindUserModel: UsersModel;
+
+    beforeEach(() => {
+      outputFindUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error find one user`, async () => {
+      const userId = identifierMock.generateId();
+      usersRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.findOne(userId);
+
+      expect(usersRepository.getById).toHaveBeenCalled();
+      expect(usersRepository.getById).toBeCalledWith(userId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error find one user`, async () => {
+      const userId = identifierMock.generateId();
+      usersRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.findOne(userId);
+
+      expect(usersRepository.getById).toHaveBeenCalled();
+      expect(usersRepository.getById).toBeCalledWith(userId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error find one user when user not found`, async () => {
+      const userId = identifierMock.generateId();
+      usersRepository.getById.mockResolvedValue([null, null]);
+
+      const [error] = await service.findOne(userId);
+
+      expect(usersRepository.getById).toHaveBeenCalled();
+      expect(usersRepository.getById).toBeCalledWith(userId);
+      expect(error).toBeInstanceOf(NotFoundUserException);
+    });
+
+    it(`Should successfully find one user`, async () => {
+      const userId = identifierMock.generateId();
+      usersRepository.getById.mockResolvedValue([null, outputFindUserModel]);
+
+      const [error, result] = await service.findOne(userId);
+
+      expect(usersRepository.getById).toHaveBeenCalled();
+      expect(usersRepository.getById).toBeCalledWith(userId);
+      expect(error).toBeNull();
+      expect(result).toMatchObject<UsersModel>({
         id: outputFindUserModel.id,
         username: outputFindUserModel.username,
         password: outputFindUserModel.password,

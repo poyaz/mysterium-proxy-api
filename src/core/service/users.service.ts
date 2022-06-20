@@ -6,6 +6,8 @@ import {AsyncReturn} from '../utility';
 import {FilterModel} from '../model/filter.model';
 import {IGenericRepositoryInterface} from '../interface/i-generic-repository.interface';
 import {InterfaceRepositoryEnum} from '../enum/interface-repository.enum';
+import {createEvalAwarePartialHost} from 'ts-node/dist/repl';
+import {NotFoundUserException} from '../exception/not-found-user.exception';
 
 @Injectable()
 export class UsersService implements IUsersService {
@@ -19,12 +21,20 @@ export class UsersService implements IUsersService {
     return this._userRepository.add(model);
   }
 
-  findAll(filter?: FilterModel): Promise<AsyncReturn<Error, Array<UsersModel>>> {
+  async findAll(filter?: FilterModel): Promise<AsyncReturn<Error, Array<UsersModel>>> {
     return this._userRepository.getAll(filter);
   }
 
-  findOne(id: string): Promise<AsyncReturn<Error, UsersModel>> {
-    return Promise.resolve(undefined);
+  async findOne(id: string): Promise<AsyncReturn<Error, UsersModel>> {
+    const [error, data] = await this._userRepository.getById(id);
+    if (error) {
+      return [error];
+    }
+    if (!data) {
+      return [new NotFoundUserException()];
+    }
+
+    return [null, data];
   }
 
   update(model: UpdateModel<UsersModel>): Promise<AsyncReturn<Error, null>> {
