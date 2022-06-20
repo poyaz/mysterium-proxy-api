@@ -7,7 +7,7 @@ export interface IGenericRepositoryInterface<T> {
 
   add(model: T): Promise<AsyncReturn<Error, T>>;
 
-  update(model: T): Promise<AsyncReturn<Error, null>>;
+  update<F>(model: F): Promise<AsyncReturn<Error, null>>;
 
   remove(model: T): Promise<AsyncReturn<Error, null>>;
 }

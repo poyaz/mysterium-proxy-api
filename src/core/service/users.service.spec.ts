@@ -9,6 +9,7 @@ import {UnknownException} from '../exception/unknown.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
 import {FilterModel} from '../model/filter.model';
 import {NotFoundUserException} from '../exception/not-found-user.exception';
+import {UpdateModel} from '../model/update.model';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -32,6 +33,11 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it(`Should be defined`, () => {
@@ -223,6 +229,57 @@ describe('UsersService', () => {
         role: outputFindUserModel.role,
         insertDate: outputFindUserModel.insertDate,
       });
+    });
+  });
+
+  describe(`Update user`, () => {
+    let findOneMock;
+    let inputUpdateModel: UpdateModel<UsersModel>;
+
+    beforeEach(() => {
+      findOneMock = service.findOne = jest.fn();
+
+      inputUpdateModel = new UpdateModel<UsersModel>(identifierMock.generateId(), {isEnable: true});
+    });
+
+    afterEach(() => {
+      findOneMock.mockClear();
+    });
+
+    it(`Should error update users when find user`, async () => {
+      findOneMock.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.update(inputUpdateModel);
+
+      expect(findOneMock).toHaveBeenCalled();
+      expect(findOneMock).toBeCalledWith(inputUpdateModel.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update users`, async () => {
+      findOneMock.mockResolvedValue([null]);
+      usersRepository.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.update(inputUpdateModel);
+
+      expect(findOneMock).toHaveBeenCalled();
+      expect(findOneMock).toBeCalledWith(inputUpdateModel.id);
+      expect(usersRepository.update).toHaveBeenCalled();
+      expect(usersRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update users`, async () => {
+      findOneMock.mockResolvedValue([null]);
+      usersRepository.update.mockResolvedValue([null]);
+
+      const [error] = await service.update(inputUpdateModel);
+
+      expect(findOneMock).toHaveBeenCalled();
+      expect(findOneMock).toBeCalledWith(inputUpdateModel.id);
+      expect(usersRepository.update).toHaveBeenCalled();
+      expect(usersRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeNull();
     });
   });
 });
