@@ -48,7 +48,10 @@ import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-passwor
 import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {ExceptionEnum} from '../../../../core/enum/exception.enum';
 
-@Controller('users')
+@Controller({
+  path: 'users',
+  version: '1',
+})
 @UseGuards(RolesGuard)
 @ApiTags('users')
 @ApiExtraModels(DefaultSuccessDto, FindUserOutputDto, NotFoundExceptionDto)

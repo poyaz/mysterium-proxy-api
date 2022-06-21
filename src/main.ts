@@ -1,6 +1,6 @@
 import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
-import {ValidationPipe} from '@nestjs/common';
+import {ValidationPipe, VersioningType} from '@nestjs/common';
 import {DocumentBuilder, SwaggerDocumentOptions, SwaggerModule} from '@nestjs/swagger';
 import {ServerConfigInterface} from './loader/configure/interface/server-config.interface';
 import {ConfigService} from '@nestjs/config';
@@ -13,7 +13,10 @@ async function bootstrap() {
 
   const SERVER_OPTIONS = configService.get<ServerConfigInterface>('server');
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
   app.useGlobalPipes(new ValidationPipe({
     errorHttpStatusCode: 422,
     transform: true,

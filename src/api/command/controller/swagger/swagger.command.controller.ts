@@ -6,6 +6,7 @@ import {resolve} from 'path';
 import {writeFileSync} from 'fs';
 import * as yaml from 'yaml';
 import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import {VersioningType} from '@nestjs/common';
 
 const DEFAULT_STORE_PATH = resolve('storage', 'tmp');
 
@@ -13,7 +14,10 @@ const DEFAULT_STORE_PATH = resolve('storage', 'tmp');
 export class SwaggerCommandController implements CommandRunner {
   async run(passedParams: string[], options?: Record<string, any>): Promise<void> {
     const app = await NestFactory.create(AppModule);
-    app.setGlobalPrefix('api/v1');
+    app.setGlobalPrefix('api');
+    app.enableVersioning({
+      type: VersioningType.URI,
+    });
 
     const swaggerConf = new DocumentBuilder()
       .setTitle('Mysterium proxy api')
