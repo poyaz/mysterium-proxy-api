@@ -1,4 +1,5 @@
 docker-compose.yml
+docker/
 
 ### Self folder
 .tests/
