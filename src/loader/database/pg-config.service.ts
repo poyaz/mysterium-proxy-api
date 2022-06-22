@@ -25,7 +25,7 @@ export class PgConfigService implements TypeOrmOptionsFactory {
 
       ...(DATABASE_OPTIONS.enableTls && {ssl: {rejectUnauthorized: DATABASE_OPTIONS.rejectUnauthorized}}),
 
-      entities: [`dist/**/*.entity{.ts,.js}`],
+      entities: [`dist/src/infrastructure/entity/*.entity{.ts,.js}`],
       synchronize: false,
       migrations: [`dist/storage/migrations/*{.ts,.js}`],
       migrationsTableName: 'migrations_history',
