@@ -24,7 +24,7 @@ export function envValidate(config: Record<string, unknown>) {
   );
 
   const errors = validateSync(validatedConfig, {
-    skipMissingProperties: true,
+    skipMissingProperties: false,
     stopAtFirstError: true,
   });
 

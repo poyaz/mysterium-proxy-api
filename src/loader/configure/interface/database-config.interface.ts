@@ -1,4 +1,4 @@
-interface DatabaseConfigInterface {
+export interface DatabaseConfigInterface {
   host: string,
   port: number,
   db: string,
@@ -6,4 +6,6 @@ interface DatabaseConfigInterface {
   password: string,
   max?: number,
   idleTimeout?: number,
+  enableTls?: boolean,
+  rejectUnauthorized?: boolean,
 }
