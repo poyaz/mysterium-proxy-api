@@ -13,12 +13,13 @@ import {OutputTransferInterceptor} from './api/http/interceptor/output.transfer.
 import {I_DATE_TIME} from './core/interface/i-date-time.interface';
 import {DateTime} from './infrastructure/system/date-time';
 import {PgModule} from './loader/database/pg.module';
-import {UsersPgRepositoryService} from './infrastructure/repository/users-pg-repository.service';
 import {InterfaceRepositoryEnum} from './core/enum/interface-repository.enum';
 import {ConfigureModule} from './loader/configure/configure.module';
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {controllersExport} from './loader/http/controller.export';
 import {PgConfigService} from './loader/database/pg-config.service';
+import {UsersPgRepository} from './infrastructure/repository/users-pg.repository';
+import {UsersEntity} from './infrastructure/entity/users.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import {PgConfigService} from './loader/database/pg-config.service';
       inject: [ConfigService],
       useClass: PgConfigService,
     }),
+    TypeOrmModule.forFeature([UsersEntity]),
   ],
   controllers: [...controllersExport],
   providers: [
@@ -68,7 +70,7 @@ import {PgConfigService} from './loader/database/pg-config.service';
     },
     {
       provide: InterfaceRepositoryEnum.USER_PG_REPOSITORY,
-      useClass: UsersPgRepositoryService,
+      useClass: UsersPgRepository,
     },
   ],
 })
