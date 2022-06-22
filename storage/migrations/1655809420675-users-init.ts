@@ -1,4 +1,5 @@
 import {MigrationInterface, QueryRunner, Table, TableIndex} from 'typeorm';
+import {UserRoleEnum} from '../../src/core/enum/user-role.enum';
 
 const TABLE_NAME = 'users';
 const UNIQUE_INDEX_USERNAME = 'users_username_unique_idx';
@@ -27,8 +28,8 @@ export class usersInit1655809420675 implements MigrationInterface {
           },
           {
             name: 'role',
-            type: 'varchar',
-            length: '20',
+            type: 'enum',
+            enum: Object.values(UserRoleEnum),
           },
           {
             name: 'is_enable',
@@ -47,7 +48,7 @@ export class usersInit1655809420675 implements MigrationInterface {
           {
             name: 'delete_date',
             type: 'timestamp',
-            default: 'now()',
+            isNullable: true,
           },
         ],
       }),
