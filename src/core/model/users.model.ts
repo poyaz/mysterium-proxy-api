@@ -8,6 +8,7 @@ export class UsersModel {
   role: UserRoleEnum;
   isEnable: boolean;
   insertDate: Date;
+  updateDate?: Date;
 
   constructor(props: ModelRequireProp<typeof UsersModel.prototype>) {
     Object.assign(this, props);
