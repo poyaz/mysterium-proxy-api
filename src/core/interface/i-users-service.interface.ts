@@ -7,7 +7,7 @@ export enum I_USER_SERVICE {
   DEFAULT = 'USERS_SERVICE_DEFAULT',
 }
 
-export interface IUsersService {
+export interface IUsersServiceInterface {
   findAll(filter?: FilterModel): Promise<AsyncReturn<Error, Array<UsersModel>>>;
 
   findOne(id: string): Promise<AsyncReturn<Error, UsersModel>>;
