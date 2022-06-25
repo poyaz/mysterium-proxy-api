@@ -50,8 +50,6 @@ import {UsersEntity} from './infrastructure/entity/users.entity';
           : new AuthGuard(reflector);
       },
     },
-    UuidIdentifier,
-    NullUuidIdentifier,
     {
       provide: I_IDENTIFIER.DEFAULT,
       useClass: UuidIdentifier,
