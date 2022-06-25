@@ -1,7 +1,8 @@
-import {ApiProperty} from '@nestjs/swagger';
+import {ApiProperty, PartialType} from '@nestjs/swagger';
 import {UserRoleEnum} from '../../../../../core/enum/user-role.enum';
+import {DateOutputDto} from '../../../dto/date-output.dto';
 
-export class FindUserOutputDto {
+export class FindUserOutputDto extends PartialType(DateOutputDto) {
   @ApiProperty({
     description: 'The identity of user',
     type: String,
@@ -37,6 +38,7 @@ export class FindUserOutputDto {
     description: 'The status of user',
     required: false,
     readOnly: true,
+    type: Boolean,
     example: true,
   })
   isEnable: boolean;
