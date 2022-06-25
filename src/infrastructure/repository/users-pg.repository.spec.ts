@@ -227,4 +227,64 @@ describe('UsersPgRepositoryService', () => {
       });
     });
   });
+
+  describe(`Get user by id`, () => {
+    let outputUsersEntity: UsersEntity;
+
+    beforeEach(() => {
+      outputUsersEntity = new UsersEntity();
+      outputUsersEntity.id = identifierMock.generateId();
+      outputUsersEntity.username = 'my-user';
+      outputUsersEntity.password = 'my-password';
+      outputUsersEntity.role = UserRoleEnum.USER;
+      outputUsersEntity.isEnable = true;
+      outputUsersEntity.insertDate = defaultDate;
+      outputUsersEntity.updateDate = null;
+    });
+
+    it(`Should error get user by id`, async () => {
+      const inputId = identifierMock.generateId();
+      const executeError: never = new Error('Error in create on database') as never;
+      userDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully get user by id but can't find and return null`, async () => {
+      const inputId = identifierMock.generateId();
+      userDb.findOneBy.mockResolvedValue(null);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get user by id`, async () => {
+      const inputId = identifierMock.generateId();
+      userDb.findOneBy.mockResolvedValue(outputUsersEntity);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeNull();
+      expect(result).toMatchObject<UsersModel>({
+        id: identifierMock.generateId(),
+        username: outputUsersEntity.username,
+        password: outputUsersEntity.password,
+        role: UserRoleEnum.USER,
+        isEnable: outputUsersEntity.isEnable,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+    });
+  });
 });

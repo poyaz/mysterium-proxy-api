@@ -56,8 +56,19 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     }
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, UsersModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, UsersModel | null>> {
+    try {
+      const row = await this._db.findOneBy({id});
+      if (!row) {
+        return [null, null];
+      }
+
+      const result = UsersPgRepository._fillModel(row);
+
+      return [null, result];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
