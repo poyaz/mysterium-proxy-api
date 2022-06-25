@@ -10,6 +10,7 @@ import {UserRoleEnum} from '../../core/enum/user-role.enum';
 import {RepositoryException} from '../../core/exception/repository.exception';
 import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
 import {User} from '../../../dist/src/users/entities/user.entity';
+import {FilterModel} from '../../core/model/filter.model';
 
 describe('UsersPgRepositoryService', () => {
   let repository: UsersPgRepository;
@@ -118,6 +119,109 @@ describe('UsersPgRepositoryService', () => {
         password: inputUsersModel.password,
         role: inputUsersModel.role,
         isEnable: inputUsersModel.isEnable,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+    });
+  });
+
+  describe(`Get all users`, () => {
+    let outputUsersEntity: UsersEntity;
+    let inputUsernameFilterModel: FilterModel;
+    let inputFilterModel: FilterModel;
+
+    beforeEach(() => {
+      outputUsersEntity = new UsersEntity();
+      outputUsersEntity.id = identifierMock.generateId();
+      outputUsersEntity.username = 'my-user';
+      outputUsersEntity.password = 'my-password';
+      outputUsersEntity.role = UserRoleEnum.USER;
+      outputUsersEntity.isEnable = true;
+      outputUsersEntity.insertDate = defaultDate;
+      outputUsersEntity.updateDate = null;
+
+      inputUsernameFilterModel = new FilterModel();
+      inputUsernameFilterModel.push({name: 'username', condition: 'eq', value: 'my-user'});
+
+      inputFilterModel = new FilterModel();
+      inputFilterModel.push({name: 'username', condition: 'eq', value: 'my-user'});
+      inputFilterModel.push({name: 'isEnable', condition: 'eq', value: true});
+    });
+
+    it(`Should error get all users (without filter)`, async () => {
+      const executeError: never = new Error('Error in create on database') as never;
+      userDb.find.mockRejectedValue(executeError);
+
+      const [error] = await repository.getAll();
+
+      expect(userDb.find).toHaveBeenCalled();
+      expect(userDb.find.mock.calls[0][0]).toEqual({});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should error get all users (with filter)`, async () => {
+      const executeError: never = new Error('Error in create on database') as never;
+      userDb.find.mockRejectedValue(executeError);
+
+      const [error] = await repository.getAll<FilterModel>(inputUsernameFilterModel);
+
+      expect(userDb.find).toHaveBeenCalled();
+      expect(userDb.find).toBeCalledWith(expect.objectContaining({
+        where: [{username: inputUsernameFilterModel[0].value}],
+      }));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully get all users (without filter) and return empty records`, async () => {
+      userDb.find.mockResolvedValue([]);
+
+      const [error, result] = await repository.getAll();
+
+      expect(userDb.find).toHaveBeenCalled();
+      expect(userDb.find.mock.calls[0][0]).toEqual({});
+      expect(error).toBeNull();
+      expect(result.length).toEqual(0);
+    });
+
+    it(`Should successfully get all users (without filter) and return records`, async () => {
+      userDb.find.mockResolvedValue([outputUsersEntity]);
+
+      const [error, result] = await repository.getAll();
+
+      expect(userDb.find).toHaveBeenCalled();
+      expect(userDb.find.mock.calls[0][0]).toEqual({});
+      expect(error).toBeNull();
+      expect(result.length).toEqual(1);
+      expect(result[0]).toMatchObject<UsersModel>({
+        id: identifierMock.generateId(),
+        username: outputUsersEntity.username,
+        password: outputUsersEntity.password,
+        role: UserRoleEnum.USER,
+        isEnable: outputUsersEntity.isEnable,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+    });
+
+    it(`Should successfully get all users (with filter) and return records`, async () => {
+      userDb.find.mockResolvedValue([outputUsersEntity]);
+
+      const [error, result] = await repository.getAll(inputFilterModel);
+
+      expect(userDb.find).toHaveBeenCalled();
+      expect(userDb.find).toBeCalledWith(expect.objectContaining({
+        where: [{username: inputFilterModel[0].value}, {isEnable: inputFilterModel[1].value}],
+      }));
+      expect(error).toBeNull();
+      expect(result.length).toEqual(1);
+      expect(result[0]).toMatchObject<UsersModel>({
+        id: identifierMock.generateId(),
+        username: outputUsersEntity.username,
+        password: outputUsersEntity.password,
+        role: UserRoleEnum.USER,
+        isEnable: outputUsersEntity.isEnable,
         insertDate: defaultDate,
         updateDate: null,
       });

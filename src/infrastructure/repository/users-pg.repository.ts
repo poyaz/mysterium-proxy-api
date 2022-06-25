@@ -9,6 +9,8 @@ import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {I_IDENTIFIER, IIdentifier} from '../../core/interface/i-identifier.interface';
 import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
 import {RepositoryException} from '../../core/exception/repository.exception';
+import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
+import {FilterModel} from '../../core/model/filter.model';
 
 @Injectable()
 export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel> {
@@ -29,27 +31,29 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
 
     try {
-      const output = await this._db.create(entity);
-      const outputModel = UsersPgRepository._fillModel(output);
+      const row = await this._db.create(entity);
+      const result = UsersPgRepository._fillModel(row);
 
-      return [null, outputModel];
+      return [null, result];
     } catch (error) {
       return [new RepositoryException(error)];
     }
   }
 
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<UsersModel>>> {
-    try {
-      const rows = await this._db.find();
-
-      const data = instanceToPlain<UsersEntity>(rows, {});
-      const usersModelList = plainToInstance(UsersModel, data);
-
-      return [null, usersModelList];
-    } catch (error) {
-      return [error];
+    const findOptions: FindManyOptions = {};
+    if (filter) {
+      findOptions.where = (filter as unknown as FilterModel).map((v) => ({[v.name]: v.value}));
     }
-    // return Promise.resolve(undefined);
+
+    try {
+      const rows = await this._db.find(findOptions);
+      const result = rows.map((v) => UsersPgRepository._fillModel(v));
+
+      return [null, result];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   getById(id: string): Promise<AsyncReturn<Error, UsersModel | null>> {
