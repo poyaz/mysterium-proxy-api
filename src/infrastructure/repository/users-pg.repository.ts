@@ -71,8 +71,19 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     }
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    try {
+      const row = await this._db.findOneBy({id});
+      if (!row) {
+        return [null];
+      }
+
+      await row.softRemove();
+
+      return [null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   update<F>(model: F): Promise<AsyncReturn<Error, null>> {

@@ -287,4 +287,78 @@ describe('UsersPgRepositoryService', () => {
       });
     });
   });
+
+  describe(`Remove user by id`, () => {
+    let outputUsersEntity: UsersEntity;
+    let entityRemoveMock;
+
+    beforeEach(() => {
+      outputUsersEntity = new UsersEntity();
+      outputUsersEntity.id = identifierMock.generateId();
+      outputUsersEntity.username = 'my-user';
+      outputUsersEntity.password = 'my-password';
+      outputUsersEntity.role = UserRoleEnum.USER;
+      outputUsersEntity.isEnable = true;
+      outputUsersEntity.insertDate = defaultDate;
+      outputUsersEntity.updateDate = null;
+      entityRemoveMock = outputUsersEntity.softRemove = jest.fn();
+    });
+
+    afterEach(() => {
+      entityRemoveMock.mockClear();
+    });
+
+    it(`Should error remove when fetch user by id`, async () => {
+      const inputId = identifierMock.generateId();
+      const executeError: never = new Error('Error in create on database') as never;
+      userDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully escape remove when user not found`, async () => {
+      const inputId = identifierMock.generateId();
+      userDb.findOneBy.mockResolvedValue(null);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(entityRemoveMock).not.toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+
+    it(`Should error remove by id`, async () => {
+      const inputId = identifierMock.generateId();
+      userDb.findOneBy.mockResolvedValue(outputUsersEntity);
+      const executeError: never = new Error('Error in create on database') as never;
+      entityRemoveMock.mockRejectedValue(executeError);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(entityRemoveMock).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully remove by id`, async () => {
+      const inputId = identifierMock.generateId();
+      userDb.findOneBy.mockResolvedValue(outputUsersEntity);
+      entityRemoveMock.mockResolvedValue();
+
+      const [error] = await repository.remove(inputId);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(entityRemoveMock).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+  });
 });
