@@ -11,6 +11,7 @@ import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface
 import {RepositoryException} from '../../core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {FilterModel} from '../../core/model/filter.model';
+import {UpdateModel} from '../../core/model/update.model';
 
 @Injectable()
 export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel> {
@@ -43,7 +44,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<UsersModel>>> {
     const findOptions: FindManyOptions = {};
     if (filter) {
-      findOptions.where = (filter as unknown as FilterModel).map((v) => ({[v.name]: v.value}));
+      findOptions.where = (<FilterModel><any>filter).map((v) => ({[v.name]: v.value}));
     }
 
     try {
@@ -86,8 +87,29 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     }
   }
 
-  update<F>(model: F): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
+    const updateModel = <UpdateModel<UsersModel>><any>model;
+    const updateUserModel = <UsersModel>updateModel;
+
+    try {
+      const row = await this._db.findOneBy({id: updateModel.id});
+      if (!row) {
+        return [null];
+      }
+
+      if (typeof updateUserModel.password !== 'undefined') {
+        row.password = updateUserModel.password;
+      }
+      if (typeof updateUserModel.isEnable !== 'undefined') {
+        row.isEnable = updateUserModel.isEnable;
+      }
+
+      await row.save();
+
+      return [null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private static _fillModel(entity) {

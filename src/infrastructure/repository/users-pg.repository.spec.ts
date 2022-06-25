@@ -11,6 +11,7 @@ import {RepositoryException} from '../../core/exception/repository.exception';
 import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
 import {User} from '../../../dist/src/users/entities/user.entity';
 import {FilterModel} from '../../core/model/filter.model';
+import {UpdateModel} from '../../core/model/update.model';
 
 describe('UsersPgRepositoryService', () => {
   let repository: UsersPgRepository;
@@ -358,6 +359,86 @@ describe('UsersPgRepositoryService', () => {
       expect(userDb.findOneBy).toHaveBeenCalled();
       expect(userDb.findOneBy).toBeCalledWith({id: inputId});
       expect(entityRemoveMock).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+  });
+
+  describe(`Update user`, () => {
+    let inputUpdate: UpdateModel<UsersModel>;
+    let outputUsersEntity: UsersEntity;
+    let entityUpdateMock;
+
+    beforeEach(() => {
+      inputUpdate = new UpdateModel<UsersModel>(identifierMock.generateId(), {
+        password: 'new-password',
+        isEnable: false,
+      });
+
+      outputUsersEntity = new UsersEntity();
+      outputUsersEntity.id = identifierMock.generateId();
+      outputUsersEntity.username = 'my-user';
+      outputUsersEntity.password = 'my-password';
+      outputUsersEntity.role = UserRoleEnum.USER;
+      outputUsersEntity.isEnable = true;
+      outputUsersEntity.insertDate = defaultDate;
+      outputUsersEntity.updateDate = null;
+      entityUpdateMock = outputUsersEntity.save = jest.fn();
+    });
+
+    afterEach(() => {
+      entityUpdateMock.mockClear();
+    });
+
+    it(`Should error update user when fetch user by id`, async () => {
+      const executeError: never = new Error('Error in create on database') as never;
+      userDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.update<UpdateModel<UsersModel>>(inputUpdate);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputUpdate.id});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully escape update when user not found`, async () => {
+      userDb.findOneBy.mockResolvedValue(null);
+
+      const [error] = await repository.update<UpdateModel<UsersModel>>(inputUpdate);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputUpdate.id});
+      expect(entityUpdateMock).not.toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+
+    it(`Should error update by id`, async () => {
+      userDb.findOneBy.mockResolvedValue(outputUsersEntity);
+      const executeError: never = new Error('Error in create on database') as never;
+      entityUpdateMock.mockRejectedValue(executeError);
+
+      const [error] = await repository.update<UpdateModel<UsersModel>>(inputUpdate);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputUpdate.id});
+      expect(entityUpdateMock).toHaveBeenCalled();
+      expect(outputUsersEntity.password).toEqual('new-password');
+      expect(outputUsersEntity.isEnable).toEqual(false);
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully update by id`, async () => {
+      userDb.findOneBy.mockResolvedValue(outputUsersEntity);
+      entityUpdateMock.mockResolvedValue();
+
+      const [error] = await repository.update<UpdateModel<UsersModel>>(inputUpdate);
+
+      expect(userDb.findOneBy).toHaveBeenCalled();
+      expect(userDb.findOneBy).toBeCalledWith({id: inputUpdate.id});
+      expect(entityUpdateMock).toHaveBeenCalled();
+      expect(outputUsersEntity.password).toEqual('new-password');
+      expect(outputUsersEntity.isEnable).toEqual(false);
       expect(error).toBeNull();
     });
   });
