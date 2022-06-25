@@ -1,7 +1,7 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {UsersHttpController} from './users.http.controller';
-import {I_USER_SERVICE, IUsersService} from '../../../../core/interface/i-users-service.interface';
+import {I_USER_SERVICE, IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
 import {UnknownException} from '../../../../core/exception/unknown.exception';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {IIdentifier} from '../../../../core/interface/i-identifier.interface';
@@ -13,24 +13,34 @@ import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {UpdateModel} from '../../../../core/model/update.model';
 import {UserRoleEnum} from '../../../../core/enum/user-role.enum';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
+import {LoginInputDto} from './dto/login-input.dto';
+import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
-  let usersService: MockProxy<IUsersService>;
+  let usersService: MockProxy<IUsersServiceInterface>;
+  let authService: MockProxy<IAuthServiceInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
-    usersService = mock<IUsersService>();
+    usersService = mock<IUsersServiceInterface>();
+    authService = mock<IAuthServiceInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersHttpController],
-      providers: [{
-        provide: I_USER_SERVICE.DEFAULT,
-        useValue: usersService,
-      }],
+      providers: [
+        {
+          provide: I_USER_SERVICE.DEFAULT,
+          useValue: usersService,
+        },
+        {
+          provide: I_AUTH_SERVICE.DEFAULT,
+          useValue: authService,
+        },
+      ],
     }).compile();
 
     controller = module.get<UsersHttpController>(UsersHttpController);
@@ -354,6 +364,37 @@ describe('UsersController', () => {
       expect(usersService.remove).toHaveBeenCalled();
       expect(usersService.remove).toBeCalledWith(userId);
       expect(error).toBeNull();
+    });
+  });
+
+  describe(`Login user`, () => {
+    let inputLoginDto: LoginInputDto;
+
+    beforeEach(() => {
+      inputLoginDto = new LoginInputDto();
+      inputLoginDto.username = 'my-user';
+      inputLoginDto.password = 'my password';
+    });
+
+    it(`Should error login user`, async () => {
+      authService.login.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.login(inputLoginDto);
+
+      expect(authService.login).toHaveBeenCalled();
+      expect(authService.login).toBeCalledWith(inputLoginDto.username, inputLoginDto.password);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully login user`, async () => {
+      authService.login.mockResolvedValue([null, 'token']);
+
+      const [error, result] = await controller.login(inputLoginDto);
+
+      expect(authService.login).toHaveBeenCalled();
+      expect(authService.login).toBeCalledWith(inputLoginDto.username, inputLoginDto.password);
+      expect(error).toBeNull();
+      expect(result).toEqual('token');
     });
   });
 });

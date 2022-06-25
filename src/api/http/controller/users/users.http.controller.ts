@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
-import {I_USER_SERVICE, IUsersService} from '../../../../core/interface/i-users-service.interface';
+import {I_USER_SERVICE, IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {
   ApiBadRequestResponse,
@@ -47,6 +47,8 @@ import {NotFoundExceptionDto} from '../../dto/not-found-exception.dto';
 import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-password-field-of-user.interceptor';
 import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {ExceptionEnum} from '../../../../core/enum/exception.enum';
+import {LoginInputDto} from './dto/login-input.dto';
+import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
 
 @Controller({
   path: 'users',
@@ -56,12 +58,13 @@ import {ExceptionEnum} from '../../../../core/enum/exception.enum';
 @ApiTags('users')
 @ApiExtraModels(DefaultSuccessDto, FindUserOutputDto, NotFoundExceptionDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
-@ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 export class UsersHttpController {
   constructor(
     @Inject(I_USER_SERVICE.DEFAULT)
-    private readonly _usersService: IUsersService,
+    private readonly _usersService: IUsersServiceInterface,
+    @Inject(I_AUTH_SERVICE.DEFAULT)
+    private readonly _authService: IAuthServiceInterface,
   ) {
   }
 
@@ -166,6 +169,7 @@ export class UsersHttpController {
       ],
     },
   })
+  @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
   findAll(@Query('filter') queryFilterDto: FindUserQueryDto) {
     return this._usersService.findAll(FindUserQueryDto.toModel(queryFilterDto));
   }
@@ -206,6 +210,7 @@ export class UsersHttpController {
       ],
     },
   })
+  @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
   async findOne(@Param('userId') userId: string) {
     return this._usersService.findOne(userId);
   }
@@ -231,6 +236,7 @@ export class UsersHttpController {
       ],
     },
   })
+  @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
   async updateAdmin(@Param('userId') userId: string, @Body() updateUserDto: UpdateUserAdminInputDto) {
     return this._usersService.update(UpdateUserAdminInputDto.toModel(userId, updateUserDto));
   }
@@ -256,6 +262,7 @@ export class UsersHttpController {
       ],
     },
   })
+  @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
   async updatePassword(@Param('userId') userId: string, @Body() updateUserDto: UpdatePasswordInputDto) {
     return this._usersService.update(UpdatePasswordInputDto.toModel(userId, updateUserDto));
   }
@@ -284,7 +291,38 @@ export class UsersHttpController {
       ],
     },
   })
+  @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
   async remove(@Param('userId') userId: string) {
     return this._usersService.remove(userId);
+  }
+
+  @Post('/login')
+  @HttpCode(200)
+  @ExcludeAuth()
+  @ApiOperation({description: 'Login user exist in system', operationId: 'Login user'})
+  @ApiOkResponse({
+    description: 'The user has been successfully login.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(DefaultSuccessDto)},
+        {
+          properties: {
+            data: {
+              type: 'string',
+              example: 'JWT token',
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized access when your login information not valid',
+    type: UnauthorizedExceptionDto,
+  })
+  async login(@Body() loginDto: LoginInputDto) {
+    const {username, password} = LoginInputDto.toObject(loginDto);
+
+    return this._authService.login(username, password);
   }
 }
