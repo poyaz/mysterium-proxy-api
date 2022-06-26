@@ -8,7 +8,7 @@ export enum I_USER_SERVICE {
 }
 
 export interface IUsersServiceInterface {
-  findAll(filter?: FilterModel): Promise<AsyncReturn<Error, Array<UsersModel>>>;
+  findAll(filter?: FilterModel<UsersModel>): Promise<AsyncReturn<Error, Array<UsersModel>>>;
 
   findOne(id: string): Promise<AsyncReturn<Error, UsersModel>>;
 

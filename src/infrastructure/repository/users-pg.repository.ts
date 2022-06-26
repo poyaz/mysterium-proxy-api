@@ -44,7 +44,19 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<UsersModel>>> {
     const findOptions: FindManyOptions = {};
     if (filter) {
-      findOptions.where = (<FilterModel><any>filter).map((v) => ({[v.name]: v.value}));
+      const filterModel = <FilterModel<UsersModel>><any>filter;
+
+      findOptions.where = [];
+
+      const getUsername = filterModel.getCondition('username');
+      if (getUsername) {
+        findOptions.where.push(getUsername);
+      }
+
+      const getIsEnable = filterModel.getCondition('isEnable');
+      if (getIsEnable) {
+        findOptions.where.push(getIsEnable);
+      }
     }
 
     try {

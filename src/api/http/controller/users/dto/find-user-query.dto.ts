@@ -8,6 +8,7 @@ import {
 import {ApiProperty} from '@nestjs/swagger';
 import {instanceToPlain, Transform} from 'class-transformer';
 import {FilterModel} from '../../../../../core/model/filter.model';
+import {UsersModel} from '../../../../../core/model/users.model';
 
 export class FindUserQueryDto {
   @ApiProperty({
@@ -22,7 +23,7 @@ export class FindUserQueryDto {
   @IsString()
   @MaxLength(20)
   @Matches(/^[a-zA-Z][a-zA-Z0-9_.-]+$/)
-  username: string;
+  username?: string;
 
   @ApiProperty({
     description: 'The status of user is enable or not',
@@ -33,15 +34,18 @@ export class FindUserQueryDto {
   @IsOptional()
   @IsBoolean()
   @Transform(({value}) => value === 'true' ? true : value === 'false' ? false : value)
-  isEnable: boolean;
+  isEnable?: boolean;
 
-  static toModel(dto: FindUserQueryDto): FilterModel {
+  static toModel(dto: FindUserQueryDto): FilterModel<UsersModel> {
     const data = instanceToPlain(dto);
 
-    const filterModel = new FilterModel();
-    Object.keys(data).map((v) => {
-      filterModel.push({name: v, condition: 'eq', value: data[v]});
-    });
+    const filterModel = new FilterModel<UsersModel>();
+    if (typeof dto.username !== 'undefined') {
+      filterModel.addCondition({$opr: 'eq', username: data.username});
+    }
+    if (typeof dto.isEnable !== 'undefined') {
+      filterModel.addCondition({$opr: 'eq', isEnable: data.isEnable});
+    }
 
     return filterModel;
   }

@@ -7,7 +7,7 @@ import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {IIdentifier} from '../../../../core/interface/i-identifier.interface';
 import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {UsersModel} from '../../../../core/model/users.model';
-import {FilterInterface, FilterModel} from '../../../../core/model/filter.model';
+import {FilterModel} from '../../../../core/model/filter.model';
 import {NotFoundUserException} from '../../../../core/exception/not-found-user.exception';
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {UpdateModel} from '../../../../core/model/update.model';
@@ -143,8 +143,8 @@ describe('UsersController', () => {
   describe(`Find all users`, () => {
     let inputFindUserQueryDto;
     let inputEmptyFindUserQueryDto;
-    let matchFindUserFilter;
-    let matchEmptyFindUserFilter;
+    let matchFindUserFilter: FilterModel<UsersModel>;
+    let matchEmptyFindUserFilter: FilterModel<UsersModel>;
     let outputUserModel;
 
     beforeEach(() => {
@@ -153,14 +153,10 @@ describe('UsersController', () => {
 
       inputEmptyFindUserQueryDto = new FindUserQueryDto();
 
-      matchFindUserFilter = new FilterModel();
-      matchFindUserFilter.push({
-        name: 'username',
-        condition: 'eq',
-        value: 'my-user',
-      } as FilterInterface);
+      matchFindUserFilter = new FilterModel<UsersModel>();
+      matchFindUserFilter.addCondition({$opr: 'eq', username: 'my-user'});
 
-      matchEmptyFindUserFilter = new FilterModel();
+      matchEmptyFindUserFilter = new FilterModel<UsersModel>();
 
       outputUserModel = new UsersModel({
         id: identifierMock.generateId(),

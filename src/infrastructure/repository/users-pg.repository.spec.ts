@@ -128,8 +128,8 @@ describe('UsersPgRepositoryService', () => {
 
   describe(`Get all users`, () => {
     let outputUsersEntity: UsersEntity;
-    let inputUsernameFilterModel: FilterModel;
-    let inputFilterModel: FilterModel;
+    let inputUsernameFilterModel: FilterModel<UsersModel>;
+    let inputFilterModel: FilterModel<UsersModel>;
 
     beforeEach(() => {
       outputUsersEntity = new UsersEntity();
@@ -141,12 +141,12 @@ describe('UsersPgRepositoryService', () => {
       outputUsersEntity.insertDate = defaultDate;
       outputUsersEntity.updateDate = null;
 
-      inputUsernameFilterModel = new FilterModel();
-      inputUsernameFilterModel.push({name: 'username', condition: 'eq', value: 'my-user'});
+      inputUsernameFilterModel = new FilterModel<UsersModel>();
+      inputUsernameFilterModel.addCondition({$opr: 'eq', username: 'my-user'});
 
-      inputFilterModel = new FilterModel();
-      inputFilterModel.push({name: 'username', condition: 'eq', value: 'my-user'});
-      inputFilterModel.push({name: 'isEnable', condition: 'eq', value: true});
+      inputFilterModel = new FilterModel<UsersModel>();
+      inputFilterModel.addCondition({$opr: 'eq', username: 'my-user'});
+      inputFilterModel.addCondition({$opr: 'eq', isEnable: true});
     });
 
     it(`Should error get all users (without filter)`, async () => {
@@ -165,11 +165,11 @@ describe('UsersPgRepositoryService', () => {
       const executeError: never = new Error('Error in create on database') as never;
       userDb.find.mockRejectedValue(executeError);
 
-      const [error] = await repository.getAll<FilterModel>(inputUsernameFilterModel);
+      const [error] = await repository.getAll(inputUsernameFilterModel);
 
       expect(userDb.find).toHaveBeenCalled();
       expect(userDb.find).toBeCalledWith(expect.objectContaining({
-        where: [{username: inputUsernameFilterModel[0].value}],
+        where: [{username: 'my-user'}],
       }));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
@@ -213,7 +213,7 @@ describe('UsersPgRepositoryService', () => {
 
       expect(userDb.find).toHaveBeenCalled();
       expect(userDb.find).toBeCalledWith(expect.objectContaining({
-        where: [{username: inputFilterModel[0].value}, {isEnable: inputFilterModel[1].value}],
+        where: [{username: 'my-user'}, {isEnable: true}],
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);
