@@ -54,7 +54,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
           }, statusCode);
         }
 
-        if (typeof result !== undefined && result !== undefined && result !== null) {
+        if (typeof result !== undefined && result !== undefined && result !== null && ['boolean', 'string', 'number'].indexOf(typeof result) === -1) {
           if (Array.isArray(result)) {
             result.map((v) => {
               v.insertDate = this._convertDateToString(v.insertDate);
