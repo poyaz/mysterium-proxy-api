@@ -32,5 +32,9 @@ export class FilterModel<T> {
 
     return find[0];
   }
+
+  getLength(): number {
+    return this._conditions.length;
+  }
 }
 

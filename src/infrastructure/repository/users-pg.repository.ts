@@ -45,17 +45,18 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     const findOptions: FindManyOptions = {};
     if (filter) {
       const filterModel = <FilterModel<UsersModel>><any>filter;
+      if (filterModel.getLength() > 0) {
+        findOptions.where = [];
 
-      findOptions.where = [];
+        const getUsername = filterModel.getCondition('username');
+        if (getUsername) {
+          findOptions.where.push(getUsername);
+        }
 
-      const getUsername = filterModel.getCondition('username');
-      if (getUsername) {
-        findOptions.where.push(getUsername);
-      }
-
-      const getIsEnable = filterModel.getCondition('isEnable');
-      if (getIsEnable) {
-        findOptions.where.push(getIsEnable);
+        const getIsEnable = filterModel.getCondition('isEnable');
+        if (getIsEnable) {
+          findOptions.where.push(getIsEnable);
+        }
       }
     }
 
@@ -65,6 +66,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
 
       return [null, result];
     } catch (error) {
+      console.log(error);
       return [new RepositoryException(error)];
     }
   }
