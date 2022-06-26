@@ -6,7 +6,7 @@ import {UsersService} from './core/service/users.service';
 import {I_USER_SERVICE} from './core/interface/i-users-service.interface';
 import {ConfigModule, ConfigService} from '@nestjs/config';
 import {APP_GUARD, APP_INTERCEPTOR, Reflector} from '@nestjs/core';
-import {AuthGuard} from './api/http/guard/auth.guard';
+import {JwtAuthGuard} from './api/http/guard/jwt-auth.guard';
 import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
 import {EnvironmentEnv} from './loader/configure/enum/environment.env';
 import {OutputTransferInterceptor} from './api/http/interceptor/output.transfer.interceptor';
@@ -21,8 +21,9 @@ import {PgConfigService} from './loader/database/pg-config.service';
 import {UsersPgRepository} from './infrastructure/repository/users-pg.repository';
 import {UsersEntity} from './infrastructure/entity/users.entity';
 import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
-import {JwtModule, JwtService} from '@nestjs/jwt';
+import {JwtModule} from '@nestjs/jwt';
 import {AuthService} from './core/service/auth.service';
+import {JwtStrategy} from './api/http/auth/jwt.strategy';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import {AuthService} from './core/service/auth.service';
   controllers: [...controllersExport],
   providers: [
     ConfigService,
+    JwtStrategy,
     {
       provide: APP_INTERCEPTOR,
       useClass: OutputTransferInterceptor,
@@ -55,9 +57,10 @@ import {AuthService} from './core/service/auth.service';
       useFactory: (configService: ConfigService, reflector: Reflector) => {
         const NODE_ENV = configService.get<string>('NODE_ENV', '');
 
-        return NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP
-          ? new FakeAuthGuard(reflector)
-          : new AuthGuard(reflector);
+        // return NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP
+        //   ? new FakeAuthGuard(reflector)
+        //   : new JwtAuthGuard(reflector);
+        return new JwtAuthGuard(reflector);
       },
     },
     {
