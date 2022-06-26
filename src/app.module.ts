@@ -20,6 +20,9 @@ import {controllersExport} from './loader/http/controller.export';
 import {PgConfigService} from './loader/database/pg-config.service';
 import {UsersPgRepository} from './infrastructure/repository/users-pg.repository';
 import {UsersEntity} from './infrastructure/entity/users.entity';
+import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
+import {JwtService} from '@nestjs/jwt';
+import {AuthService} from './core/service/auth.service';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import {UsersEntity} from './infrastructure/entity/users.entity';
   controllers: [...controllersExport],
   providers: [
     ConfigService,
+    JwtService,
     {
       provide: APP_INTERCEPTOR,
       useClass: OutputTransferInterceptor,
@@ -63,6 +67,10 @@ import {UsersEntity} from './infrastructure/entity/users.entity';
       useClass: UsersService,
     },
     {
+      provide: I_AUTH_SERVICE.DEFAULT,
+      useClass: AuthService,
+    },
+    {
       provide: I_DATE_TIME.DEFAULT,
       useClass: DateTime,
     },
@@ -70,6 +78,7 @@ import {UsersEntity} from './infrastructure/entity/users.entity';
       provide: InterfaceRepositoryEnum.USER_PG_REPOSITORY,
       useClass: UsersPgRepository,
     },
+    AuthService,
   ],
 })
 export class AppModule {
