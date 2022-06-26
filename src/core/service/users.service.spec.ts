@@ -96,12 +96,12 @@ describe('UsersService', () => {
   });
 
   describe(`Find all users`, () => {
-    let inputFilterModel: FilterModel;
+    let inputFilterModel: FilterModel<UsersModel>;
     let outputFindUserModel: UsersModel;
 
     beforeEach(() => {
-      inputFilterModel = new FilterModel();
-      inputFilterModel.push({name: 'username', condition: 'eq', value: 'my-username'});
+      inputFilterModel = new FilterModel<UsersModel>();
+      inputFilterModel.addCondition({$opr: 'eq', username: 'my-username'});
 
       outputFindUserModel = new UsersModel({
         id: identifierMock.generateId(),
