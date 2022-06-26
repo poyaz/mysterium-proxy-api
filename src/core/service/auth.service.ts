@@ -6,18 +6,13 @@ import {AsyncReturn} from '../utility';
 import {FilterModel} from '../model/filter.model';
 import {UsersModel} from '../model/users.model';
 import {AuthenticateException} from '../exception/authenticate.exception';
-import {ConfigService} from '@nestjs/config';
 
 @Injectable()
 export class AuthService implements IAuthServiceInterface {
-  private readonly _secret: string;
-
   constructor(
     @Inject(I_USER_SERVICE.DEFAULT)
     private readonly _usersService: IUsersServiceInterface,
-    private readonly _jwtService: JwtService,
-    private readonly _configService: ConfigService) {
-    this._secret = this._configService.get('JWT_SECRET_KEY');
+    private readonly _jwtService: JwtService) {
   }
 
   async login(username: string, password: string): Promise<AsyncReturn<Error, string>> {
@@ -34,11 +29,11 @@ export class AuthService implements IAuthServiceInterface {
       return [new AuthenticateException()];
     }
 
-    const obj = {};
-    obj['userId'] = usersList[0].id;
-    obj['role'] = usersList[0].role;
+    const payload = {};
+    payload['userId'] = usersList[0].id;
+    payload['role'] = usersList[0].role;
 
-    const token = this._jwtService.sign(obj, {secret: this._secret});
+    const token = this._jwtService.sign(payload);
 
     return [null, token];
   }

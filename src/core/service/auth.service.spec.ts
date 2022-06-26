@@ -9,7 +9,6 @@ import {UsersModel} from '../model/users.model';
 import {AuthenticateException} from '../exception/authenticate.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
 import {IIdentifier} from '../interface/i-identifier.interface';
-import {ConfigService} from '@nestjs/config';
 import {JwtSignOptions} from '@nestjs/jwt/dist/interfaces';
 
 describe('AuthService', () => {
@@ -17,16 +16,11 @@ describe('AuthService', () => {
   let service: AuthService;
   let usersService: MockProxy<IUsersServiceInterface>;
   let jwtService: MockProxy<JwtService>;
-  let configService: MockProxy<ConfigService>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
-    secret = 'secret';
-
     usersService = mock<IUsersServiceInterface>();
     jwtService = mock<JwtService>();
-    configService = mock<ConfigService>();
-    configService.get.mockReturnValue(secret);
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
@@ -40,10 +34,6 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: jwtService,
-        },
-        {
-          provide: ConfigService,
-          useValue: configService,
         },
         AuthService,
       ],
@@ -131,7 +121,7 @@ describe('AuthService', () => {
       expect(jwtService.sign).toBeCalledWith(expect.objectContaining({
         userId: outputValidPasswordUserModel.id,
         role: outputValidPasswordUserModel.role,
-      }), <JwtSignOptions>{secret});
+      }));
       expect(error).toBeNull();
       expect(result).toEqual('token');
     });

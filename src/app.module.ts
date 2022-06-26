@@ -21,7 +21,7 @@ import {PgConfigService} from './loader/database/pg-config.service';
 import {UsersPgRepository} from './infrastructure/repository/users-pg.repository';
 import {UsersEntity} from './infrastructure/entity/users.entity';
 import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
-import {JwtService} from '@nestjs/jwt';
+import {JwtModule, JwtService} from '@nestjs/jwt';
 import {AuthService} from './core/service/auth.service';
 
 @Module({
@@ -34,11 +34,17 @@ import {AuthService} from './core/service/auth.service';
       useClass: PgConfigService,
     }),
     TypeOrmModule.forFeature([UsersEntity]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET_KEY'),
+      }),
+    }),
   ],
   controllers: [...controllersExport],
   providers: [
     ConfigService,
-    JwtService,
     {
       provide: APP_INTERCEPTOR,
       useClass: OutputTransferInterceptor,
