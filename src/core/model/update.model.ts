@@ -1,4 +1,4 @@
-import {UpdateInstanceType} from '../utility';
+export type UpdateInstanceType<T> = Partial<Omit<Pick<T, { [K in keyof T]: T[K] extends Function ? never : K }[keyof T]>, 'id' | 'insertDate'>>;
 
 export class UpdateModel<T> {
   id: string;
