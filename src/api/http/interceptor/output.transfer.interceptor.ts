@@ -37,6 +37,10 @@ export class OutputTransferInterceptor implements NestInterceptor {
               statusCode = HttpStatus.NOT_FOUND;
               error = 'Not Found';
               break;
+            case ExceptionEnum.AUTHENTICATE_ERROR:
+              statusCode = HttpStatus.UNAUTHORIZED;
+              error = 'Unauthorized';
+              break;
             default:
               statusCode = HttpStatus.BAD_REQUEST;
               error = 'Bad Request';
