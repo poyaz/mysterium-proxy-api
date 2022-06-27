@@ -32,7 +32,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
 
     try {
-      const row = await this._db.save(entity);
+      const row = await this._db.save(entity, {transaction: false});
       const result = UsersPgRepository._fillModel(row);
 
       return [null, result];
@@ -92,7 +92,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
         return [null];
       }
 
-      await row.softRemove();
+      await row.softRemove({transaction: false});
 
       return [null];
     } catch (error) {
@@ -117,7 +117,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
         row.isEnable = updateUserModel.isEnable;
       }
 
-      await row.save();
+      await row.save({transaction: false});
 
       return [null];
     } catch (error) {
