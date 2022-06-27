@@ -17,6 +17,8 @@ export class PgConfigService implements TypeOrmOptionsFactory {
       name: 'pg',
       type: 'postgres',
 
+      applicationName: DATABASE_OPTIONS.applicationName,
+
       host: DATABASE_OPTIONS.host,
       port: DATABASE_OPTIONS.port,
       database: DATABASE_OPTIONS.db,
