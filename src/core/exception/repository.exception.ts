@@ -1,5 +1,4 @@
 import {ExceptionEnum} from '../enum/exception.enum';
-import {UsersEntity} from '../../infrastructure/entity/users.entity';
 import {ExistException} from './exist.exception';
 
 export class RepositoryException extends Error {
