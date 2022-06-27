@@ -32,7 +32,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
 
     try {
-      const row = await this._db.create(entity);
+      const row = await this._db.save(entity);
       const result = UsersPgRepository._fillModel(row);
 
       return [null, result];

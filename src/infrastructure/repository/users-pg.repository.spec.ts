@@ -9,7 +9,6 @@ import {UsersModel} from '../../core/model/users.model';
 import {UserRoleEnum} from '../../core/enum/user-role.enum';
 import {RepositoryException} from '../../core/exception/repository.exception';
 import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
-import {User} from '../../../dist/src/users/entities/user.entity';
 import {FilterModel} from '../../core/model/filter.model';
 import {UpdateModel} from '../../core/model/update.model';
 
@@ -70,14 +69,14 @@ describe('UsersPgRepositoryService', () => {
 
     it(`Should error create user`, async () => {
       const executeError: never = new Error('Error in create on database') as never;
-      userDb.create.mockRejectedValue(executeError);
+      userDb.save.mockRejectedValue(executeError);
 
       const [error] = await repository.add(inputUsersModel);
 
       expect(identifierMock.generateId).toHaveBeenCalled();
       expect(dateTimeMock.gregorianCurrentDateWithTimezone).toHaveBeenCalled();
-      expect(userDb.create).toHaveBeenCalled();
-      expect(userDb.create).toBeCalledWith({
+      expect(userDb.save).toHaveBeenCalled();
+      expect(userDb.save).toBeCalledWith({
         id: identifierMock.generateId(),
         username: inputUsersModel.username,
         password: inputUsersModel.password,
@@ -98,14 +97,14 @@ describe('UsersPgRepositoryService', () => {
       outputUsersEntity.isEnable = inputUsersModel.isEnable;
       outputUsersEntity.insertDate = defaultDate;
       outputUsersEntity.updateDate = null;
-      userDb.create.mockResolvedValue(outputUsersEntity as never);
+      userDb.save.mockResolvedValue(outputUsersEntity as never);
 
       const [error, result] = await repository.add(inputUsersModel);
 
       expect(identifierMock.generateId).toHaveBeenCalled();
       expect(dateTimeMock.gregorianCurrentDateWithTimezone).toHaveBeenCalled();
-      expect(userDb.create).toHaveBeenCalled();
-      expect(userDb.create).toBeCalledWith({
+      expect(userDb.save).toHaveBeenCalled();
+      expect(userDb.save).toBeCalledWith({
         id: identifierMock.generateId(),
         username: inputUsersModel.username,
         password: inputUsersModel.password,
