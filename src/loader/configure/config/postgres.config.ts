@@ -11,6 +11,7 @@ export default registerAs('postgres', (): DatabaseConfigInterface => {
     password: process.env.DB_PG_PASSWORD,
     enableTls: convertStringToBoolean(process.env.DB_PG_USE_TLS),
     rejectUnauthorized: convertStringToBoolean(process.env.DB_PG_TLS_REJECT_UNAUTHORIZED),
+    applicationName: process.env.DB_APPLICATION_NAME || 'proxy-typeorm',
   };
   if (process.env.DB_PG_MAX) {
     obj.max = Number(process.env.DB_PG_MAX);

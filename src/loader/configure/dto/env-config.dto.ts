@@ -68,6 +68,10 @@ export class EnvConfigDto {
   @Transform(param => param.value.toLowerCase())
   DB_PG_TLS_REJECT_UNAUTHORIZED?: BooleanEnv;
 
+  @IsOptional()
+  @IsString()
+  DB_APPLICATION_NAME?: string;
+
   @IsString()
   JWT_SECRET_KEY: string;
 }

@@ -8,4 +8,5 @@ export interface DatabaseConfigInterface {
   idleTimeout?: number,
   enableTls?: boolean,
   rejectUnauthorized?: boolean,
+  applicationName: string,
 }
