@@ -34,7 +34,7 @@ export class SwaggerCommand implements CommandRunner {
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConf);
 
-    const type = options?.output !== undefined && options?.output !== '' ? options.type : 'json';
+    const type = options?.type !== undefined && options?.type !== '' ? options.type : 'json';
 
     let data;
     let outputFile;
