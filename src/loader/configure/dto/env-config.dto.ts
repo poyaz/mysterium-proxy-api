@@ -52,6 +52,10 @@ export class EnvConfigDto {
 
   @IsOptional()
   @IsString()
+  DB_PG_MIN?: number;
+
+  @IsOptional()
+  @IsString()
   DB_PG_MAX?: number;
 
   @IsOptional()
@@ -70,7 +74,7 @@ export class EnvConfigDto {
 
   @IsOptional()
   @IsString()
-  DB_APPLICATION_NAME?: string;
+  DB_PG_APPLICATION_NAME?: string;
 
   @IsString()
   JWT_SECRET_KEY: string;

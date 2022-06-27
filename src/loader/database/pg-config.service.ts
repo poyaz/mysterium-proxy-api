@@ -3,6 +3,7 @@ import {Inject, Injectable} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
 import {DatabaseConfigInterface} from '../configure/interface/database-config.interface';
 import {EnvironmentEnv} from '../configure/enum/environment.env';
+import {PostgresConnectionOptions} from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 @Injectable()
 export class PgConfigService implements TypeOrmOptionsFactory {
@@ -13,7 +14,7 @@ export class PgConfigService implements TypeOrmOptionsFactory {
     const NODE_ENV = this._configService.get<string>('NODE_ENV', '');
     const DATABASE_OPTIONS = this._configService.get<DatabaseConfigInterface>('postgres');
 
-    return {
+    return <PostgresConnectionOptions>{
       name: 'pg',
       type: 'postgres',
 
@@ -24,8 +25,12 @@ export class PgConfigService implements TypeOrmOptionsFactory {
       database: DATABASE_OPTIONS.db,
       username: DATABASE_OPTIONS.username,
       ...(DATABASE_OPTIONS.password && DATABASE_OPTIONS.password !== '' && {password: DATABASE_OPTIONS.password}),
-
       ...(DATABASE_OPTIONS.enableTls && {ssl: {rejectUnauthorized: DATABASE_OPTIONS.rejectUnauthorized}}),
+      extra: {
+        ...(DATABASE_OPTIONS.min && DATABASE_OPTIONS.min > 0 && {max: DATABASE_OPTIONS.min}),
+        ...(DATABASE_OPTIONS.max && DATABASE_OPTIONS.max > 0 && {max: DATABASE_OPTIONS.max}),
+        ...(DATABASE_OPTIONS.idleTimeout && DATABASE_OPTIONS.idleTimeout > 0 && {idleTimeoutMillis: DATABASE_OPTIONS.idleTimeout}),
+      },
 
       entities: [`dist/src/infrastructure/entity/*.entity{.ts,.js}`],
       synchronize: false,

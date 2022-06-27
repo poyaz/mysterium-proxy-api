@@ -4,6 +4,7 @@ export interface DatabaseConfigInterface {
   db: string,
   username: string,
   password: string,
+  min?: number,
   max?: number,
   idleTimeout?: number,
   enableTls?: boolean,
