@@ -30,7 +30,6 @@ describe('UsersPgRepositoryService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        UsersPgRepository,
         {
           provide: I_IDENTIFIER.DEFAULT,
           useValue: identifierMock,

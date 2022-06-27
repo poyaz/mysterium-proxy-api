@@ -24,7 +24,6 @@ describe('UsersService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        UsersService,
         {
           provide: InterfaceRepositoryEnum.USER_PG_REPOSITORY,
           useValue: usersRepository,
