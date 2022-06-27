@@ -9,10 +9,8 @@ import {UsersModel} from '../model/users.model';
 import {AuthenticateException} from '../exception/authenticate.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
 import {IIdentifier} from '../interface/i-identifier.interface';
-import {JwtSignOptions} from '@nestjs/jwt/dist/interfaces';
 
 describe('AuthService', () => {
-  let secret: string;
   let service: AuthService;
   let usersService: MockProxy<IUsersServiceInterface>;
   let jwtService: MockProxy<JwtService>;
@@ -35,7 +33,12 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: jwtService,
         },
-        AuthService,
+        {
+          provide: AuthService,
+          inject: [I_USER_SERVICE.DEFAULT, JwtService],
+          useFactory: (usersService: IUsersServiceInterface, jwtService: JwtService) =>
+            new AuthService(usersService, jwtService),
+        },
       ],
     }).compile();
 

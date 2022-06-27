@@ -11,7 +11,6 @@ import {NotFoundUserException} from '../exception/not-found-user.exception';
 @Injectable()
 export class UsersService implements IUsersServiceInterface {
   constructor(
-    @Inject(InterfaceRepositoryEnum.USER_PG_REPOSITORY)
     private readonly _userRepository: IGenericRepositoryInterface<UsersModel>,
   ) {
   }

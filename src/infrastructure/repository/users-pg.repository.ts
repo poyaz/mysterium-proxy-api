@@ -1,13 +1,12 @@
-import {Inject, Injectable} from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {IGenericRepositoryInterface} from '../../core/interface/i-generic-repository.interface';
 import {UsersModel} from '../../core/model/users.model';
 import {AsyncReturn} from '../../core/utility';
 import {UsersEntity} from '../entity/users.entity';
-import {InjectRepository} from '@nestjs/typeorm';
 import {Repository} from 'typeorm';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {I_IDENTIFIER, IIdentifier} from '../../core/interface/i-identifier.interface';
-import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
+import {IIdentifier} from '../../core/interface/i-identifier.interface';
+import {IDateTime} from '../../core/interface/i-date-time.interface';
 import {RepositoryException} from '../../core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {FilterModel} from '../../core/model/filter.model';
@@ -16,11 +15,8 @@ import {UpdateModel} from '../../core/model/update.model';
 @Injectable()
 export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel> {
   constructor(
-    @InjectRepository(UsersEntity)
     private readonly _db: Repository<UsersEntity>,
-    @Inject(I_IDENTIFIER.DEFAULT)
     private readonly _identifier: IIdentifier,
-    @Inject(I_DATE_TIME.DEFAULT)
     private readonly _date: IDateTime,
   ) {
   }

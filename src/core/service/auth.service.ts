@@ -10,7 +10,6 @@ import {AuthenticateException} from '../exception/authenticate.exception';
 @Injectable()
 export class AuthService implements IAuthServiceInterface {
   constructor(
-    @Inject(I_USER_SERVICE.DEFAULT)
     private readonly _usersService: IUsersServiceInterface,
     private readonly _jwtService: JwtService) {
   }

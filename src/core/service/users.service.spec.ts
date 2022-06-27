@@ -29,6 +29,12 @@ describe('UsersService', () => {
           provide: InterfaceRepositoryEnum.USER_PG_REPOSITORY,
           useValue: usersRepository,
         },
+        {
+          provide: UsersService,
+          inject: [InterfaceRepositoryEnum.USER_PG_REPOSITORY],
+          useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
+            new UsersService(usersRepository),
+        },
       ],
     }).compile();
 

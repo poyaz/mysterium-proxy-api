@@ -43,6 +43,12 @@ describe('UsersPgRepositoryService', () => {
           provide: getRepositoryToken(UsersEntity),
           useValue: userDb,
         },
+        {
+          provide: UsersPgRepository,
+          inject: [getRepositoryToken(UsersEntity), I_IDENTIFIER.DEFAULT, I_DATE_TIME.DEFAULT],
+          useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
+            new UsersPgRepository(db, identifier, dateTime),
+        },
       ],
     }).compile();
 
@@ -83,7 +89,7 @@ describe('UsersPgRepositoryService', () => {
         role: inputUsersModel.role,
         isEnable: inputUsersModel.isEnable,
         insertDate: defaultDate,
-      });
+      }, {transaction: false});
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
     });
@@ -111,7 +117,7 @@ describe('UsersPgRepositoryService', () => {
         role: inputUsersModel.role,
         isEnable: inputUsersModel.isEnable,
         insertDate: defaultDate,
-      });
+      }, {transaction: false});
       expect(error).toBeNull();
       expect(result).toMatchObject<UsersModel>({
         id: identifierMock.generateId(),
