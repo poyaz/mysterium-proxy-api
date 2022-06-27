@@ -1,12 +1,12 @@
-import {Inject, Injectable} from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {IUsersServiceInterface} from '../interface/i-users-service.interface';
 import {UsersModel} from '../model/users.model';
 import {UpdateModel} from '../model/update.model';
 import {AsyncReturn} from '../utility';
 import {FilterModel} from '../model/filter.model';
 import {IGenericRepositoryInterface} from '../interface/i-generic-repository.interface';
-import {InterfaceRepositoryEnum} from '../enum/interface-repository.enum';
 import {NotFoundUserException} from '../exception/not-found-user.exception';
+import {UserRoleEnum} from '../enum/user-role.enum';
 
 @Injectable()
 export class UsersService implements IUsersServiceInterface {
@@ -16,6 +16,13 @@ export class UsersService implements IUsersServiceInterface {
   }
 
   async create(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {
+    if (!(<keyof UsersModel>'role' in model)) {
+      model.role = UserRoleEnum.USER;
+    }
+    if (!(<keyof UsersModel>'isEnable' in model)) {
+      model.isEnable = true;
+    }
+
     return this._userRepository.add(model);
   }
 

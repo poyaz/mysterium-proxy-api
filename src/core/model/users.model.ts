@@ -5,8 +5,8 @@ export class UsersModel {
   id: string;
   username: string;
   password: string;
-  role?: UserRoleEnum = UserRoleEnum.USER;
-  isEnable?: boolean = true;
+  role?: UserRoleEnum;
+  isEnable?: boolean;
   insertDate: Date;
   updateDate?: Date;
 

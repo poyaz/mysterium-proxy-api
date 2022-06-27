@@ -52,6 +52,7 @@ describe('UsersService', () => {
 
   describe(`Create user`, () => {
     let inputCreateUserModel: UsersModel;
+    let inputCreateUserOptionalModel: UsersModel;
     let outputCreateUserModel: UsersModel;
 
     beforeEach(() => {
@@ -61,6 +62,13 @@ describe('UsersService', () => {
         password: 'my-password',
         role: UserRoleEnum.USER,
         isEnable: true,
+        insertDate: new Date(),
+      });
+
+      inputCreateUserOptionalModel = new UsersModel({
+        id: '',
+        username: 'my-user',
+        password: 'my-password',
         insertDate: new Date(),
       });
 
@@ -89,6 +97,31 @@ describe('UsersService', () => {
       const [error, result] = await service.create(inputCreateUserModel);
 
       expect(usersRepository.add).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toMatchObject<UsersModel>({
+        id: outputCreateUserModel.id,
+        username: outputCreateUserModel.username,
+        password: outputCreateUserModel.password,
+        isEnable: outputCreateUserModel.isEnable,
+        role: outputCreateUserModel.role,
+        insertDate: outputCreateUserModel.insertDate,
+      });
+    });
+
+    it(`Should successfully create user with optional`, async () => {
+      usersRepository.add.mockResolvedValue([null, outputCreateUserModel]);
+
+      const [error, result] = await service.create(inputCreateUserOptionalModel);
+
+      expect(usersRepository.add).toHaveBeenCalled();
+      expect(usersRepository.add).toBeCalledWith(expect.objectContaining<UsersModel>({
+        id: inputCreateUserOptionalModel.id,
+        username: inputCreateUserOptionalModel.username,
+        password: inputCreateUserOptionalModel.password,
+        isEnable: true,
+        role: UserRoleEnum.USER,
+        insertDate: inputCreateUserOptionalModel.insertDate,
+      }));
       expect(error).toBeNull();
       expect(result).toMatchObject<UsersModel>({
         id: outputCreateUserModel.id,
