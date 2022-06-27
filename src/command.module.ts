@@ -6,6 +6,7 @@ import {I_USER_SERVICE} from './core/interface/i-users-service.interface';
 import {controllersExport} from './loader/http/controller.export';
 import {MigrationRunCommand, MigrationUndoCommand} from './api/command/migration/migration.command';
 import {PgConfigService} from './loader/database/pg-config.service';
+import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
 
 @Module({
   imports: [ConfigureModule, PgModule],
@@ -29,6 +30,10 @@ import {PgConfigService} from './loader/database/pg-config.service';
 
     {
       provide: I_USER_SERVICE.DEFAULT,
+      useFactory: () => () => ({}),
+    },
+    {
+      provide: I_AUTH_SERVICE.DEFAULT,
       useFactory: () => () => ({}),
     },
   ],
