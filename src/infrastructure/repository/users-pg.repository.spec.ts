@@ -54,6 +54,11 @@ describe('UsersPgRepositoryService', () => {
     repository = module.get<UsersPgRepository>(UsersPgRepository);
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetAllMocks();
+  });
+
   it(`should be defined`, () => {
     expect(repository).toBeDefined();
   });
