@@ -66,7 +66,6 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
 
       return [null, result];
     } catch (error) {
-      console.log(error);
       return [new RepositoryException(error)];
     }
   }
