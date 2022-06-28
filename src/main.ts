@@ -1,10 +1,9 @@
 import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import {ValidationPipe, VersioningType} from '@nestjs/common';
-import {DocumentBuilder, SwaggerDocumentOptions, SwaggerModule} from '@nestjs/swagger';
+import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {ServerConfigInterface} from './loader/configure/interface/server-config.interface';
 import {ConfigService} from '@nestjs/config';
-import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
 import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 async function bootstrap() {
