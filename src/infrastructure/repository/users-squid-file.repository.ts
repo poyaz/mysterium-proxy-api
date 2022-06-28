@@ -63,7 +63,13 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
   }
 
   async update(username: string, password: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+    try {
+      await this._executeFile(username, password);
+
+      return [null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   async verify(username: string, password: string): Promise<AsyncReturn<Error, boolean>> {

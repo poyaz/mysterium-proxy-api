@@ -296,4 +296,87 @@ describe('UsersSquidFileRepository', () => {
       expect(error).toBeNull();
     });
   });
+
+  describe(`Update user`, () => {
+    let inputUsername;
+    let inputPassword;
+
+    beforeEach(() => {
+      inputUsername = 'my-user';
+      inputPassword = 'my password';
+    });
+
+    it(`Should error update user when run add username`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      const spawnError = new Error('Spawn error');
+      (<jest.Mock>spawn).mockImplementation(() => {
+        throw spawnError;
+      });
+
+      const [error] = await repository.update(inputUsername, inputPassword);
+
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
+    });
+
+    it(`Should error update user when execute add password`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      const spawnErrorMsg = 'Spawn stderr error';
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(spawnErrorMsg);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.update(inputUsername, inputPassword);
+
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
+    });
+
+    it(`Should successfully update user`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.update(inputUsername, inputPassword);
+
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+    });
+
+    it(`Should successfully update user with updating message`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write('Updating user successfully');
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.update(inputUsername, inputPassword);
+
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+    });
+  });
 });
