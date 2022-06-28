@@ -104,7 +104,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
     });
@@ -124,7 +124,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
     });
@@ -142,7 +142,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
     });
 
@@ -160,7 +160,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
     });
   });
@@ -303,7 +303,7 @@ describe('UsersSquidFileRepository', () => {
       const [error] = await repository.update(inputUsername, inputPassword);
 
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
     });
@@ -322,7 +322,7 @@ describe('UsersSquidFileRepository', () => {
       const [error] = await repository.update(inputUsername, inputPassword);
 
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
     });
@@ -339,7 +339,7 @@ describe('UsersSquidFileRepository', () => {
       const [error] = await repository.update(inputUsername, inputPassword);
 
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
     });
 
@@ -356,7 +356,7 @@ describe('UsersSquidFileRepository', () => {
       const [error] = await repository.update(inputUsername, inputPassword);
 
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-B', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
     });
   });
@@ -404,7 +404,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-b', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-B', '-b', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
     });
@@ -424,7 +424,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-b', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-B', '-b', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
     });
@@ -444,7 +444,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-b', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-B', '-b', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
       expect(result).toEqual(false);
     });
@@ -463,7 +463,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-b', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-B', '-b', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
       expect(result).toEqual(false);
     });
@@ -482,7 +482,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-b', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-B', '-b', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
       expect(result).toEqual(true);
     });
@@ -500,7 +500,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
-      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-b', fileAddr, inputUsername, inputPassword]));
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-B', '-b', fileAddr, inputUsername, inputPassword]));
       expect(error).toBeNull();
       expect(result).toEqual(false);
     });
