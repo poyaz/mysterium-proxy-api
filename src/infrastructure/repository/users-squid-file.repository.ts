@@ -31,8 +31,35 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
     }
   }
 
-  async remove(username: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(username: string): Promise<AsyncReturn<Error, undefined>> {
+    const [error, isFileExist] = await this._checkFileExist();
+    if (error) {
+      return [error];
+    }
+    if (!isFileExist) {
+      return [null];
+    }
+
+    try {
+      const exec = spawn('htpasswd', ['-D', '-i', this._passwordFileAddr, username]);
+      exec.stdin.end();
+
+      let executeError = '';
+      for await (const chunk of exec.stderr) {
+        executeError += chunk;
+      }
+      if (executeError) {
+        if (/Deleting/i.test(executeError) || /not found/i.test(executeError)) {
+          return [null];
+        }
+
+        return [new RepositoryException(new Error(executeError))];
+      }
+
+      return [null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   async update(username: string, password: string): Promise<AsyncReturn<Error, null>> {

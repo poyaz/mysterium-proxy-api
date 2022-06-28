@@ -92,7 +92,7 @@ describe('UsersSquidFileRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(fileError);
     });
 
-    it(`Should error add new user when execute add username`, async () => {
+    it(`Should error add new user when run add username`, async () => {
       (<jest.Mock>fsAsync.access).mockResolvedValue(null);
       const spawnError = new Error('Spawn error');
       (<jest.Mock>spawn).mockImplementation(() => {
@@ -103,6 +103,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
     });
@@ -124,6 +125,7 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
     });
@@ -143,10 +145,11 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
       expect(error).toBeNull();
     });
 
-    it(`Should successfully add new user with adding msg`, async () => {
+    it(`Should successfully add new user with adding message`, async () => {
       (<jest.Mock>fsAsync.access).mockResolvedValue(null);
       (<jest.Mock>spawn).mockImplementation(() => {
         const stdin = new PassThrough();
@@ -162,6 +165,134 @@ describe('UsersSquidFileRepository', () => {
 
       expect(fsAsync.access).toHaveBeenCalled();
       expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+    });
+  });
+
+  describe(`Remove user`, () => {
+    let inputUsername;
+
+    beforeEach(() => {
+      inputUsername = 'my-user';
+    });
+
+    it(`Should error remove user when check file exist`, async () => {
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.access).mockRejectedValue(fileError);
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully remove user and skip when file not exist`, async () => {
+      const fileExistError = new Error('File exist error');
+      fileExistError['code'] = 'ENOENT';
+      (<jest.Mock>fsAsync.access).mockRejectedValue(fileExistError);
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+
+    it(`Should error remove user when run check user`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      const spawnError = new Error('Spawn error');
+      (<jest.Mock>spawn).mockImplementation(() => {
+        throw spawnError;
+      });
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-D', '-i', fileAddr, inputUsername]));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
+    });
+
+    it(`Should error remove user when execute check user`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      const spawnErrorMsg = 'Spawn stderr error';
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(spawnErrorMsg);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-D', '-i', fileAddr, inputUsername]));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
+    });
+
+    it(`Should successfully remove user`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-D', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+    });
+
+    it(`Should successfully remove user with remove message`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(`Deleting password for user ${inputUsername}`);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-D', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+    });
+
+    it(`Should successfully remove user with not found message`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(`User ${inputUsername} not found`);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.remove(inputUsername);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-D', '-i', fileAddr, inputUsername]));
       expect(error).toBeNull();
     });
   });
