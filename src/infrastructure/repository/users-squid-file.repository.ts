@@ -58,7 +58,7 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
   }
 
   private async _executeFile(username: string, password: string): Promise<void> {
-    const exec = spawn('htpasswd', ['-b', '-m', '-i', this._passwordFileAddr, username]);
+    const exec = spawn('htpasswd', ['-b', '-5', '-i', this._passwordFileAddr, username]);
     exec.stdin.write(password);
     exec.stdin.end();
 
