@@ -78,6 +78,10 @@ export class EnvConfigDto {
 
   @IsString()
   JWT_SECRET_KEY: string;
+
+  @IsOptional()
+  @IsString()
+  SQUID_PWD_FILE?: string;
 }
 
 
