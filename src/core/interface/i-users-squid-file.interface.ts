@@ -8,4 +8,6 @@ export interface IUsersSquidFileInterface {
   update(username: string, password: string): Promise<AsyncReturn<Error, null>>;
 
   remove(username: string): Promise<AsyncReturn<Error, null>>;
+
+  isUserExist(username: string): Promise<AsyncReturn<Error, boolean>>;
 }
