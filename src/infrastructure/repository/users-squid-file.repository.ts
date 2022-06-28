@@ -73,7 +73,38 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
   }
 
   async verify(username: string, password: string): Promise<AsyncReturn<Error, boolean>> {
-    return Promise.resolve(undefined);
+    const [error, isFileExist] = await this._checkFileExist();
+    if (error) {
+      return [error];
+    }
+    if (!isFileExist) {
+      return [null, false];
+    }
+
+    try {
+      const exec = spawn('htpasswd', ['-v', '-5', '-i', this._passwordFileAddr, username]);
+      exec.stdin.write(password);
+      exec.stdin.end();
+
+      let executeError = '';
+      for await (const chunk of exec.stderr) {
+        executeError += chunk;
+      }
+      if (executeError) {
+        if (/not found/i.test(executeError) || /verification failed/i.test(executeError)) {
+          return [null, false];
+        }
+        if (/correct/i.test(executeError)) {
+          return [null, true];
+        }
+
+        return [new RepositoryException(new Error(executeError))];
+      }
+
+      return [null, false];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private async _checkFileExist(): Promise<AsyncReturn<Error, boolean>> {

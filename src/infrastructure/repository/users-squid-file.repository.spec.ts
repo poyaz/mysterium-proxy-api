@@ -9,6 +9,7 @@ import {spawn} from 'child_process';
 import {UsersSquidFileRepository} from './users-squid-file.repository';
 import {RepositoryException} from '../../core/exception/repository.exception';
 import {PassThrough} from 'stream';
+import {AuthenticateException} from '../../core/exception/authenticate.exception';
 
 describe('UsersSquidFileRepository', () => {
   let repository: UsersSquidFileRepository;
@@ -377,6 +378,160 @@ describe('UsersSquidFileRepository', () => {
       expect(spawn).toHaveBeenCalled();
       expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-b', '-5', '-i', fileAddr, inputUsername]));
       expect(error).toBeNull();
+    });
+  });
+
+  describe(`Verify user`, () => {
+    let inputUsername;
+    let inputPassword;
+
+    beforeEach(() => {
+      inputUsername = 'my-user';
+      inputPassword = 'my password';
+    });
+
+    it(`Should error verify user when check file exist`, async () => {
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.access).mockRejectedValue(fileError);
+
+      const [error] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully verify user and return false when file not exist`, async () => {
+      const fileExistError = new Error('File exist error');
+      fileExistError['code'] = 'ENOENT';
+      (<jest.Mock>fsAsync.access).mockRejectedValue(fileExistError);
+
+      const [error, result] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toEqual(false);
+    });
+
+    it(`Should error verify user when run verify user`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      const spawnError = new Error('Spawn error');
+      (<jest.Mock>spawn).mockImplementation(() => {
+        throw spawnError;
+      });
+
+      const [error] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(spawnError);
+    });
+
+    it(`Should error verify user when execute verify username and password`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      const spawnErrorMsg = 'Spawn stderr error';
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(spawnErrorMsg);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(new Error(spawnErrorMsg));
+    });
+
+    it(`Should successfully verify user and return false when user not found`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(`User ${inputUsername} not found`);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error, result] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+      expect(result).toEqual(false);
+    });
+
+    it(`Should successfully verify user and return false when password incorrect`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(`password verification failed`);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error, result] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+      expect(result).toEqual(false);
+    });
+
+    it(`Should successfully verify user and return true when username and password is correct`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.write(`Password for user ${inputUsername} correct`);
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error, result] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+      expect(result).toEqual(true);
+    });
+
+    it(`Should successfully verify user and return false when not print anything in stderr`, async () => {
+      (<jest.Mock>fsAsync.access).mockResolvedValue(null);
+      (<jest.Mock>spawn).mockImplementation(() => {
+        const stdin = new PassThrough();
+
+        const stderr = new PassThrough();
+        stderr.end();
+
+        return {stderr, stdin};
+      });
+
+      const [error, result] = await repository.verify(inputUsername, inputPassword);
+
+      expect(fsAsync.access).toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalled();
+      expect(spawn).toBeCalledWith('htpasswd', expect.arrayContaining(['-v', '-5', '-i', fileAddr, inputUsername]));
+      expect(error).toBeNull();
+      expect(result).toEqual(false);
     });
   });
 });
