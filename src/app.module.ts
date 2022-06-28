@@ -27,6 +27,8 @@ import {JwtStrategy} from './api/http/auth/jwt.strategy';
 import {Repository} from 'typeorm';
 import {IGenericRepositoryInterface} from './core/interface/i-generic-repository.interface';
 import {UsersModel} from './core/model/users.model';
+import {SquidConfigInterface} from './loader/configure/interface/squid-config.interface';
+import {UsersSquidFileRepository} from './infrastructure/repository/users-squid-file.repository';
 
 @Module({
   imports: [
@@ -94,6 +96,15 @@ import {UsersModel} from './core/model/users.model';
       inject: [getRepositoryToken(UsersEntity), I_IDENTIFIER.DEFAULT, I_DATE_TIME.DEFAULT],
       useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
         new UsersPgRepository(db, identifier, dateTime),
+    },
+    {
+      provide: InterfaceRepositoryEnum.USERS_SQUID_FILE_REPOSITORY,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const SQUID_CONFIG = configService.get<SquidConfigInterface>('squid');
+
+        return new UsersSquidFileRepository(SQUID_CONFIG.pwdFile);
+      },
     },
   ],
 })
