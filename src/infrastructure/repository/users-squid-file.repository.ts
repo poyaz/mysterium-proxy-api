@@ -41,8 +41,7 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
     }
 
     try {
-      const exec = spawn('htpasswd', ['-D', '-i', this._passwordFileAddr, username]);
-      exec.stdin.end();
+      const exec = spawn('htpasswd', ['-D', this._passwordFileAddr, username]);
 
       let executeError = '';
       for await (const chunk of exec.stderr) {
@@ -82,9 +81,7 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
     }
 
     try {
-      const exec = spawn('htpasswd', ['-v', '-5', '-i', this._passwordFileAddr, username]);
-      exec.stdin.write(password);
-      exec.stdin.end();
+      const exec = spawn('htpasswd', ['-v', '-5', '-b', this._passwordFileAddr, username, password]);
 
       let executeError = '';
       for await (const chunk of exec.stderr) {
@@ -122,9 +119,7 @@ export class UsersSquidFileRepository implements IUsersSquidFileInterface {
   }
 
   private async _executeFile(username: string, password: string): Promise<void> {
-    const exec = spawn('htpasswd', ['-b', '-5', '-i', this._passwordFileAddr, username]);
-    exec.stdin.write(password);
-    exec.stdin.end();
+    const exec = spawn('htpasswd', ['-b', '-5', this._passwordFileAddr, username, password]);
 
     let executeError = '';
     for await (const chunk of exec.stderr) {
