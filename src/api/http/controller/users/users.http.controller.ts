@@ -10,7 +10,9 @@ import {
   Put,
   HttpCode,
   HttpStatus,
-  UseGuards, UseInterceptors, Query,
+  UseGuards,
+  UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
@@ -26,7 +28,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
+  ApiParam, ApiQuery,
   ApiTags, ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
   getSchemaPath,
@@ -56,7 +58,7 @@ import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/
 })
 @UseGuards(RolesGuard)
 @ApiTags('users')
-@ApiExtraModels(DefaultSuccessDto, FindUserOutputDto, NotFoundExceptionDto)
+@ApiExtraModels(DefaultSuccessDto, FindUserOutputDto, NotFoundExceptionDto, FindUserQueryDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 export class UsersHttpController {
@@ -128,6 +130,20 @@ export class UsersHttpController {
   @Roles(UserRoleEnum.ADMIN)
   @UseInterceptors(RemovePasswordFieldOfUserInterceptor)
   @ApiOperation({description: 'Get all users', operationId: 'Get all users'})
+  @ApiQuery({
+    name: 'sorts',
+    required: false,
+    style: 'deepObject',
+    explode: true,
+    type: 'object',
+  })
+  @ApiQuery({
+    name: 'filters',
+    required: false,
+    style: 'deepObject',
+    explode: true,
+    type: 'object',
+  })
   @ApiBearerAuth()
   @ApiOkResponse({
     schema: {
@@ -170,7 +186,7 @@ export class UsersHttpController {
     },
   })
   @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
-  findAll(@Query('filter') queryFilterDto: FindUserQueryDto) {
+  findAll(@Query() queryFilterDto: FindUserQueryDto) {
     return this._usersService.findAll(FindUserQueryDto.toModel(queryFilterDto));
   }
 

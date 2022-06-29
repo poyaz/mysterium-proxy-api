@@ -41,7 +41,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     const findOptions: FindManyOptions = {};
     if (filter) {
       const filterModel = <FilterModel<UsersModel>><any>filter;
-      if (filterModel.getLength() > 0) {
+      if (filterModel.getLengthOfCondition() > 0) {
         findOptions.where = [];
 
         const getUsername = filterModel.getCondition('username');

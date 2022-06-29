@@ -1,13 +1,19 @@
 import {KnownKeys, PickOne} from '../utility';
+import {SortEnum} from '../enum/sort.enum';
 
 export type FilterOperationType = 'eq' | 'neq' | 'gte' | 'gt' | 'lte' | 'lt';
 
 export type FilterInstanceType<T> =
   PickOne<Partial<Omit<Pick<T, { [K in keyof T]: T[K] extends Function ? never : K }[keyof T]>, 'id' | 'deleteDate'>>>;
 
+export type PartialSort<T> = {
+  [P in keyof T]?: SortEnum.ASC | SortEnum.DESC;
+};
+
 export class FilterModel<T> {
   readonly page: number = 1;
   readonly limit: number = 100;
+  private _sort: Array<PartialSort<T>> = [];
   private readonly _conditions: Array<FilterInstanceType<T> & { $opr: FilterOperationType }> = [];
 
   constructor(props?: { page?: number, limit?: number }) {
@@ -17,6 +23,19 @@ export class FilterModel<T> {
     if (props?.limit && props?.limit > 0) {
       this.limit = props.limit;
     }
+  }
+
+  addSortBy(item: PartialSort<T>) {
+    this._sort.push(item);
+    this._sort = [...new Set(this._sort)];
+  }
+
+  getSortBy(): Array<PartialSort<T>> {
+    return this._sort;
+  }
+
+  getLengthOfSortBy(): number {
+    return this._conditions.length;
   }
 
   addCondition(item: FilterInstanceType<T> & { $opr: FilterOperationType }) {
@@ -33,7 +52,7 @@ export class FilterModel<T> {
     return find[0];
   }
 
-  getLength(): number {
+  getLengthOfCondition(): number {
     return this._conditions.length;
   }
 }

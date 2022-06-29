@@ -1,16 +1,12 @@
-import {
-  IsBoolean,
-  IsOptional,
-  IsString,
-  Matches,
-  MaxLength,
-} from 'class-validator';
-import {ApiProperty} from '@nestjs/swagger';
-import {instanceToPlain, Transform} from 'class-transformer';
+import {IsBoolean, IsEnum, IsOptional, IsString, Matches, MaxLength, ValidateNested} from 'class-validator';
+import {ApiProperty, PartialType} from '@nestjs/swagger';
+import {instanceToPlain, Transform, Type} from 'class-transformer';
 import {FilterModel} from '../../../../../core/model/filter.model';
 import {UsersModel} from '../../../../../core/model/users.model';
+import {FilterInputDto} from '../../../dto/filter-input.dto';
+import {SortEnum} from '../../../../../core/enum/sort.enum';
 
-export class FindUserQueryDto {
+class FilterUserInputDto {
   @ApiProperty({
     description: 'The username of user for searching',
     type: String,
@@ -35,16 +31,115 @@ export class FindUserQueryDto {
   @IsBoolean()
   @Transform(({value}) => value === 'true' ? true : value === 'false' ? false : value)
   isEnable?: boolean;
+}
+
+class SortUserInputDto {
+  @ApiProperty({
+    type: String,
+    required: false,
+    enum: SortEnum,
+    example: SortEnum.ASC,
+    default: SortEnum.ASC,
+  })
+  @IsOptional()
+  @IsString()
+  @IsEnum(SortEnum)
+  @Transform(({value}) => value.toString().toLowerCase())
+  username?: SortEnum.ASC | SortEnum.DESC;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    enum: SortEnum,
+    example: SortEnum.ASC,
+    default: SortEnum.ASC,
+  })
+  @IsOptional()
+  @IsString()
+  @IsEnum(SortEnum)
+  @Transform(({value}) => value.toString().toLowerCase())
+  isEnable?: SortEnum.ASC | SortEnum.DESC;
+}
+
+export class FindUserQueryDto extends PartialType(FilterInputDto) {
+  @Type(() => SortUserInputDto)
+  @ValidateNested()
+  @ApiProperty({
+    type: SortUserInputDto,
+    examples: {
+      'no sort': {
+        description: 'Default sort by insertDate DESC',
+        value: {},
+      },
+      'sort with username asc': {
+        description: 'Sort by username with ASC format',
+        value: {
+          username: SortEnum.ASC,
+        },
+      },
+      'sort with username desc': {
+        description: 'Sort by username with DESC format',
+        value: {
+          username: SortEnum.DESC,
+        },
+      },
+      'sort with username asc & isEnable asc': {
+        description: 'Sort by username and isEnable with ASC format',
+        value: {
+          username: SortEnum.ASC,
+          isEnable: SortEnum.ASC,
+        },
+      },
+    },
+  })
+  sorts?: SortUserInputDto;
+
+  @Type(() => FilterUserInputDto)
+  @ValidateNested()
+  @ApiProperty({
+    type: FilterUserInputDto,
+    examples: {
+      'no filter': {
+        description: 'Search without any filters',
+        value: {},
+      },
+      'with username': {
+        value: {
+          username: 'my-user',
+        },
+      },
+      'search with isEnable': {
+        value: {
+          isEnable: true,
+        },
+      },
+      'search with username & isEnable': {
+        value: {
+          username: 'my-user',
+          isEnable: true,
+        },
+      },
+    },
+  })
+  filters?: FilterUserInputDto;
 
   static toModel(dto: FindUserQueryDto): FilterModel<UsersModel> {
     const data = instanceToPlain(dto);
 
     const filterModel = new FilterModel<UsersModel>();
-    if (typeof dto.username !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', username: data.username});
+
+    if (typeof dto.sorts.username !== 'undefined') {
+      filterModel.addSortBy({username: dto.sorts.username});
     }
-    if (typeof dto.isEnable !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', isEnable: data.isEnable});
+    if (typeof dto.sorts.isEnable !== 'undefined') {
+      filterModel.addSortBy({isEnable: dto.sorts.isEnable});
+    }
+
+    if (typeof dto.filters.username !== 'undefined') {
+      filterModel.addCondition({$opr: 'eq', username: data.filters.username});
+    }
+    if (typeof dto.filters.isEnable !== 'undefined') {
+      filterModel.addCondition({$opr: 'eq', isEnable: data.filters.isEnable});
     }
 
     return filterModel;
