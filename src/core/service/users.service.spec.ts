@@ -162,31 +162,33 @@ describe('UsersService', () => {
     });
 
     it(`Should successfully find all users without filter and return empty records`, async () => {
-      usersRepository.getAll.mockResolvedValue([null, []]);
+      usersRepository.getAll.mockResolvedValue([null, [], 0]);
 
-      const [error, result] = await service.findAll();
+      const [error, result, count] = await service.findAll();
 
       expect(usersRepository.getAll).toHaveBeenCalled();
       expect(usersRepository.getAll).toBeCalledWith(undefined);
       expect(error).toBeNull();
       expect(result).toHaveLength(0);
+      expect(count).toEqual(0);
     });
 
     it(`Should successfully find all users with filter and return empty records`, async () => {
-      usersRepository.getAll.mockResolvedValue([null, []]);
+      usersRepository.getAll.mockResolvedValue([null, [], 0]);
 
-      const [error, result] = await service.findAll(inputFilterModel);
+      const [error, result, count] = await service.findAll(inputFilterModel);
 
       expect(usersRepository.getAll).toHaveBeenCalled();
       expect(usersRepository.getAll).toBeCalledWith(inputFilterModel);
       expect(error).toBeNull();
       expect(result).toHaveLength(0);
+      expect(count).toEqual(0);
     });
 
     it(`Should successfully find all users`, async () => {
-      usersRepository.getAll.mockResolvedValue([null, [outputFindUserModel]]);
+      usersRepository.getAll.mockResolvedValue([null, [outputFindUserModel], 1]);
 
-      const [error, result] = await service.findAll();
+      const [error, result, count] = await service.findAll();
 
       expect(usersRepository.getAll).toHaveBeenCalled();
       expect(usersRepository.getAll).toBeCalledWith(undefined);
@@ -200,6 +202,7 @@ describe('UsersService', () => {
         role: outputFindUserModel.role,
         insertDate: outputFindUserModel.insertDate,
       });
+      expect(count).toEqual(1);
     });
   });
 

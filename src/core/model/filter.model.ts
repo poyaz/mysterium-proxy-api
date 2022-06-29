@@ -30,12 +30,17 @@ export class FilterModel<T> {
     this._sort = [...new Set(this._sort)];
   }
 
-  getSortBy(): Array<PartialSort<T>> {
-    return this._sort;
+  getSortBy(key: KnownKeys<T>): SortEnum | null {
+    const find = this._sort.filter((v) => Object.hasOwnProperty.call(v, key));
+    if (!find || (find && find.length !== 1)) {
+      return null;
+    }
+
+    return find[0][key];
   }
 
   getLengthOfSortBy(): number {
-    return this._conditions.length;
+    return this._sort.length;
   }
 
   addCondition(item: FilterInstanceType<T> & { $opr: FilterOperationType }) {

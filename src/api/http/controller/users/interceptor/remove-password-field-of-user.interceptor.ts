@@ -5,7 +5,7 @@ import {map, Observable} from 'rxjs';
 export class RemovePasswordFieldOfUserInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map(([err, result]) => {
+      map(([err, result, count]) => {
         if (err) {
           return [err];
         }
@@ -20,7 +20,7 @@ export class RemovePasswordFieldOfUserInterceptor implements NestInterceptor {
           }
         }
 
-        return [null, result];
+        return [null, result, count];
       }),
     );
   }

@@ -11,6 +11,8 @@ import {RepositoryException} from '../../core/exception/repository.exception';
 import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
 import {FilterModel} from '../../core/model/filter.model';
 import {UpdateModel} from '../../core/model/update.model';
+import {SortEnum} from '../../core/enum/sort.enum';
+import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 
 describe('UsersPgRepositoryService', () => {
   let repository: UsersPgRepository;
@@ -139,6 +141,7 @@ describe('UsersPgRepositoryService', () => {
     let outputUsersEntity: UsersEntity;
     let inputUsernameFilterModel: FilterModel<UsersModel>;
     let inputFilterModel: FilterModel<UsersModel>;
+    let inputFilterSortModel: FilterModel<UsersModel>;
 
     beforeEach(() => {
       outputUsersEntity = new UsersEntity();
@@ -156,52 +159,64 @@ describe('UsersPgRepositoryService', () => {
       inputFilterModel = new FilterModel<UsersModel>();
       inputFilterModel.addCondition({$opr: 'eq', username: 'my-user'});
       inputFilterModel.addCondition({$opr: 'eq', isEnable: true});
+
+      inputFilterSortModel = new FilterModel<UsersModel>();
+      inputFilterSortModel.addSortBy({username: SortEnum.DESC});
+      inputFilterSortModel.addSortBy({isEnable: SortEnum.DESC});
+      inputFilterSortModel.addSortBy({insertDate: SortEnum.DESC});
     });
 
     it(`Should error get all users (without filter)`, async () => {
       const executeError: never = new Error('Error in create on database') as never;
-      userDb.find.mockRejectedValue(executeError);
+      userDb.findAndCount.mockRejectedValue(executeError);
 
       const [error] = await repository.getAll();
 
-      expect(userDb.find).toHaveBeenCalled();
-      expect(userDb.find.mock.calls[0][0]).toEqual({});
+      expect(userDb.findAndCount).toHaveBeenCalled();
+      expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
+        order: {insertDate: SortEnum.DESC}
+      }));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
     });
 
     it(`Should error get all users (with filter)`, async () => {
       const executeError: never = new Error('Error in create on database') as never;
-      userDb.find.mockRejectedValue(executeError);
+      userDb.findAndCount.mockRejectedValue(executeError);
 
       const [error] = await repository.getAll(inputUsernameFilterModel);
 
-      expect(userDb.find).toHaveBeenCalled();
-      expect(userDb.find).toBeCalledWith(expect.objectContaining({
+      expect(userDb.findAndCount).toHaveBeenCalled();
+      expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
         where: [{username: 'my-user'}],
+        order: {insertDate: SortEnum.DESC},
       }));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
     });
 
     it(`Should successfully get all users (without filter) and return empty records`, async () => {
-      userDb.find.mockResolvedValue([]);
+      userDb.findAndCount.mockResolvedValue([[], 0]);
 
       const [error, result] = await repository.getAll();
 
-      expect(userDb.find).toHaveBeenCalled();
-      expect(userDb.find.mock.calls[0][0]).toEqual({});
+      expect(userDb.findAndCount).toHaveBeenCalled();
+      expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
+        order: {insertDate: SortEnum.DESC}
+      }));
       expect(error).toBeNull();
       expect(result.length).toEqual(0);
     });
 
     it(`Should successfully get all users (without filter) and return records`, async () => {
-      userDb.find.mockResolvedValue([outputUsersEntity]);
+      userDb.findAndCount.mockResolvedValue([[outputUsersEntity], 1]);
 
       const [error, result] = await repository.getAll();
 
-      expect(userDb.find).toHaveBeenCalled();
-      expect(userDb.find.mock.calls[0][0]).toEqual({});
+      expect(userDb.findAndCount).toHaveBeenCalled();
+      expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
+        order: {insertDate: SortEnum.DESC}
+      }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);
       expect(result[0]).toMatchObject<UsersModel>({
@@ -216,13 +231,36 @@ describe('UsersPgRepositoryService', () => {
     });
 
     it(`Should successfully get all users (with filter) and return records`, async () => {
-      userDb.find.mockResolvedValue([outputUsersEntity]);
+      userDb.findAndCount.mockResolvedValue([[outputUsersEntity], 1]);
 
       const [error, result] = await repository.getAll(inputFilterModel);
 
-      expect(userDb.find).toHaveBeenCalled();
-      expect(userDb.find).toBeCalledWith(expect.objectContaining({
+      expect(userDb.findAndCount).toHaveBeenCalled();
+      expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
         where: [{username: 'my-user'}, {isEnable: true}],
+        order: {insertDate: SortEnum.DESC},
+      }));
+      expect(error).toBeNull();
+      expect(result.length).toEqual(1);
+      expect(result[0]).toMatchObject<UsersModel>({
+        id: identifierMock.generateId(),
+        username: outputUsersEntity.username,
+        password: outputUsersEntity.password,
+        role: UserRoleEnum.USER,
+        isEnable: outputUsersEntity.isEnable,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+    });
+
+    it(`Should successfully get all users (with sort) and return records`, async () => {
+      userDb.findAndCount.mockResolvedValue([[outputUsersEntity], 1]);
+
+      const [error, result] = await repository.getAll(inputFilterSortModel);
+
+      expect(userDb.findAndCount).toHaveBeenCalled();
+      expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
+        order: {username: SortEnum.DESC, isEnable: SortEnum.DESC, insertDate: SortEnum.DESC},
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);

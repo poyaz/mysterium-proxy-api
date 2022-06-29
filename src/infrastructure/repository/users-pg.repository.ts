@@ -11,6 +11,8 @@ import {RepositoryException} from '../../core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {FilterModel} from '../../core/model/filter.model';
 import {UpdateModel} from '../../core/model/update.model';
+import {FindOptionsOrder} from 'typeorm/find-options/FindOptionsOrder';
+import {SortEnum} from '../../core/enum/sort.enum';
 
 @Injectable()
 export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel> {
@@ -38,9 +40,11 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
   }
 
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<UsersModel>>> {
-    const findOptions: FindManyOptions = {};
+    const findOptions: FindManyOptions<UsersEntity> = {order: {insertDate: SortEnum.DESC}};
+
     if (filter) {
       const filterModel = <FilterModel<UsersModel>><any>filter;
+
       if (filterModel.getLengthOfCondition() > 0) {
         findOptions.where = [];
 
@@ -54,13 +58,33 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
           findOptions.where.push(getIsEnable);
         }
       }
+
+      if (filterModel.getLengthOfSortBy() > 0) {
+        findOptions.order = {};
+
+        const getUsernameSort = filterModel.getSortBy('username');
+        if (getUsernameSort) {
+          findOptions.order.username = getUsernameSort;
+        }
+        const getIsEnableSort = filterModel.getSortBy('isEnable');
+        if (getIsEnableSort) {
+          findOptions.order.isEnable = getIsEnableSort;
+        }
+        const getInsertDateSort = filterModel.getSortBy('insertDate');
+        if (getInsertDateSort) {
+          findOptions.order.insertDate = getInsertDateSort;
+        }
+      }
+
+      findOptions.skip = filterModel.page - 1;
+      findOptions.take = filterModel.limit;
     }
 
     try {
-      const rows = await this._db.find(findOptions);
+      const [rows, count] = await this._db.findAndCount(findOptions);
       const result = rows.map((v) => UsersPgRepository._fillModel(v));
 
-      return [null, result];
+      return [null, result, count];
     } catch (error) {
       return [new RepositoryException(error)];
     }
