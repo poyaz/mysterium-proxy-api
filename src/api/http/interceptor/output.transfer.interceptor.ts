@@ -21,7 +21,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map(([err, result]) => {
+      map(([err, result, count]) => {
         if (err) {
           let statusCode: number;
           let error: string;
@@ -54,8 +54,10 @@ export class OutputTransferInterceptor implements NestInterceptor {
           }, statusCode);
         }
 
+        let isDataArray = false;
         if (typeof result !== undefined && result !== undefined && result !== null && ['boolean', 'string', 'number'].indexOf(typeof result) === -1) {
           if (Array.isArray(result)) {
+            isDataArray = true;
             result.map((v) => {
               v.insertDate = this._convertDateToString(v.insertDate);
               v.updateDate = this._convertDateToString(v.updateDate);
@@ -67,6 +69,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
         }
 
         return {
+          ...(isDataArray && count !== undefined && count !== null && !isNaN(Number(count)) && {count: Number(count)}),
           data: result,
           status: 'success',
         };

@@ -126,7 +126,7 @@ export class FindUserQueryDto extends PartialType(FilterInputDto) {
   static toModel(dto: FindUserQueryDto): FilterModel<UsersModel> {
     const data = instanceToPlain(dto);
 
-    const filterModel = new FilterModel<UsersModel>();
+    const filterModel = new FilterModel<UsersModel>(data);
 
     if (typeof dto.sorts.username !== 'undefined') {
       filterModel.addSortBy({username: dto.sorts.username});

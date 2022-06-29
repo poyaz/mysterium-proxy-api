@@ -51,6 +51,7 @@ import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {ExceptionEnum} from '../../../../core/enum/exception.enum';
 import {LoginInputDto} from './dto/login-input.dto';
 import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
+import {DefaultArraySuccessDto} from '../../dto/default-array-success.dto';
 
 @Controller({
   path: 'users',
@@ -58,7 +59,7 @@ import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/
 })
 @UseGuards(RolesGuard)
 @ApiTags('users')
-@ApiExtraModels(DefaultSuccessDto, FindUserOutputDto, NotFoundExceptionDto, FindUserQueryDto)
+@ApiExtraModels(DefaultSuccessDto, DefaultArraySuccessDto, FindUserOutputDto, NotFoundExceptionDto, FindUserQueryDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 export class UsersHttpController {
@@ -153,9 +154,13 @@ export class UsersHttpController {
             {
               title: 'With data',
             },
-            {$ref: getSchemaPath(DefaultSuccessDto)},
+            {$ref: getSchemaPath(DefaultArraySuccessDto)},
             {
               properties: {
+                count: {
+                  type: 'number',
+                  example: 1,
+                },
                 data: {
                   type: 'array',
                   items: {
@@ -171,9 +176,13 @@ export class UsersHttpController {
             {
               title: 'Without data',
             },
-            {$ref: getSchemaPath(DefaultSuccessDto)},
+            {$ref: getSchemaPath(DefaultArraySuccessDto)},
             {
               properties: {
+                count: {
+                  type: 'number',
+                  example: 0,
+                },
                 data: {
                   type: 'array',
                   example: [],
@@ -186,7 +195,7 @@ export class UsersHttpController {
     },
   })
   @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
-  findAll(@Query() queryFilterDto: FindUserQueryDto) {
+  async findAll(@Query() queryFilterDto: FindUserQueryDto) {
     return this._usersService.findAll(FindUserQueryDto.toModel(queryFilterDto));
   }
 
