@@ -4,14 +4,15 @@ import {mock, MockProxy} from 'jest-mock-extended';
 import {Repository} from 'typeorm';
 import {UsersEntity} from '../entity/users.entity';
 import {getRepositoryToken} from '@nestjs/typeorm';
-import {I_IDENTIFIER, IIdentifier} from '../../core/interface/i-identifier.interface';
+import {IIdentifier} from '../../core/interface/i-identifier.interface';
 import {UsersModel} from '../../core/model/users.model';
 import {UserRoleEnum} from '../../core/enum/user-role.enum';
 import {RepositoryException} from '../../core/exception/repository.exception';
-import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
+import {IDateTime} from '../../core/interface/i-date-time.interface';
 import {FilterModel, SortEnum} from '../../core/model/filter.model';
 import {UpdateModel} from '../../core/model/update.model';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
+import {ProviderTokenEnum} from '../../core/enum/provider-token.enum';
 
 describe('UsersPgRepositoryService', () => {
   let repository: UsersPgRepository;
@@ -32,11 +33,11 @@ describe('UsersPgRepositoryService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: I_IDENTIFIER.DEFAULT,
+          provide: ProviderTokenEnum.IDENTIFIER_UUID,
           useValue: identifierMock,
         },
         {
-          provide: I_DATE_TIME.DEFAULT,
+          provide: ProviderTokenEnum.DATE_TIME_DEFAULT,
           useValue: dateTimeMock,
         },
         {
@@ -45,7 +46,7 @@ describe('UsersPgRepositoryService', () => {
         },
         {
           provide: UsersPgRepository,
-          inject: [getRepositoryToken(UsersEntity), I_IDENTIFIER.DEFAULT, I_DATE_TIME.DEFAULT],
+          inject: [getRepositoryToken(UsersEntity), ProviderTokenEnum.IDENTIFIER_UUID, ProviderTokenEnum.DATE_TIME_DEFAULT],
           useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
             new UsersPgRepository(db, identifier, dateTime),
         },
@@ -173,7 +174,7 @@ describe('UsersPgRepositoryService', () => {
 
       expect(userDb.findAndCount).toHaveBeenCalled();
       expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
-        order: {insertDate: SortEnum.DESC}
+        order: {insertDate: SortEnum.DESC},
       }));
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
@@ -201,7 +202,7 @@ describe('UsersPgRepositoryService', () => {
 
       expect(userDb.findAndCount).toHaveBeenCalled();
       expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
-        order: {insertDate: SortEnum.DESC}
+        order: {insertDate: SortEnum.DESC},
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(0);
@@ -214,7 +215,7 @@ describe('UsersPgRepositoryService', () => {
 
       expect(userDb.findAndCount).toHaveBeenCalled();
       expect(userDb.findAndCount).toBeCalledWith(expect.objectContaining(<FindManyOptions<UsersEntity>>{
-        order: {insertDate: SortEnum.DESC}
+        order: {insertDate: SortEnum.DESC},
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);

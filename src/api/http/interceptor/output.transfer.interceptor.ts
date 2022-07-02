@@ -9,12 +9,12 @@ import {
 } from '@nestjs/common';
 import {map, Observable} from 'rxjs';
 import {ExceptionEnum} from '../../../core/enum/exception.enum';
-import {I_DATE_TIME} from '../../../core/interface/i-date-time.interface';
+import {ProviderTokenEnum} from '../../../core/enum/provider-token.enum';
 
 @Injectable()
 export class OutputTransferInterceptor implements NestInterceptor {
   constructor(
-    @Inject(I_DATE_TIME.DEFAULT)
+    @Inject(ProviderTokenEnum.DATE_TIME_DEFAULT)
     private readonly _dateTime,
   ) {
   }

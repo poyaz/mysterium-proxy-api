@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
-import {I_USER_SERVICE, IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
+import {IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {
   ApiBadRequestResponse,
@@ -50,8 +50,9 @@ import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-passwor
 import {FindUserQueryDto} from './dto/find-user-query.dto';
 import {ExceptionEnum} from '../../../../core/enum/exception.enum';
 import {LoginInputDto} from './dto/login-input.dto';
-import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
+import {IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
 import {DefaultArraySuccessDto} from '../../dto/default-array-success.dto';
+import {ProviderTokenEnum} from '../../../../core/enum/provider-token.enum';
 
 @Controller({
   path: 'users',
@@ -64,9 +65,9 @@ import {DefaultArraySuccessDto} from '../../dto/default-array-success.dto';
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 export class UsersHttpController {
   constructor(
-    @Inject(I_USER_SERVICE.DEFAULT)
+    @Inject(ProviderTokenEnum.USER_SERVICE_DEFAULT)
     private readonly _usersService: IUsersServiceInterface,
-    @Inject(I_AUTH_SERVICE.DEFAULT)
+    @Inject(ProviderTokenEnum.AUTH_SERVICE_DEFAULT)
     private readonly _authService: IAuthServiceInterface,
   ) {
   }

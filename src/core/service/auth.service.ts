@@ -1,5 +1,5 @@
-import {Inject, Injectable} from '@nestjs/common';
-import {I_USER_SERVICE, IUsersServiceInterface} from '../interface/i-users-service.interface';
+import {Injectable} from '@nestjs/common';
+import {IUsersServiceInterface} from '../interface/i-users-service.interface';
 import {JwtService} from '@nestjs/jwt';
 import {IAuthServiceInterface} from '../interface/i-auth-service.interface';
 import {AsyncReturn} from '../utility';

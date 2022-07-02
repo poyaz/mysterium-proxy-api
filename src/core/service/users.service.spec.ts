@@ -4,12 +4,12 @@ import {mock, MockProxy} from 'jest-mock-extended';
 import {IGenericRepositoryInterface} from '../interface/i-generic-repository.interface';
 import {IIdentifier} from '../interface/i-identifier.interface';
 import {UsersModel} from '../model/users.model';
-import {InterfaceRepositoryEnum} from '../enum/interface-repository.enum';
 import {UnknownException} from '../exception/unknown.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
 import {FilterModel} from '../model/filter.model';
 import {NotFoundUserException} from '../exception/not-found-user.exception';
 import {UpdateModel} from '../model/update.model';
+import {ProviderTokenEnum} from '../enum/provider-token.enum';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -25,12 +25,12 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: InterfaceRepositoryEnum.USER_PG_REPOSITORY,
+          provide: ProviderTokenEnum.USER_PG_REPOSITORY,
           useValue: usersRepository,
         },
         {
           provide: UsersService,
-          inject: [InterfaceRepositoryEnum.USER_PG_REPOSITORY],
+          inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
           useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
             new UsersService(usersRepository),
         },

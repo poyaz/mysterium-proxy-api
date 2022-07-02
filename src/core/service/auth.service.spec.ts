@@ -2,13 +2,14 @@ import {Test, TestingModule} from '@nestjs/testing';
 import {AuthService} from './auth.service';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {JwtService} from '@nestjs/jwt';
-import {I_USER_SERVICE, IUsersServiceInterface} from '../interface/i-users-service.interface';
+import {IUsersServiceInterface} from '../interface/i-users-service.interface';
 import {UnknownException} from '../exception/unknown.exception';
 import {FilterModel} from '../model/filter.model';
 import {UsersModel} from '../model/users.model';
 import {AuthenticateException} from '../exception/authenticate.exception';
 import {UserRoleEnum} from '../enum/user-role.enum';
 import {IIdentifier} from '../interface/i-identifier.interface';
+import {ProviderTokenEnum} from '../enum/provider-token.enum';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -26,7 +27,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: I_USER_SERVICE.DEFAULT,
+          provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
           useValue: usersService,
         },
         {
@@ -35,7 +36,7 @@ describe('AuthService', () => {
         },
         {
           provide: AuthService,
-          inject: [I_USER_SERVICE.DEFAULT, JwtService],
+          inject: [ProviderTokenEnum.USER_SERVICE_DEFAULT, JwtService],
           useFactory: (usersService: IUsersServiceInterface, jwtService: JwtService) =>
             new AuthService(usersService, jwtService),
         },

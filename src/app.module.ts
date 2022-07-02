@@ -1,26 +1,24 @@
 import {Module} from '@nestjs/common';
 import {UuidIdentifier} from './infrastructure/system/uuid-identifier';
 import {NullUuidIdentifier} from './infrastructure/system/null-uuid-identifier';
-import {I_IDENTIFIER, IIdentifier} from './core/interface/i-identifier.interface';
+import {IIdentifier} from './core/interface/i-identifier.interface';
 import {UsersService} from './core/service/users.service';
-import {I_USER_SERVICE, IUsersServiceInterface} from './core/interface/i-users-service.interface';
+import {IUsersServiceInterface} from './core/interface/i-users-service.interface';
 import {ConfigModule, ConfigService} from '@nestjs/config';
 import {APP_GUARD, APP_INTERCEPTOR, Reflector} from '@nestjs/core';
 import {JwtAuthGuard} from './api/http/guard/jwt-auth.guard';
 import {FakeAuthGuard} from './api/http/guard/fake-auth.guard';
 import {EnvironmentEnv} from './loader/configure/enum/environment.env';
 import {OutputTransferInterceptor} from './api/http/interceptor/output.transfer.interceptor';
-import {I_DATE_TIME, IDateTime} from './core/interface/i-date-time.interface';
+import {IDateTime} from './core/interface/i-date-time.interface';
 import {DateTime} from './infrastructure/system/date-time';
 import {PgModule} from './loader/database/pg.module';
-import {InterfaceRepositoryEnum} from './core/enum/interface-repository.enum';
 import {ConfigureModule} from './loader/configure/configure.module';
 import {getRepositoryToken, TypeOrmModule} from '@nestjs/typeorm';
 import {controllersExport} from './loader/http/controller.export';
 import {PgConfigService} from './loader/database/pg-config.service';
 import {UsersPgRepository} from './infrastructure/repository/users-pg.repository';
 import {UsersEntity} from './infrastructure/entity/users.entity';
-import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
 import {JwtModule, JwtService} from '@nestjs/jwt';
 import {AuthService} from './core/service/auth.service';
 import {JwtStrategy} from './api/http/auth/jwt.strategy';
@@ -29,6 +27,7 @@ import {IGenericRepositoryInterface} from './core/interface/i-generic-repository
 import {UsersModel} from './core/model/users.model';
 import {SquidConfigInterface} from './loader/configure/interface/squid-config.interface';
 import {UsersSquidFileRepository} from './infrastructure/repository/users-squid-file.repository';
+import {ProviderTokenEnum} from './core/enum/provider-token.enum';
 
 @Module({
   imports: [
@@ -68,37 +67,37 @@ import {UsersSquidFileRepository} from './infrastructure/repository/users-squid-
       },
     },
     {
-      provide: I_IDENTIFIER.DEFAULT,
+      provide: ProviderTokenEnum.IDENTIFIER_UUID,
       useClass: UuidIdentifier,
     },
     {
-      provide: I_IDENTIFIER.NULL,
+      provide: ProviderTokenEnum.IDENTIFIER_UUID_NULL,
       useClass: NullUuidIdentifier,
     },
     {
-      provide: I_DATE_TIME.DEFAULT,
+      provide: ProviderTokenEnum.DATE_TIME_DEFAULT,
       useClass: DateTime,
     },
     {
-      provide: I_USER_SERVICE.DEFAULT,
-      inject: [InterfaceRepositoryEnum.USER_PG_REPOSITORY],
+      provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
+      inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
       useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
         new UsersService(usersRepository),
     },
     {
-      provide: I_AUTH_SERVICE.DEFAULT,
-      inject: [I_USER_SERVICE.DEFAULT, JwtService],
+      provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
+      inject: [ProviderTokenEnum.USER_SERVICE_DEFAULT, JwtService],
       useFactory: (usersService: IUsersServiceInterface, jwtService: JwtService) =>
         new AuthService(usersService, jwtService),
     },
     {
-      provide: InterfaceRepositoryEnum.USER_PG_REPOSITORY,
-      inject: [getRepositoryToken(UsersEntity), I_IDENTIFIER.DEFAULT, I_DATE_TIME.DEFAULT],
+      provide: ProviderTokenEnum.USER_PG_REPOSITORY,
+      inject: [getRepositoryToken(UsersEntity), ProviderTokenEnum.IDENTIFIER_UUID, ProviderTokenEnum.DATE_TIME_DEFAULT],
       useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
         new UsersPgRepository(db, identifier, dateTime),
     },
     {
-      provide: InterfaceRepositoryEnum.USERS_SQUID_FILE_REPOSITORY,
+      provide: ProviderTokenEnum.USERS_SQUID_FILE_REPOSITORY,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const SQUID_CONFIG = configService.get<SquidConfigInterface>('squid');

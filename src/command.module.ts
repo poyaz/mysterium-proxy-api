@@ -2,11 +2,10 @@ import {Module} from '@nestjs/common';
 import {SwaggerCommand} from './api/command/swagger/swagger.command';
 import {ConfigureModule} from './loader/configure/configure.module';
 import {PgModule} from './loader/database/pg.module';
-import {I_USER_SERVICE} from './core/interface/i-users-service.interface';
 import {controllersExport} from './loader/http/controller.export';
 import {MigrationRunCommand, MigrationUndoCommand} from './api/command/migration/migration.command';
 import {PgConfigService} from './loader/database/pg-config.service';
-import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
+import {ProviderTokenEnum} from './core/enum/provider-token.enum';
 
 @Module({
   imports: [ConfigureModule, PgModule],
@@ -29,11 +28,11 @@ import {I_AUTH_SERVICE} from './core/interface/i-auth-service.interface';
     },
 
     {
-      provide: I_USER_SERVICE.DEFAULT,
+      provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
       useFactory: () => () => ({}),
     },
     {
-      provide: I_AUTH_SERVICE.DEFAULT,
+      provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
       useFactory: () => () => ({}),
     },
   ],
