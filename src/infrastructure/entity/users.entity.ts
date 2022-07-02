@@ -21,8 +21,8 @@ export class UsersEntity extends BaseEntity {
   @Column({type: 'varchar', length: 225})
   password: string;
 
-  @Column({type: 'varchar', length: 20, enum: UserRoleEnum})
-  role: string;
+  @Column({type: 'enum', enum: UserRoleEnum})
+  role: UserRoleEnum;
 
   @Column({type: 'boolean', name: 'is_enable'})
   isEnable: boolean;
