@@ -1,5 +1,9 @@
 import {KnownKeys, PickOne} from '../utility';
-import {SortEnum} from '../enum/sort.enum';
+
+export enum SortEnum {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 export type FilterOperationType = 'eq' | 'neq' | 'gte' | 'gt' | 'lte' | 'lt';
 
@@ -7,7 +11,7 @@ export type FilterInstanceType<T> =
   PickOne<Partial<Omit<Pick<T, { [K in keyof T]: T[K] extends Function ? never : K }[keyof T]>, 'id' | 'deleteDate'>>>;
 
 export type PartialSort<T> = {
-  [P in keyof T]?: SortEnum.ASC | SortEnum.DESC;
+  [P in keyof T]?: SortEnum;
 };
 
 export class FilterModel<T> {

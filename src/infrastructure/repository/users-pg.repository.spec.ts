@@ -9,9 +9,8 @@ import {UsersModel} from '../../core/model/users.model';
 import {UserRoleEnum} from '../../core/enum/user-role.enum';
 import {RepositoryException} from '../../core/exception/repository.exception';
 import {I_DATE_TIME, IDateTime} from '../../core/interface/i-date-time.interface';
-import {FilterModel} from '../../core/model/filter.model';
+import {FilterModel, SortEnum} from '../../core/model/filter.model';
 import {UpdateModel} from '../../core/model/update.model';
-import {SortEnum} from '../../core/enum/sort.enum';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 
 describe('UsersPgRepositoryService', () => {

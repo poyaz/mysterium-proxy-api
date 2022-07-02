@@ -10,10 +10,9 @@ import {
 } from 'class-validator';
 import {ApiProperty, PartialType} from '@nestjs/swagger';
 import {instanceToPlain, Transform, Type} from 'class-transformer';
-import {FilterModel} from '../../../../../core/model/filter.model';
+import {FilterModel, SortEnum} from '../../../../../core/model/filter.model';
 import {UsersModel} from '../../../../../core/model/users.model';
 import {FilterInputDto} from '../../../dto/filter-input.dto';
-import {SortEnum} from '../../../../../core/enum/sort.enum';
 
 class FilterUserInputDto {
   @ApiProperty({
