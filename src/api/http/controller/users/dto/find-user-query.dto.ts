@@ -53,7 +53,7 @@ class SortUserInputDto {
   @IsString()
   @IsEnum(SortEnum)
   @Transform(({value}) => value.toString().toLowerCase())
-  username?: SortEnum.ASC | SortEnum.DESC;
+  username?: SortEnum;
 
   @ApiProperty({
     type: String,
@@ -66,7 +66,7 @@ class SortUserInputDto {
   @IsString()
   @IsEnum(SortEnum)
   @Transform(({value}) => value.toString().toLowerCase())
-  isEnable?: SortEnum.ASC | SortEnum.DESC;
+  isEnable?: SortEnum;
 
   @ApiProperty({
     type: String,

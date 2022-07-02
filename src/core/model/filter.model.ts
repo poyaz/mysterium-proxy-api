@@ -56,7 +56,6 @@ export class FilterModel<T> {
     if (!find || (find && find.length !== 1)) {
       return null;
     }
-    delete find[0].$opr;
 
     return find[0];
   }

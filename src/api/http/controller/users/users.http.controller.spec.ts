@@ -1,7 +1,7 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {UsersHttpController} from './users.http.controller';
-import {I_USER_SERVICE, IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
+import {IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
 import {UnknownException} from '../../../../core/exception/unknown.exception';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {IIdentifier} from '../../../../core/interface/i-identifier.interface';
@@ -14,7 +14,8 @@ import {UpdateModel} from '../../../../core/model/update.model';
 import {UserRoleEnum} from '../../../../core/enum/user-role.enum';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
 import {LoginInputDto} from './dto/login-input.dto';
-import {I_AUTH_SERVICE, IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
+import {IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
+import {ProviderTokenEnum} from '../../../../core/enum/provider-token.enum';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -33,11 +34,11 @@ describe('UsersController', () => {
       controllers: [UsersHttpController],
       providers: [
         {
-          provide: I_USER_SERVICE.DEFAULT,
+          provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
           useValue: usersService,
         },
         {
-          provide: I_AUTH_SERVICE.DEFAULT,
+          provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
           useValue: authService,
         },
       ],
@@ -149,7 +150,7 @@ describe('UsersController', () => {
 
     beforeEach(() => {
       inputFindUserQueryDto = new FindUserQueryDto();
-      inputFindUserQueryDto.username = 'my-user';
+      inputFindUserQueryDto.filters = {username: 'my-user'};
 
       inputEmptyFindUserQueryDto = new FindUserQueryDto();
 
@@ -184,7 +185,9 @@ describe('UsersController', () => {
       const [error] = await controller.findAll(inputFindUserQueryDto);
 
       expect(usersService.findAll).toHaveBeenCalled();
-      expect(usersService.findAll).toBeCalledWith(matchFindUserFilter);
+      expect(usersService.findAll.mock.calls[0][0].getCondition('username')).toMatchObject(
+        matchFindUserFilter.getCondition('username'),
+      );
       expect(error).toBeInstanceOf(UnknownException);
     });
 
