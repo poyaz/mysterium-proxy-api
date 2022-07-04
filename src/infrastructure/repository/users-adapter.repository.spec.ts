@@ -342,4 +342,41 @@ describe('UsersAdapterRepository', () => {
       expect(result[0]).toMatchObject(outputUsersModel);
     });
   });
+
+  describe(`Get by id`, () => {
+    let inputId: string;
+    let outputUsersModel: UsersModel;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputUsersModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error get by id`, async () => {
+      usersPgRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get by id`, async () => {
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toMatchObject(outputUsersModel);
+    });
+  });
 });

@@ -66,8 +66,8 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     return this._usersPgRepository.getAll(filter);
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, UsersModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, UsersModel | null>> {
+    return this._usersPgRepository.getById(id);
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
