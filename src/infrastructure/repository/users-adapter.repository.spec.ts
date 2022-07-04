@@ -379,4 +379,30 @@ describe('UsersAdapterRepository', () => {
       expect(result).toMatchObject(outputUsersModel);
     });
   });
+
+  describe(`Remove by id`, () => {
+    let inputId: string;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+    });
+
+    it(`Should error remove by id`, async () => {
+      usersPgRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should remove get by id`, async () => {
+      usersPgRepository.remove.mockResolvedValue([null]);
+
+      const [error, result] = await repository.remove(inputId);
+
+      expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+  });
 });
