@@ -399,9 +399,35 @@ describe('UsersAdapterRepository', () => {
     it(`Should remove get by id`, async () => {
       usersPgRepository.remove.mockResolvedValue([null]);
 
-      const [error, result] = await repository.remove(inputId);
+      const [error] = await repository.remove(inputId);
 
       expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+  });
+
+  describe(`Update user`, () => {
+    let inputUpdateModel: UpdateModel<UsersModel>;
+
+    beforeEach(() => {
+      inputUpdateModel = new UpdateModel<UsersModel>(identifierMock.generateId(), {isEnable: true});
+    });
+
+    it(`Should error remove by id`, async () => {
+      usersPgRepository.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should remove get by id`, async () => {
+      usersPgRepository.update.mockResolvedValue([null]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(usersPgRepository.update).toHaveBeenCalled();
       expect(error).toBeNull();
     });
   });

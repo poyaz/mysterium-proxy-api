@@ -74,8 +74,8 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     return this._usersPgRepository.remove(id);
   }
 
-  update<F>(model: F): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
+    return this._usersPgRepository.update(model);
   }
 
   private async _upsertUser(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {
