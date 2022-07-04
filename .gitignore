@@ -1,20 +1,21 @@
-docker-compose.yml
-docker/
+package-lock.json
+
+### Local run server
+docker/docker-compose.local*
 
 ### Self folder
 .tests/
-package-lock.json
 build/*
 !build/.gitkeep
-logs/temp/*
-!logs/temp/.gitkeep
+
 storage/tmp/*
 !storage/tmp/.gitkeep
-storage/upload/*
-!storage/upload/.gitkeep
-storage/public
+
 docker/custom/*
 !docker/custom/.gitkeep
+
+storage/docker/volume/myst-keysore/*
+!storage/docker/volume/myst-keysore/.gitkeep
 
 ### compiled output
 /dist
@@ -57,11 +58,6 @@ lerna-debug.log*
 
 ### HTML def file
 *.html.def
-
-### Local run server
-config/.local*
-docker/docker-compose.local*
-tests/report/
 
 ### Node template
 # Runtime data
