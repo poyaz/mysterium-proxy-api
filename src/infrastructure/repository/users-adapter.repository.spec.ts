@@ -1,17 +1,16 @@
 import {UsersAdapterRepository} from './users-adapter.repository';
-import {UsersPgRepository} from './users-pg.repository';
-import {IGenericRepositoryInterface} from '../../core/interface/i-generic-repository.interface';
-import {UsersModel} from '../../core/model/users.model';
-import {IUsersSquidFileInterface} from '../../core/interface/i-users-squid-file.interface';
+import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
+import {UsersModel} from '@src-core/model/users.model';
+import {IUsersSquidFileInterface} from '@src-core/interface/i-users-squid-file.interface';
 import {mock, MockProxy} from 'jest-mock-extended';
-import {IIdentifier} from '../../core/interface/i-identifier.interface';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {Test, TestingModule} from '@nestjs/testing';
-import {ProviderTokenEnum} from '../../core/enum/provider-token.enum';
-import {UnknownException} from '../../core/exception/unknown.exception';
-import {UserRoleEnum} from '../../core/enum/user-role.enum';
-import {FilterModel} from '../../core/model/filter.model';
-import {ExistException} from '../../core/exception/exist.exception';
-import {UpdateModel} from '../../core/model/update.model';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {FilterModel} from '@src-core/model/filter.model';
+import {ExistException} from '@src-core/exception/exist.exception';
+import {UpdateModel} from '@src-core/model/update.model';
 
 describe('UsersAdapterRepository', () => {
   let repository: UsersAdapterRepository;

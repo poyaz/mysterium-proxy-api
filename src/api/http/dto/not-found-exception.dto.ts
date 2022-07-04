@@ -1,5 +1,5 @@
 import {ApiResponseProperty} from '@nestjs/swagger';
-import {ExceptionEnum} from '../../../core/enum/exception.enum';
+import {ExceptionEnum} from '@src-core/enum/exception.enum';
 
 export class NotFoundExceptionDto {
   @ApiResponseProperty({type: Number, example: 404})

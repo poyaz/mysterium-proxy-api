@@ -1,8 +1,8 @@
 import {TypeOrmModuleOptions, TypeOrmOptionsFactory} from '@nestjs/typeorm';
 import {Inject, Injectable} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
-import {DatabaseConfigInterface} from '../configure/interface/database-config.interface';
-import {EnvironmentEnv} from '../configure/enum/environment.env';
+import {DatabaseConfigInterface} from '@src-loader/configure/interface/database-config.interface';
+import {EnvironmentEnv} from '@src-loader/configure/enum/environment.env';
 import {PostgresConnectionOptions} from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 @Injectable()

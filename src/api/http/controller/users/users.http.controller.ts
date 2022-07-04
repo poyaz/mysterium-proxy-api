@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
-import {IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
+import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
 import {
   ApiBadRequestResponse,
@@ -34,31 +34,31 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import {FindUserOutputDto} from './dto/find-user-output.dto';
-import {ValidateExceptionDto} from '../../dto/validate-exception.dto';
-import {DefaultExceptionDto} from '../../dto/default-exception.dto';
-import {NoBodySuccessDto} from '../../dto/no-body-success.dto';
-import {RolesGuard} from '../../guard/roles.guard';
-import {UserRoleEnum} from '../../../../core/enum/user-role.enum';
-import {Roles} from '../../decorator/roles.decorator';
-import {ExcludeAuth} from '../../decorator/exclude-auth.decorator';
+import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
+import {DefaultExceptionDto} from '@src-api/http/dto/default-exception.dto';
+import {NoBodySuccessDto} from '@src-api/http/dto/no-body-success.dto';
+import {OwnerOrAdminGuard} from '@src-api/http/guard/ownerOrAdmin.guard';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {Roles} from '@src-api/http/decorator/roles.decorator';
+import {ExcludeAuth} from '@src-api/http/decorator/exclude-auth.decorator';
 import {CreateAdminUserGuard} from './guard/create-admin-user.guard';
-import {DefaultSuccessDto} from '../../dto/default-success.dto';
-import {UnauthorizedExceptionDto} from '../../dto/unauthorized-exception.dto';
-import {ForbiddenExceptionDto} from '../../dto/forbidden-exception.dto';
-import {NotFoundExceptionDto} from '../../dto/not-found-exception.dto';
+import {DefaultSuccessDto} from '@src-api/http/dto/default-success.dto';
+import {UnauthorizedExceptionDto} from '@src-api/http/dto/unauthorized-exception.dto';
+import {ForbiddenExceptionDto} from '@src-api/http/dto/forbidden-exception.dto';
+import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 import {RemovePasswordFieldOfUserInterceptor} from './interceptor/remove-password-field-of-user.interceptor';
 import {FindUserQueryDto} from './dto/find-user-query.dto';
-import {ExceptionEnum} from '../../../../core/enum/exception.enum';
+import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {LoginInputDto} from './dto/login-input.dto';
-import {IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
-import {DefaultArraySuccessDto} from '../../dto/default-array-success.dto';
-import {ProviderTokenEnum} from '../../../../core/enum/provider-token.enum';
+import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interface';
+import {DefaultArraySuccessDto} from '@src-api/http/dto/default-array-success.dto';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 @Controller({
   path: 'users',
   version: '1',
 })
-@UseGuards(RolesGuard)
+@UseGuards(OwnerOrAdminGuard)
 @ApiTags('users')
 @ApiExtraModels(DefaultSuccessDto, DefaultArraySuccessDto, FindUserOutputDto, NotFoundExceptionDto, FindUserQueryDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})

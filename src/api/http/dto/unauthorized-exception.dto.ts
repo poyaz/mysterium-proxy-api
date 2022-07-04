@@ -1,4 +1,3 @@
-import {HttpStatus} from '@nestjs/common';
 import {ApiResponseProperty} from '@nestjs/swagger';
 
 export class UnauthorizedExceptionDto {

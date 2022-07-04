@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {Observable} from 'rxjs';
-import {UserRoleEnum} from '../../../../../core/enum/user-role.enum';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 
 @Injectable()
 export class CreateAdminUserGuard implements CanActivate {

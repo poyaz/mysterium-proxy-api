@@ -1,4 +1,4 @@
-import {KnownKeys, PickOne} from '../utility';
+import {KnownKeys, PickOne} from '@src-core/utility';
 
 export enum SortEnum {
   ASC = 'asc',

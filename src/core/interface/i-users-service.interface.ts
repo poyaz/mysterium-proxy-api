@@ -1,7 +1,7 @@
-import {UsersModel} from '../model/users.model';
-import {FilterModel} from '../model/filter.model';
-import {UpdateModel} from '../model/update.model';
-import {AsyncReturn} from '../utility';
+import {UsersModel} from '@src-core/model/users.model';
+import {FilterModel} from '@src-core/model/filter.model';
+import {UpdateModel} from '@src-core/model/update.model';
+import {AsyncReturn} from '@src-core/utility';
 
 export interface IUsersServiceInterface {
   findAll(filter?: FilterModel<UsersModel>): Promise<AsyncReturn<Error, Array<UsersModel>>>;

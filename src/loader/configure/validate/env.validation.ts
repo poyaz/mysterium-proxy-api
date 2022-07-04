@@ -1,6 +1,6 @@
 import {plainToInstance} from 'class-transformer';
 import {validateSync} from 'class-validator';
-import {EnvConfigDto} from '../dto/env-config.dto';
+import {EnvConfigDto} from '@src-loader/configure/dto/env-config.dto';
 
 function removeObjectItem(obj: Record<string, unknown>) {
   for (const key in obj) {

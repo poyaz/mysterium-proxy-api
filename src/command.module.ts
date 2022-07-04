@@ -1,11 +1,11 @@
 import {Module} from '@nestjs/common';
-import {SwaggerCommand} from './api/command/swagger/swagger.command';
-import {ConfigureModule} from './loader/configure/configure.module';
-import {PgModule} from './loader/database/pg.module';
-import {controllersExport} from './loader/http/controller.export';
-import {MigrationRunCommand, MigrationUndoCommand} from './api/command/migration/migration.command';
-import {PgConfigService} from './loader/database/pg-config.service';
-import {ProviderTokenEnum} from './core/enum/provider-token.enum';
+import {SwaggerCommand} from '@src-api/command/swagger/swagger.command';
+import {ConfigureModule} from '@src-loader/configure/configure.module';
+import {PgModule} from '@src-loader/database/pg.module';
+import {controllersExport} from '@src-loader/http/controller.export';
+import {MigrationRunCommand, MigrationUndoCommand} from '@src-api/command/migration/migration.command';
+import {PgConfigService} from '@src-loader/database/pg-config.service';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 @Module({
   imports: [ConfigureModule, PgModule],

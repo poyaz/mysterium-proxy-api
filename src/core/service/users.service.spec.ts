@@ -1,15 +1,15 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import {UsersService} from './users.service';
 import {mock, MockProxy} from 'jest-mock-extended';
-import {IGenericRepositoryInterface} from '../interface/i-generic-repository.interface';
-import {IIdentifier} from '../interface/i-identifier.interface';
-import {UsersModel} from '../model/users.model';
-import {UnknownException} from '../exception/unknown.exception';
-import {UserRoleEnum} from '../enum/user-role.enum';
-import {FilterModel} from '../model/filter.model';
+import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
+import {UsersModel} from '@src-core/model/users.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {FilterModel} from '@src-core/model/filter.model';
 import {NotFoundUserException} from '../exception/not-found-user.exception';
-import {UpdateModel} from '../model/update.model';
-import {ProviderTokenEnum} from '../enum/provider-token.enum';
+import {UpdateModel} from '@src-core/model/update.model';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -97,7 +97,7 @@ describe('UsersService', () => {
 
       expect(usersRepository.add).toHaveBeenCalled();
       expect(error).toBeNull();
-      expect(result).toMatchObject<UsersModel>({
+      expect(result).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: outputCreateUserModel.id,
         username: outputCreateUserModel.username,
         password: outputCreateUserModel.password,
@@ -113,7 +113,7 @@ describe('UsersService', () => {
       const [error, result] = await service.create(inputCreateUserOptionalModel);
 
       expect(usersRepository.add).toHaveBeenCalled();
-      expect(usersRepository.add).toBeCalledWith(expect.objectContaining<UsersModel>({
+      expect(usersRepository.add).toBeCalledWith(expect.objectContaining<Omit<UsersModel, 'clone'>>({
         id: inputCreateUserOptionalModel.id,
         username: inputCreateUserOptionalModel.username,
         password: inputCreateUserOptionalModel.password,
@@ -122,7 +122,7 @@ describe('UsersService', () => {
         insertDate: inputCreateUserOptionalModel.insertDate,
       }));
       expect(error).toBeNull();
-      expect(result).toMatchObject<UsersModel>({
+      expect(result).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: outputCreateUserModel.id,
         username: outputCreateUserModel.username,
         password: outputCreateUserModel.password,
@@ -262,7 +262,7 @@ describe('UsersService', () => {
       expect(usersRepository.getById).toHaveBeenCalled();
       expect(usersRepository.getById).toBeCalledWith(userId);
       expect(error).toBeNull();
-      expect(result).toMatchObject<UsersModel>({
+      expect(result).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: outputFindUserModel.id,
         username: outputFindUserModel.username,
         password: outputFindUserModel.password,

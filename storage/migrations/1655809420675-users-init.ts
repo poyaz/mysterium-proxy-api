@@ -1,5 +1,5 @@
 import {MigrationInterface, QueryRunner, Table, TableIndex} from 'typeorm';
-import {UserRoleEnum} from '../../src/core/enum/user-role.enum';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 
 const TABLE_NAME = 'users';
 const UNIQUE_INDEX_USERNAME = 'users_username_unique_idx';

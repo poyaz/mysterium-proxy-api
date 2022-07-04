@@ -1,9 +1,9 @@
 import {ApiProperty} from '@nestjs/swagger';
-import {UsersModel} from '../../../../../core/model/users.model';
-import {instanceToPlain, plainToClass, plainToInstance} from 'class-transformer';
-import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
+import {UsersModel} from '@src-core/model/users.model';
+import {instanceToPlain, plainToInstance} from 'class-transformer';
+import {MatchConfirm} from '@src-api/http/decorator/match-confirm.decorator';
 import {IsDefined, IsString, MaxLength, MinLength} from 'class-validator';
-import {UpdateModel} from '../../../../../core/model/update.model';
+import {UpdateModel} from '@src-core/model/update.model';
 
 export class UpdatePasswordInputDto {
   @ApiProperty({

@@ -1,9 +1,9 @@
-import {UsersModel} from '../../../../../core/model/users.model';
-import {instanceToPlain, plainToClass, plainToInstance} from 'class-transformer';
+import {UsersModel} from '@src-core/model/users.model';
+import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {ApiProperty} from '@nestjs/swagger';
-import {IsBoolean, IsDefined, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
-import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
-import {UpdateModel} from '../../../../../core/model/update.model';
+import {IsBoolean, IsOptional, IsString, MaxLength, MinLength} from 'class-validator';
+import {MatchConfirm} from '@src-api/http/decorator/match-confirm.decorator';
+import {UpdateModel} from '@src-core/model/update.model';
 
 export class UpdateUserAdminInputDto {
   @ApiProperty({

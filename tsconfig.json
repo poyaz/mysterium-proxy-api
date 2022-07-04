@@ -16,6 +16,20 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@src-api/*": [
+        "src/api/*"
+      ],
+      "@src-core/*": [
+        "src/core/*"
+      ],
+      "@src-infrastructure/*": [
+        "src/infrastructure/*"
+      ],
+      "@src-loader/*": [
+        "src/loader/*"
+      ]
+    }
+  },
 }

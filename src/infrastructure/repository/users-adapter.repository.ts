@@ -1,11 +1,11 @@
 import {Injectable} from '@nestjs/common';
-import {IGenericRepositoryInterface} from '../../core/interface/i-generic-repository.interface';
-import {UsersModel} from '../../core/model/users.model';
-import {IUsersSquidFileInterface} from '../../core/interface/i-users-squid-file.interface';
-import {AsyncReturn} from '../../core/utility';
-import {FilterModel} from '../../core/model/filter.model';
-import {ExistException} from '../../core/exception/exist.exception';
-import {UpdateModel} from '../../core/model/update.model';
+import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
+import {UsersModel} from '@src-core/model/users.model';
+import {IUsersSquidFileInterface} from '@src-core/interface/i-users-squid-file.interface';
+import {AsyncReturn} from '@src-core/utility';
+import {FilterModel} from '@src-core/model/filter.model';
+import {ExistException} from '@src-core/exception/exist.exception';
+import {UpdateModel} from '@src-core/model/update.model';
 
 @Injectable()
 export class UsersAdapterRepository implements IGenericRepositoryInterface<UsersModel> {

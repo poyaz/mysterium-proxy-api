@@ -1,21 +1,21 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {UsersHttpController} from './users.http.controller';
-import {IUsersServiceInterface} from '../../../../core/interface/i-users-service.interface';
-import {UnknownException} from '../../../../core/exception/unknown.exception';
+import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
-import {IIdentifier} from '../../../../core/interface/i-identifier.interface';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {FindUserQueryDto} from './dto/find-user-query.dto';
-import {UsersModel} from '../../../../core/model/users.model';
-import {FilterModel} from '../../../../core/model/filter.model';
-import {NotFoundUserException} from '../../../../core/exception/not-found-user.exception';
+import {UsersModel} from '@src-core/model/users.model';
+import {FilterModel} from '@src-core/model/filter.model';
+import {NotFoundUserException} from '@src-core/exception/not-found-user.exception';
 import {UpdateUserAdminInputDto} from './dto/update-user-admin-input.dto';
-import {UpdateModel} from '../../../../core/model/update.model';
-import {UserRoleEnum} from '../../../../core/enum/user-role.enum';
+import {UpdateModel} from '@src-core/model/update.model';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
 import {LoginInputDto} from './dto/login-input.dto';
-import {IAuthServiceInterface} from '../../../../core/interface/i-auth-service.interface';
-import {ProviderTokenEnum} from '../../../../core/enum/provider-token.enum';
+import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interface';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;

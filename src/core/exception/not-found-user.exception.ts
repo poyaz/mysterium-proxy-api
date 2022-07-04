@@ -1,5 +1,5 @@
-import {ExceptionEnum} from '../enum/exception.enum';
-import {NotFoundException} from './not-found.exception';
+import {ExceptionEnum} from '@src-core/enum/exception.enum';
+import {NotFoundException} from '@src-core/exception/not-found.exception';
 
 export class NotFoundUserException extends NotFoundException {
   readonly isOperation: boolean;

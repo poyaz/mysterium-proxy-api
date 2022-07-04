@@ -4,15 +4,15 @@ import {mock, MockProxy} from 'jest-mock-extended';
 import {Repository} from 'typeorm';
 import {UsersEntity} from '../entity/users.entity';
 import {getRepositoryToken} from '@nestjs/typeorm';
-import {IIdentifier} from '../../core/interface/i-identifier.interface';
-import {UsersModel} from '../../core/model/users.model';
-import {UserRoleEnum} from '../../core/enum/user-role.enum';
-import {RepositoryException} from '../../core/exception/repository.exception';
-import {IDateTime} from '../../core/interface/i-date-time.interface';
-import {FilterModel, SortEnum} from '../../core/model/filter.model';
-import {UpdateModel} from '../../core/model/update.model';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
+import {UsersModel} from '@src-core/model/users.model';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {RepositoryException} from '@src-core/exception/repository.exception';
+import {IDateTime} from '@src-core/interface/i-date-time.interface';
+import {FilterModel, SortEnum} from '@src-core/model/filter.model';
+import {UpdateModel} from '@src-core/model/update.model';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
-import {ProviderTokenEnum} from '../../core/enum/provider-token.enum';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 describe('UsersPgRepositoryService', () => {
   let repository: UsersPgRepository;
@@ -125,7 +125,7 @@ describe('UsersPgRepositoryService', () => {
         insertDate: defaultDate,
       }, {transaction: false});
       expect(error).toBeNull();
-      expect(result).toMatchObject<UsersModel>({
+      expect(result).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: identifierMock.generateId(),
         username: inputUsersModel.username,
         password: inputUsersModel.password,
@@ -219,7 +219,7 @@ describe('UsersPgRepositoryService', () => {
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);
-      expect(result[0]).toMatchObject<UsersModel>({
+      expect(result[0]).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: identifierMock.generateId(),
         username: outputUsersEntity.username,
         password: outputUsersEntity.password,
@@ -242,7 +242,7 @@ describe('UsersPgRepositoryService', () => {
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);
-      expect(result[0]).toMatchObject<UsersModel>({
+      expect(result[0]).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: identifierMock.generateId(),
         username: outputUsersEntity.username,
         password: outputUsersEntity.password,
@@ -264,7 +264,7 @@ describe('UsersPgRepositoryService', () => {
       }));
       expect(error).toBeNull();
       expect(result.length).toEqual(1);
-      expect(result[0]).toMatchObject<UsersModel>({
+      expect(result[0]).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: identifierMock.generateId(),
         username: outputUsersEntity.username,
         password: outputUsersEntity.password,
@@ -324,7 +324,7 @@ describe('UsersPgRepositoryService', () => {
       expect(userDb.findOneBy).toHaveBeenCalled();
       expect(userDb.findOneBy).toBeCalledWith({id: inputId});
       expect(error).toBeNull();
-      expect(result).toMatchObject<UsersModel>({
+      expect(result).toMatchObject<Omit<UsersModel, 'clone'>>({
         id: identifierMock.generateId(),
         username: outputUsersEntity.username,
         password: outputUsersEntity.password,

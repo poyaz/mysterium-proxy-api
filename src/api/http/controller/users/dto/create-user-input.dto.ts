@@ -1,8 +1,8 @@
 import {ApiBearerAuth, ApiProperty} from '@nestjs/swagger';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {UsersModel} from '../../../../../core/model/users.model';
+import {UsersModel} from '@src-core/model/users.model';
 import {IsBoolean, IsDefined, IsOptional, IsString, Matches, MaxLength, MinLength} from 'class-validator';
-import {MatchConfirm} from '../../../decorator/match-confirm.decorator';
+import {MatchConfirm} from '@src-api/http/decorator/match-confirm.decorator';
 
 export class CreateUserInputDto {
   @ApiProperty({

@@ -1,4 +1,4 @@
-import {AsyncReturn} from '../utility';
+import {AsyncReturn} from '@src-core/utility';
 
 export interface IUsersSquidFileInterface {
   add(username: string, password: string): Promise<AsyncReturn<Error, null>>;

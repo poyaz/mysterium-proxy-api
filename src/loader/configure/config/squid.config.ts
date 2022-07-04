@@ -1,5 +1,5 @@
 import {registerAs} from '@nestjs/config';
-import {SquidConfigInterface} from '../interface/squid-config.interface';
+import {SquidConfigInterface} from '@src-loader/configure/interface/squid-config.interface';
 import {resolve} from 'path';
 
 export default registerAs('squid', (): SquidConfigInterface => {

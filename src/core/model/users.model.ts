@@ -1,5 +1,5 @@
-import {ModelRequireProp} from '../utility';
-import {UserRoleEnum} from '../enum/user-role.enum';
+import {ModelRequireProp} from '@src-core/utility';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 
 export class UsersModel {
   id: string;

@@ -1,5 +1,5 @@
-import {ExceptionEnum} from '../enum/exception.enum';
-import {ExistException} from './exist.exception';
+import {ExceptionEnum} from '@src-core/enum/exception.enum';
+import {ExistException} from '@src-core/exception/exist.exception';
 
 export class RepositoryException extends Error {
   readonly isOperation: boolean;

@@ -1,16 +1,16 @@
 import {Injectable} from '@nestjs/common';
-import {IGenericRepositoryInterface} from '../../core/interface/i-generic-repository.interface';
-import {UsersModel} from '../../core/model/users.model';
-import {AsyncReturn} from '../../core/utility';
+import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
+import {UsersModel} from '@src-core/model/users.model';
+import {AsyncReturn} from '@src-core/utility';
 import {UsersEntity} from '../entity/users.entity';
 import {Repository} from 'typeorm';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {IIdentifier} from '../../core/interface/i-identifier.interface';
-import {IDateTime} from '../../core/interface/i-date-time.interface';
-import {RepositoryException} from '../../core/exception/repository.exception';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
+import {IDateTime} from '@src-core/interface/i-date-time.interface';
+import {RepositoryException} from '@src-core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
-import {FilterModel, SortEnum} from '../../core/model/filter.model';
-import {UpdateModel} from '../../core/model/update.model';
+import {FilterModel, SortEnum} from '@src-core/model/filter.model';
+import {UpdateModel} from '@src-core/model/update.model';
 
 @Injectable()
 export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel> {

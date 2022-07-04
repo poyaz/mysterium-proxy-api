@@ -2,7 +2,7 @@ import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import {ValidationPipe, VersioningType} from '@nestjs/common';
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
-import {ServerConfigInterface} from './loader/configure/interface/server-config.interface';
+import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
 import {ConfigService} from '@nestjs/config';
 import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 

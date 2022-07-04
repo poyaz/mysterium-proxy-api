@@ -1,6 +1,6 @@
 import {registerAs} from '@nestjs/config';
-import {DatabaseConfigInterface} from '../interface/database-config.interface';
-import {convertStringToBoolean} from '../util';
+import {DatabaseConfigInterface} from '@src-loader/configure/interface/database-config.interface';
+import {convertStringToBoolean} from '@src-loader/configure/util';
 
 export default registerAs('postgres', (): DatabaseConfigInterface => {
   const obj: DatabaseConfigInterface = {

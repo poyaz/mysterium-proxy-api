@@ -1,10 +1,10 @@
-import {IUsersSquidFileInterface} from '../../core/interface/i-users-squid-file.interface';
-import {AsyncReturn} from '../../core/utility';
+import {IUsersSquidFileInterface} from '@src-core/interface/i-users-squid-file.interface';
+import {AsyncReturn} from '@src-core/utility';
 import {Injectable} from '@nestjs/common';
 import * as fs from 'fs';
 import * as fsAsync from 'fs/promises';
 import {spawn} from 'child_process';
-import {RepositoryException} from '../../core/exception/repository.exception';
+import {RepositoryException} from '@src-core/exception/repository.exception';
 
 @Injectable()
 export class UsersSquidFileRepository implements IUsersSquidFileInterface {

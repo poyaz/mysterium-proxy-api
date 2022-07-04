@@ -1,6 +1,6 @@
 import {registerAs} from '@nestjs/config';
-import {ServerConfigInterface} from '../interface/server-config.interface';
-import {convertStringToBoolean} from '../util';
+import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
+import {convertStringToBoolean} from '@src-loader/configure/util';
 
 export default registerAs('server', (): ServerConfigInterface => {
   return ({

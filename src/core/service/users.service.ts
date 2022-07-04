@@ -1,12 +1,12 @@
 import {Injectable} from '@nestjs/common';
-import {IUsersServiceInterface} from '../interface/i-users-service.interface';
-import {UsersModel} from '../model/users.model';
-import {UpdateModel} from '../model/update.model';
-import {AsyncReturn} from '../utility';
-import {FilterModel} from '../model/filter.model';
-import {IGenericRepositoryInterface} from '../interface/i-generic-repository.interface';
-import {NotFoundUserException} from '../exception/not-found-user.exception';
-import {UserRoleEnum} from '../enum/user-role.enum';
+import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
+import {UsersModel} from '@src-core/model/users.model';
+import {UpdateModel} from '@src-core/model/update.model';
+import {AsyncReturn} from '@src-core/utility';
+import {FilterModel} from '@src-core/model/filter.model';
+import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
+import {NotFoundUserException} from '@src-core/exception/not-found-user.exception';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 
 @Injectable()
 export class UsersService implements IUsersServiceInterface {

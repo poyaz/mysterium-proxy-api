@@ -2,14 +2,14 @@ import {Test, TestingModule} from '@nestjs/testing';
 import {AuthService} from './auth.service';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {JwtService} from '@nestjs/jwt';
-import {IUsersServiceInterface} from '../interface/i-users-service.interface';
-import {UnknownException} from '../exception/unknown.exception';
-import {FilterModel} from '../model/filter.model';
-import {UsersModel} from '../model/users.model';
-import {AuthenticateException} from '../exception/authenticate.exception';
-import {UserRoleEnum} from '../enum/user-role.enum';
-import {IIdentifier} from '../interface/i-identifier.interface';
-import {ProviderTokenEnum} from '../enum/provider-token.enum';
+import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import {FilterModel} from '@src-core/model/filter.model';
+import {UsersModel} from '@src-core/model/users.model';
+import {AuthenticateException} from '@src-core/exception/authenticate.exception';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 describe('AuthService', () => {
   let service: AuthService;

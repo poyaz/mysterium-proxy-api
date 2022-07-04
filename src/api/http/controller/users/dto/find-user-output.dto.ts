@@ -1,6 +1,6 @@
 import {ApiProperty, PartialType} from '@nestjs/swagger';
-import {UserRoleEnum} from '../../../../../core/enum/user-role.enum';
-import {DateOutputDto} from '../../../dto/date-output.dto';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {DateOutputDto} from '@src-api/http/dto/date-output.dto';
 
 export class FindUserOutputDto extends PartialType(DateOutputDto) {
   @ApiProperty({

@@ -1,11 +1,11 @@
 import {Injectable} from '@nestjs/common';
-import {IUsersServiceInterface} from '../interface/i-users-service.interface';
+import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
 import {JwtService} from '@nestjs/jwt';
-import {IAuthServiceInterface} from '../interface/i-auth-service.interface';
-import {AsyncReturn} from '../utility';
-import {FilterModel} from '../model/filter.model';
-import {UsersModel} from '../model/users.model';
-import {AuthenticateException} from '../exception/authenticate.exception';
+import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interface';
+import {AsyncReturn} from '@src-core/utility';
+import {FilterModel} from '@src-core/model/filter.model';
+import {UsersModel} from '@src-core/model/users.model';
+import {AuthenticateException} from '@src-core/exception/authenticate.exception';
 
 @Injectable()
 export class AuthService implements IAuthServiceInterface {

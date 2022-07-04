@@ -7,7 +7,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import {UserRoleEnum} from '../../core/enum/user-role.enum';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {Exclude} from 'class-transformer';
 
 @Entity({name: 'users'})

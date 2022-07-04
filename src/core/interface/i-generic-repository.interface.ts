@@ -1,4 +1,4 @@
-import {AsyncReturn} from '../utility';
+import {AsyncReturn} from '@src-core/utility';
 
 export interface IGenericRepositoryInterface<T> {
   getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<T>>>;

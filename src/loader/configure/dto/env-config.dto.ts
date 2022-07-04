@@ -1,6 +1,6 @@
-import {IsEmpty, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString} from 'class-validator';
-import {EnvironmentEnv} from '../enum/environment.env';
-import {BooleanEnv} from '../enum/boolean.env';
+import {IsEnum, IsNumber, IsOptional, IsString} from 'class-validator';
+import {EnvironmentEnv} from '@src-loader/configure/enum/environment.env';
+import {BooleanEnv} from '@src-loader/configure/enum/boolean.env';
 import {Transform} from 'class-transformer';
 
 export class EnvConfigDto {

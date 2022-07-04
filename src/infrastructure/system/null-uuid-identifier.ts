@@ -1,5 +1,5 @@
 import {Injectable} from '@nestjs/common';
-import {IIdentifier} from '../../core/interface/i-identifier.interface';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 
 @Injectable()
 export class NullUuidIdentifier implements IIdentifier {

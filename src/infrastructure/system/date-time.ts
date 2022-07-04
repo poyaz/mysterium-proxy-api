@@ -1,4 +1,4 @@
-import {IDateTime} from '../../core/interface/i-date-time.interface';
+import {IDateTime} from '@src-core/interface/i-date-time.interface';
 import * as moment from 'moment-timezone';
 
 export class DateTime implements IDateTime {

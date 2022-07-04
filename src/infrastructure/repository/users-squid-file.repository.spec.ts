@@ -7,9 +7,8 @@ jest.mock('child_process');
 import {spawn} from 'child_process';
 
 import {UsersSquidFileRepository} from './users-squid-file.repository';
-import {RepositoryException} from '../../core/exception/repository.exception';
+import {RepositoryException} from '@src-core/exception/repository.exception';
 import {PassThrough} from 'stream';
-import {AuthenticateException} from '../../core/exception/authenticate.exception';
 
 describe('UsersSquidFileRepository', () => {
   let repository: UsersSquidFileRepository;

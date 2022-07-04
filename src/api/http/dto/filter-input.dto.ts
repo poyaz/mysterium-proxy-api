@@ -1,7 +1,6 @@
-import {ApiHideProperty, ApiProperty} from '@nestjs/swagger';
-import {IsArray, IsInt, IsNumber, IsObject, IsOptional, IsString, Matches, Max, Min} from 'class-validator';
+import {ApiProperty} from '@nestjs/swagger';
+import {IsInt, IsObject, IsOptional, Max, Min} from 'class-validator';
 import {Transform} from 'class-transformer';
-import objectContaining = jasmine.objectContaining;
 
 export class FilterInputDto<T> {
   @IsOptional()

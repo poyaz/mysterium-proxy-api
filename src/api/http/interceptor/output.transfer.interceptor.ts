@@ -8,8 +8,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import {map, Observable} from 'rxjs';
-import {ExceptionEnum} from '../../../core/enum/exception.enum';
-import {ProviderTokenEnum} from '../../../core/enum/provider-token.enum';
+import {ExceptionEnum} from '@src-core/enum/exception.enum';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 @Injectable()
 export class OutputTransferInterceptor implements NestInterceptor {

@@ -1,4 +1,4 @@
-import {ExceptionEnum} from "../enum/exception.enum";
+import {ExceptionEnum} from '@src-core/enum/exception.enum';
 
 export class ExistException extends Error {
   readonly isOperation: boolean;
