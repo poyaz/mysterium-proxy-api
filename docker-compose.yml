@@ -1,0 +1,75 @@
+version: "2.3"
+services:
+  app:
+    build:
+      context: ./docker/images/node
+      dockerfile: Dockerfile
+    expose:
+      - 3000
+    volumes:
+      - $PWD:/home/node
+      - /etc/localtime:/etc/localtime:ro
+    user: node
+    working_dir: /home/node
+    command: "sh -c 'npm install; npm run build; npm run start:prod'"
+    networks:
+      main:
+        ipv4_address: 10.102.0.50
+    restart: "always"
+
+  redoc:
+    image: redocly/redoc:latest
+    volumes:
+      - $PWD/storage/tmp/swagger.json:/usr/share/nginx/html/swagger.json
+    environment:
+      - SPEC_URL=swagger.json
+    ports:
+      - 4000:80
+    networks:
+      main:
+        ipv4_address: 10.102.0.51
+    restart: "always"
+
+  postgres:
+    image: postgres:11.10
+    volumes:
+      - ${PG_DIR_DATA:-postgres-storage}:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+      - $PWD/storage/docker/volume/postgres-migration/:/docker-entrypoint-initdb.d/
+    networks:
+      main:
+        ipv4_address: 10.102.0.52
+    restart: "always"
+
+  myst:
+    build:
+      context: ./docker/images/myst
+      dockerfile: Dockerfile
+    expose:
+      - 4449:4449
+    volumes:
+      - myst-data:/var/lib/mysterium-node
+      - myst-keysore:/var/lib/mysterium-node/keystore/
+    cap_add:
+      - NET_ADMIN
+    command: "service --agreed-terms-and-conditions"
+    restart: "always"
+
+volumes:
+  postgres-storage: { }
+  myst-data: { }
+  myst-keysore:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: $PWD/storage/docker/volume/myst-keysore
+
+networks:
+  main:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.102.0.48/28
+          gateway: 10.102.0.49
