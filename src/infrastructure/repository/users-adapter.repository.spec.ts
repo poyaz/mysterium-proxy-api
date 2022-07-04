@@ -307,4 +307,39 @@ describe('UsersAdapterRepository', () => {
       expect(result).toEqual(outputUsersModel);
     });
   });
+
+  describe(`Get all users`, () => {
+    let outputUsersModel: UsersModel;
+
+    beforeEach(() => {
+      outputUsersModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error get all users`, async () => {
+      usersPgRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getAll();
+
+      expect(usersPgRepository.getAll).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get all users`, async () => {
+      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel]]);
+
+      const [error, result] = await repository.getAll();
+
+      expect(usersPgRepository.getAll).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result.length).toEqual(1);
+      expect(result[0]).toMatchObject(outputUsersModel);
+    });
+  });
 });
