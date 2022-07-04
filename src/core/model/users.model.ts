@@ -13,4 +13,8 @@ export class UsersModel {
   constructor(props: ModelRequireProp<typeof UsersModel.prototype>) {
     Object.assign(this, props);
   }
+
+  clone() {
+    return Object.assign(Object.create(this), this);
+  }
 }
