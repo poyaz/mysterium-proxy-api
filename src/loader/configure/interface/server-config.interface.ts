@@ -1,10 +1,10 @@
 export interface ServerConfigInterface {
-  host: string,
-  http: {
-    port: number,
+  readonly host: string,
+  readonly http: {
+    readonly port: number,
   },
-  https: {
-    port: number,
-    force: boolean,
+  readonly https: {
+    readonly port: number,
+    readonly force: boolean,
   }
 }

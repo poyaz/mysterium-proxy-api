@@ -1,3 +1,3 @@
 export interface SquidConfigInterface {
-  pwdFile: string,
+  readonly pwdFile: string,
 }
