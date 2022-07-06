@@ -46,12 +46,15 @@ services:
       context: ./docker/images/myst
       dockerfile: Dockerfile
     expose:
-      - 4449:4449
+      - 4449
     volumes:
       - myst-data:/var/lib/mysterium-node
       - myst-keysore:/var/lib/mysterium-node/keystore/
     cap_add:
       - NET_ADMIN
+    networks:
+      main:
+        ipv4_address: 10.102.0.53
     command: "service --agreed-terms-and-conditions"
     restart: "always"
 
