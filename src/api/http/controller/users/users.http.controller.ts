@@ -37,7 +37,6 @@ import {FindUserOutputDto} from './dto/find-user-output.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
 import {DefaultExceptionDto} from '@src-api/http/dto/default-exception.dto';
 import {NoBodySuccessDto} from '@src-api/http/dto/no-body-success.dto';
-import {OwnerOrAdminGuard} from '@src-api/http/guard/ownerOrAdmin.guard';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {Roles} from '@src-api/http/decorator/roles.decorator';
 import {ExcludeAuth} from '@src-api/http/decorator/exclude-auth.decorator';
@@ -53,12 +52,13 @@ import {LoginInputDto} from './dto/login-input.dto';
 import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interface';
 import {DefaultArraySuccessDto} from '@src-api/http/dto/default-array-success.dto';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {RoleGuard} from '@src-api/http/guard/role.guard';
 
 @Controller({
   path: 'users',
   version: '1',
 })
-@UseGuards(OwnerOrAdminGuard)
+@UseGuards(RoleGuard)
 @ApiTags('users')
 @ApiExtraModels(DefaultSuccessDto, DefaultArraySuccessDto, FindUserOutputDto, NotFoundExceptionDto, FindUserQueryDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
