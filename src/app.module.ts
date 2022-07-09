@@ -68,7 +68,7 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
     },
     {
       provide: ProviderTokenEnum.IDENTIFIER_UUID,
-      useClass: UuidIdentifier,
+      useFactory: () => new UuidIdentifier(),
     },
     {
       provide: ProviderTokenEnum.IDENTIFIER_UUID_NULL,
