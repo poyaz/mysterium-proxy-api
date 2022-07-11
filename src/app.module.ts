@@ -1,4 +1,4 @@
-import {Module} from '@nestjs/common';
+import {Logger, Module} from '@nestjs/common';
 import {UuidIdentifier} from '@src-infrastructure/system/uuid-identifier';
 import {NullUuidIdentifier} from '@src-infrastructure/system/null-uuid-identifier';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
@@ -49,6 +49,7 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
   ],
   controllers: [...controllersExport],
   providers: [
+    Logger,
     ConfigService,
     JwtStrategy,
     {
@@ -57,14 +58,17 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
     },
     {
       provide: APP_GUARD,
-      inject: [ConfigService, Reflector],
-      useFactory: (configService: ConfigService, reflector: Reflector) => {
+      inject: [ConfigService, Reflector, Logger],
+      useFactory: (configService: ConfigService, reflector: Reflector, logger: Logger) => {
         const NODE_ENV = configService.get<string>('NODE_ENV', '');
         const FAKE_AUTH_GUARD = configService.get<boolean>('FAKE_AUTH_GUARD', false);
 
-        return (NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP) && FAKE_AUTH_GUARD
-          ? new FakeAuthGuard(reflector)
-          : new JwtAuthGuard(reflector);
+        if ((NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP) && FAKE_AUTH_GUARD) {
+          logger.warn(`Auth guard has been faked because you use "FAKE_AUTH_GUARD=${process.env.FAKE_AUTH_GUARD}" variable!`, 'AuthGuardFactory');
+          return new FakeAuthGuard(reflector);
+        }
+
+        return new JwtAuthGuard(reflector);
       },
     },
     {
