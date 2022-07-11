@@ -14,7 +14,7 @@ services:
     command: "sh -c 'npm install; npm run build; npm run start:prod'"
     networks:
       main:
-        ipv4_address: 10.102.0.50
+        ipv4_address: 10.110.0.2
     restart: "always"
 
   redoc:
@@ -27,7 +27,7 @@ services:
       - 4000:80
     networks:
       main:
-        ipv4_address: 10.102.0.51
+        ipv4_address: 10.110.0.3
     restart: "always"
 
   postgres:
@@ -38,7 +38,7 @@ services:
       - $PWD/storage/docker/volume/postgres-migration/:/docker-entrypoint-initdb.d/
     networks:
       main:
-        ipv4_address: 10.102.0.52
+        ipv4_address: 10.110.0.4
     restart: "always"
 
   myst:
@@ -54,7 +54,7 @@ services:
       - NET_ADMIN
     networks:
       main:
-        ipv4_address: 10.102.0.53
+        ipv4_address: 10.110.0.5
     command: "service --agreed-terms-and-conditions"
     restart: "always"
 
@@ -74,5 +74,5 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.102.0.48/28
-          gateway: 10.102.0.49
+        - subnet: 10.110.0.0/20
+          gateway: 10.110.0.1
