@@ -11,7 +11,7 @@ import {FakeAuthGuard} from '@src-api/http/guard/fake-auth.guard';
 import {EnvironmentEnv} from '@src-loader/configure/enum/environment.env';
 import {OutputTransferInterceptor} from '@src-api/http/interceptor/output.transfer.interceptor';
 import {IDateTime} from '@src-core/interface/i-date-time.interface';
-import {DateTime} from "./infrastructure/system/date-time";
+import {DateTime} from './infrastructure/system/date-time';
 import {PgModule} from '@src-loader/database/pg.module';
 import {ConfigureModule} from '@src-loader/configure/configure.module';
 import {getRepositoryToken, TypeOrmModule} from '@nestjs/typeorm';
@@ -60,8 +60,9 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
       inject: [ConfigService, Reflector],
       useFactory: (configService: ConfigService, reflector: Reflector) => {
         const NODE_ENV = configService.get<string>('NODE_ENV', '');
+        const FAKE_AUTH_GUARD = configService.get<boolean>('FAKE_AUTH_GUARD', false);
 
-        return NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP
+        return (NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP) && FAKE_AUTH_GUARD
           ? new FakeAuthGuard(reflector)
           : new JwtAuthGuard(reflector);
       },

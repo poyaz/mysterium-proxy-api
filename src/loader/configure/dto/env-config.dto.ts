@@ -14,6 +14,11 @@ export class EnvConfigDto {
   NODE_ENV?: EnvironmentEnv;
 
   @IsOptional()
+  @IsEnum(BooleanEnv)
+  @Transform(param => param.value.toLowerCase())
+  FAKE_AUTH_GUARD?: BooleanEnv;
+
+  @IsOptional()
   @IsString()
   SERVER_HOST?: string;
 
