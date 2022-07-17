@@ -32,9 +32,9 @@ export class PgConfigService implements TypeOrmOptionsFactory {
         ...(DATABASE_OPTIONS.idleTimeout && DATABASE_OPTIONS.idleTimeout > 0 && {idleTimeoutMillis: DATABASE_OPTIONS.idleTimeout}),
       },
 
-      entities: [`dist/src/infrastructure/entity/*.entity{.ts,.js}`],
+      entities: [`dist/infrastructure/entity/*.entity{.ts,.js}`],
       synchronize: false,
-      migrations: [`dist/storage/migrations/*{.ts,.js}`],
+      migrations: [`dist/infrastructure/migrations/*{.ts,.js}`],
       migrationsTableName: 'migrations_history',
       migrationsRun: NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP,
       retryAttempts: 0,
