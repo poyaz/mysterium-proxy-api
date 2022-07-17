@@ -51,7 +51,7 @@ export class FilterModel<T> {
     this._conditions.push(item);
   }
 
-  getCondition(key: KnownKeys<T>): FilterInstanceType<T> | null {
+  getCondition(key: KnownKeys<T>): FilterInstanceType<T> & { $opr: FilterOperationType } | null {
     const find = this._conditions.filter((v) => Object.hasOwnProperty.call(v, key));
     if (!find || (find && find.length !== 1)) {
       return null;

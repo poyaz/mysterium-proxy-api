@@ -48,12 +48,12 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
 
         const getUsername = filterModel.getCondition('username');
         if (getUsername) {
-          findOptions.where.push(getUsername);
+          findOptions.where.push({username: getUsername.username});
         }
 
         const getIsEnable = filterModel.getCondition('isEnable');
         if (getIsEnable) {
-          findOptions.where.push(getIsEnable);
+          findOptions.where.push({isEnable: getIsEnable.isEnable});
         }
       }
 
