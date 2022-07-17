@@ -46,6 +46,10 @@ export class OutputTransferInterceptor implements NestInterceptor {
               error = 'Bad Request';
           }
 
+          if (!err.isOperation) {
+            console.error(err);
+          }
+
           throw new HttpException({
             status: statusCode,
             message: err.message,
