@@ -1,0 +1,12 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+.config/
+.npm/
+.tests/
+dist/
+.git/
+
+storage/docker/
+
+.ash_history
+.gitignore
