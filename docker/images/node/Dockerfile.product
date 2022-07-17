@@ -1,0 +1,39 @@
+FROM node:16.16.0-alpine3.16 AS build
+
+RUN mkdir -p /data; \
+    chown -R node:node /data
+
+WORKDIR /data
+
+COPY --chown=node:node \
+        tsconfig*.json \
+        package.json \
+        nest-cli.json \
+        src/
+        ./
+
+USER node
+
+RUN npm install --only=prod; npm run build
+
+FROM node:16.16.0-alpine3.16
+
+RUN apk add --no-cache apache2-utils curl; \
+    mkdir -p /data /data/storage/tmp; \
+    chown -R node:node /data
+
+WORKDIR /data
+
+COPY --chown=node:node \
+        package.json \
+        ./
+
+COPY --from=build --chown=node:node \
+        /data/dist
+        ./
+        
+USER node
+
+VOLUME /data
+
+CMD npm run start:prod

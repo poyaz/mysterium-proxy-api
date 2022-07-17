@@ -7,11 +7,7 @@ services:
     expose:
       - 3000
     volumes:
-      - $PWD:/data
       - /etc/localtime:/etc/localtime:ro
-    user: node
-    working_dir: /data
-    command: "sh -c 'npm install; npm run build; npm run start:prod'"
     networks:
       main:
         ipv4_address: 10.110.0.2

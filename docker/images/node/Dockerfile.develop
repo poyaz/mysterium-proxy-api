@@ -1,0 +1,18 @@
+FROM node:16.16.0-alpine3.16 AS build
+
+RUN apk add --no-cache apache2-utils curl; \
+    mkdir -p /data /data/storage/tmp; \
+    chown -R node:node /data
+
+WORKDIR /data
+
+COPY --chown=node:node \
+        tsconfig*.json \
+        package.json \
+        nest-cli.json \
+        src/
+        ./
+
+USER node
+
+RUN npm install
