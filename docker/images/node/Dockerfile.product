@@ -9,7 +9,7 @@ COPY --chown=node:node \
         tsconfig*.json \
         package.json \
         nest-cli.json \
-        src/
+        src/ \
         ./
 
 USER node
@@ -29,9 +29,9 @@ COPY --chown=node:node \
         ./
 
 COPY --from=build --chown=node:node \
-        /data/dist
+        /data/dist \
         ./
-        
+
 USER node
 
 VOLUME /data

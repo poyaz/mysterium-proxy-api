@@ -10,7 +10,7 @@ COPY --chown=node:node \
         tsconfig*.json \
         package.json \
         nest-cli.json \
-        src/
+        src/ \
         ./
 
 USER node
