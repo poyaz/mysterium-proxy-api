@@ -12,12 +12,12 @@ COPY --chown=node:node \
         nest-cli.json \
         ./
 
+RUN npm install
+
 COPY --chown=node:node \
         src/ \
         ./src
 
 USER node
-
-RUN npm install
 
 VOLUME /data
