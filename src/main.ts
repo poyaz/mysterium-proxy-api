@@ -22,6 +22,7 @@ async function bootstrap() {
     whitelist: true,
     forbidNonWhitelisted: true,
   }));
+  app.enableCors({origin: "*"});
 
   const swaggerConf = new DocumentBuilder()
     .setTitle('Mysterium proxy api')
