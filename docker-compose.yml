@@ -37,34 +37,18 @@ services:
         ipv4_address: 10.110.0.4
     restart: "always"
 
-  myst:
+  build-myst-image:
     build:
       context: ./docker/images/myst
       dockerfile: Dockerfile
-    expose:
-      - 4449
-    volumes:
-      - myst-data:/var/lib/mysterium-node
-      - myst-keysore:/var/lib/mysterium-node/keystore/
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - NET_ADMIN
-    networks:
-      main:
-        ipv4_address: 10.110.0.5
-    command: "service --agreed-terms-and-conditions"
-    restart: "always"
+    image: myst-service:latest
+    network_mode: "bridge"
+    restart: "no"
+    entrypoint: ""
+    command: /bin/bash -c "sleep 1; exit"
 
 volumes:
   postgres-storage: { }
-  myst-data: { }
-  myst-keysore:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: $PWD/storage/docker/volume/myst-keysore
 
 networks:
   main:
