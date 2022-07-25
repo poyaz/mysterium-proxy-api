@@ -47,6 +47,16 @@ services:
     entrypoint: ""
     command: /bin/bash -c "sleep 1; exit"
 
+  build-myst-connect-image:
+    build:
+      context: ./docker/images/connect
+      dockerfile: Dockerfile
+    image: myst-connect-service:latest
+    network_mode: "bridge"
+    restart: "no"
+    entrypoint: ""
+    command: /bin/bash -c "sleep 1; exit"
+
 volumes:
   postgres-storage: { }
 
