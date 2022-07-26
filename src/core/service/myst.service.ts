@@ -19,6 +19,7 @@ import {
 } from '@src-core/model/runner.model';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
+import {VpnDisconnectException} from '@src-core/exception/vpn-disconnect.exception';
 
 @Injectable()
 export class MystService implements IProviderServiceInterface {
@@ -66,7 +67,38 @@ export class MystService implements IProviderServiceInterface {
   }
 
   async down(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+    const runnerFilter = new FilterModel<VpnProviderModel>();
+    runnerFilter.addCondition({$opr: 'eq', providerIdentity: id});
+    const [runnerError, runnerList] = await this._runnerDockerService.findAllByMetaData(runnerFilter);
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    if (runnerList.length === 0) {
+      return [new NotFoundException()];
+    }
+
+    const mystRunner = runnerList.find((v) => v.service === RunnerServiceEnum.MYST);
+
+    if (mystRunner) {
+      const [error] = await this._runnerDockerService.remove(mystRunner.id);
+      if (error) {
+        return [new VpnDisconnectException()];
+      }
+    }
+
+    const tasks = [];
+    for (const runner of runnerList) {
+      if (runner.service === RunnerServiceEnum.MYST) {
+        continue;
+      }
+
+      tasks.push(this._runnerDockerService.remove(runner.id));
+    }
+
+    await Promise.all(tasks);
+
+    return [null];
   }
 
   async _createRunner(providerId, mystIdentityModel, proxyModel, outgoingIp): Promise<AsyncReturn<Error, VpnProviderModel>> {

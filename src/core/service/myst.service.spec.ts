@@ -27,6 +27,7 @@ import {
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
 import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
+import {VpnDisconnectException} from '@src-core/exception/vpn-disconnect.exception';
 
 describe('MystService', () => {
   let service: MystService;
@@ -814,6 +815,172 @@ describe('MystService', () => {
         isEnable: true,
         insertDate: new Date(),
       });
+    });
+  });
+
+  describe(`Remove proxy`, () => {
+    let inputId: string;
+    let outputMystRunnerModel: RunnerModel;
+    let outputMystConnectRunnerModel: RunnerModel;
+    let outputEnvoyRunnerModel: RunnerModel;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputMystRunnerModel = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'myst serial',
+        name: 'myst',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+
+      outputMystConnectRunnerModel = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'myst connect serial',
+        name: 'myst-connect',
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+
+      outputEnvoyRunnerModel = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'envoy serial',
+        name: 'envoy',
+        service: RunnerServiceEnum.ENVOY,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.2',
+        socketPort: 10001,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error remove proxy when fetch runner list for proxy`, async () => {
+      runnerDockerService.findAllByMetaData.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.down(inputId);
+
+      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: inputId,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove proxy when can't find any runner service`, async () => {
+      runnerDockerService.findAllByMetaData.mockResolvedValue([null, []]);
+
+      const [error] = await service.down(inputId);
+
+      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: inputId,
+      });
+      expect(error).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error remove proxy when fail to remove primary service`, async () => {
+      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
+        outputMystRunnerModel,
+        outputMystConnectRunnerModel,
+        outputEnvoyRunnerModel,
+      ]]);
+      runnerDockerService.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.down(inputId);
+
+      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: inputId,
+      });
+      expect(runnerDockerService.remove).toBeCalledTimes(1);
+      expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
+      expect(error).toBeInstanceOf(VpnDisconnectException);
+    });
+
+    it(`Should successfully remove proxy (All service remove successfully)`, async () => {
+      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
+        outputMystRunnerModel,
+        outputMystConnectRunnerModel,
+        outputEnvoyRunnerModel,
+      ]]);
+      runnerDockerService.remove.mockResolvedValue([null]);
+
+      const [error] = await service.down(inputId);
+
+      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: inputId,
+      });
+      expect(runnerDockerService.remove).toBeCalledTimes(3);
+      expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
+      expect(runnerDockerService.remove.mock.calls[1][0]).toEqual(identifierMock.generateId());
+      expect(runnerDockerService.remove.mock.calls[2][0]).toEqual(identifierMock.generateId());
+      expect(error).toBeNull();
+    });
+
+    it(`Should successfully remove proxy (If can't remove myst-connect service)`, async () => {
+      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
+        outputMystRunnerModel,
+        outputMystConnectRunnerModel,
+        outputEnvoyRunnerModel,
+      ]]);
+      runnerDockerService.remove
+        .mockResolvedValueOnce([null, null])
+        .mockResolvedValueOnce([new UnknownException()])
+        .mockResolvedValueOnce([null, null]);
+
+      const [error] = await service.down(inputId);
+
+      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: inputId,
+      });
+      expect(runnerDockerService.remove).toBeCalledTimes(3);
+      expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
+      expect(runnerDockerService.remove.mock.calls[1][0]).toEqual(identifierMock.generateId());
+      expect(runnerDockerService.remove.mock.calls[2][0]).toEqual(identifierMock.generateId());
+      expect(error).toBeNull();
+    });
+
+    it(`Should successfully remove proxy (If can't remove envoy service)`, async () => {
+      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
+        outputMystRunnerModel,
+        outputMystConnectRunnerModel,
+        outputEnvoyRunnerModel,
+      ]]);
+      runnerDockerService.remove
+        .mockResolvedValueOnce([null, null])
+        .mockResolvedValueOnce([null, null])
+        .mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await service.down(inputId);
+
+      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: inputId,
+      });
+      expect(runnerDockerService.remove).toBeCalledTimes(3);
+      expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
+      expect(runnerDockerService.remove.mock.calls[1][0]).toEqual(identifierMock.generateId());
+      expect(runnerDockerService.remove.mock.calls[2][0]).toEqual(identifierMock.generateId());
+      expect(error).toBeNull();
     });
   });
 });
