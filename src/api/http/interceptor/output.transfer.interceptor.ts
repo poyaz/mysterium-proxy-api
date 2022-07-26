@@ -33,6 +33,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
               break;
             case ExceptionEnum.NOT_FOUND_ERROR:
             case ExceptionEnum.NOT_FOUND_USER_ERROR:
+            case ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR:
             case ExceptionEnum.MODEL_ID_NOT_EXIST_ERROR:
               statusCode = HttpStatus.NOT_FOUND;
               error = 'Not Found';
