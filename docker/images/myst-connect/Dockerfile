@@ -10,4 +10,4 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["myst"]
 
 HEALTHCHECK --start-period=3s --interval=5s --timeout=3s \
-    CMD bash /usr/local/bin/docker-healcheck.sh || pkill -f 1
+    CMD bash /usr/local/bin/docker-healcheck.sh || pkill -SIGILL -f 1
