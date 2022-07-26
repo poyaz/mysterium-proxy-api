@@ -24,14 +24,16 @@ export enum VpnProviderStatusEnum {
 
 export class VpnProviderModel {
   id: string;
+  userIdentity?: string;
   serviceType: VpnServiceTypeEnum;
   providerName: VpnProviderName;
   providerIdentity: string;
   providerStatus?: VpnProviderStatusEnum;
   providerIpType: VpnProviderIpTypeEnum;
-  ip: string;
-  mask: number;
+  ip?: string;
+  mask?: number;
   country: string;
+  serverOutgoingIp?: string;
   runner?: RunnerModel;
   quality?: number;
   bandwidth?: number;
@@ -42,5 +44,9 @@ export class VpnProviderModel {
 
   constructor(props: ModelRequireProp<typeof VpnProviderModel.prototype>) {
     Object.assign(this, props);
+  }
+
+  clone() {
+    return Object.assign(Object.create(this), this);
   }
 }
