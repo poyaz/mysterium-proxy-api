@@ -40,7 +40,7 @@ export class EnvConfigDto {
   DB_PG_HOST?: string;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   DB_PG_PORT?: number;
 
   @IsOptional()
@@ -56,15 +56,15 @@ export class EnvConfigDto {
   DB_PG_PASSWORD?: string;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   DB_PG_MIN?: number;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   DB_PG_MAX?: number;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   DB_PG_IDLE_TIMEOUT?: number;
 
   @IsOptional()
@@ -80,6 +80,22 @@ export class EnvConfigDto {
   @IsOptional()
   @IsString()
   DB_PG_APPLICATION_NAME?: string;
+
+  @IsOptional()
+  @IsString()
+  DB_REDIS_HOST?: string;
+
+  @IsOptional()
+  @IsNumber()
+  DB_REDIS_PORT?: number;
+
+  @IsOptional()
+  @IsString()
+  DB_REDIS_DATABASE?: string;
+
+  @IsOptional()
+  @IsString()
+  DB_REDIS_PASSWORD?: string;
 
   @IsString()
   JWT_SECRET_KEY: string;

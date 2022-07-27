@@ -4,6 +4,7 @@ import {resolve} from 'path';
 import {envValidate} from './validate/env.validation';
 import serverConfig from './config/server.config';
 import postgresConfig from './config/postgres.config';
+import redisConfig from './config/redis.config';
 import squidConfig from './config/squid.config';
 
 @Module({
@@ -12,7 +13,7 @@ import squidConfig from './config/squid.config';
       cache: true,
       envFilePath: resolve('env', 'app', '.env'),
       validate: envValidate,
-      load: [serverConfig, postgresConfig, squidConfig],
+      load: [serverConfig, postgresConfig, redisConfig, squidConfig],
     }),
   ],
 })

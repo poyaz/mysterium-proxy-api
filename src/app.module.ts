@@ -28,6 +28,9 @@ import {UsersModel} from '@src-core/model/users.model';
 import {SquidConfigInterface} from '@src-loader/configure/interface/squid-config.interface';
 import {UsersSquidFileRepository} from '@src-infrastructure/repository/users-squid-file.repository';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {RedisModule} from '@liaoliaots/nestjs-redis';
+import {RedisConfigInterface} from '@src-loader/configure/interface/redis-config.interface';
+import {config} from 'rxjs';
 
 @Module({
   imports: [
@@ -39,6 +42,14 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
       useClass: PgConfigService,
     }),
     TypeOrmModule.forFeature([UsersEntity]),
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        closeClient: true,
+        config: configService.get<RedisConfigInterface>('redis'),
+      }),
+    }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
