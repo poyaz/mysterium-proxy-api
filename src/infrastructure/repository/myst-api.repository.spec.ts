@@ -98,6 +98,7 @@ describe('MystApiRepository', () => {
           'uptime': 24,
         },
       };
+      outputNullAxiosData = null;
       outputAxiosData1 = {
         'id': 0,
         'format': 'service-proposal/v3',
@@ -283,7 +284,7 @@ describe('MystApiRepository', () => {
 
     it(`Should successfully get all vpn provider with empty record when result of api is null`, async () => {
       (<jest.Mock>axios.get).mockResolvedValue({
-        data: null,
+        data: outputNullAxiosData,
       });
 
       const [error, result] = await repository.getAll();

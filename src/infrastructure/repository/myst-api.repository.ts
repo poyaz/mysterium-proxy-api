@@ -86,9 +86,6 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
   }
 
   private _fillModel(row) {
-    let serviceType;
-
-
     return new VpnProviderModel({
       id: this._identifier.generateId(row['id']),
       serviceType: VpnServiceTypeEnum.WIREGUARD,
