@@ -6,6 +6,4 @@ export interface IProxyApiRepositoryInterface {
   getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<VpnProviderModel>>>;
 
   getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>>;
-
-  getConnectionInfo(runner: RunnerModel): Promise<AsyncReturn<Error, VpnProviderModel>>;
 }
