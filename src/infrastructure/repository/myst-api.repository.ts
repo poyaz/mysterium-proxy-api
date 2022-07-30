@@ -38,6 +38,11 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
           params['location_country'] = getCountry.country;
         }
 
+        const getProviderIdentity = filterModel.getCondition('providerIdentity');
+        if (getProviderIdentity) {
+          params['provider_id'] = getProviderIdentity.providerIdentity;
+        }
+
         const getIsRegister = filterModel.getCondition('isRegister');
         if (getIsRegister) {
           isSkipPagination = true;
@@ -82,8 +87,6 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
   }
 
   async getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
-    let data;
-
     try {
       const response = await axios.get(`${this._myst_api_prefix}/proposals`, {
         headers: {
