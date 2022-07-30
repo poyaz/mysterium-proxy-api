@@ -14,40 +14,28 @@ import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {FilterModel} from '@src-core/model/filter.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
-import {RedisService} from '@liaoliaots/nestjs-redis';
-import {Redis} from 'ioredis';
 
 jest.mock('axios');
 
 describe('MystApiRepository', () => {
   let repository: MystApiRepository;
-  let redis: MockProxy<Redis>;
-  let redisService: MockProxy<RedisService>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
-    redis = mock<Redis>();
-    redisService = mock<RedisService>();
-    redisService.getClient.mockReturnValue(redis);
-
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: RedisService,
-          useValue: redisService,
-        },
-        {
           provide: ProviderTokenEnum.IDENTIFIER_UUID,
           useValue: identifierMock,
         },
         {
           provide: MystApiRepository,
-          inject: [ProviderTokenEnum.IDENTIFIER_UUID, RedisService],
-          useFactory: (identifier: IIdentifier, redisService: RedisService) =>
-            new MystApiRepository(redisService, identifier, 'https://myst.com'),
+          inject: [ProviderTokenEnum.IDENTIFIER_UUID],
+          useFactory: (identifier: IIdentifier) =>
+            new MystApiRepository(identifier, 'https://myst.com'),
         },
       ],
     }).compile();
@@ -509,30 +497,52 @@ describe('MystApiRepository', () => {
   describe(`Get vpn info by id`, () => {
     let inputId: string;
     let outputNullAxiosData = null;
+    let outputAxiosData;
 
     beforeEach(() => {
       inputId = identifierMock.generateId();
+      outputAxiosData = {
+        'id': 0,
+        'format': 'service-proposal/v3',
+        'compatibility': 2,
+        'provider_id': '0x73cd26eedd454613acb73f620628021b4c936dba',
+        'service_type': 'wireguard',
+        'location': {
+          'continent': 'EU',
+          'country': 'GB',
+          'city': 'England',
+          'asn': 31898,
+          'isp': 'Oracle Public Cloud',
+          'ip_type': 'hosting',
+        },
+        'contacts': [
+          {
+            'type': 'nats/p2p/v1',
+            'definition': {
+              'broker_addresses': [
+                'nats://broker.mysterium.network:4222',
+                'nats://broker.mysterium.network:4222',
+                'nats://51.15.116.186:4222',
+                'nats://51.15.72.87:4222',
+              ],
+            },
+          },
+        ],
+        'quality': {
+          'quality': 2.625,
+          'latency': 4002.173432,
+          'bandwidth': 1130.874381,
+          'uptime': 24,
+        },
+      };
     });
 
-    it(`Should error get vpn info by id when read from catch`, async () => {
-      const executeError = new Error('Error in execute on database');
-      redis.get.mockRejectedValue(executeError);
-
-      const [error] = await repository.getById(inputId);
-
-      expect(redis.get).toHaveBeenCalled();
-      expect(error).toBeInstanceOf(RepositoryException);
-      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
-    });
-
-    it(`Should error get vpn info by id when fetch from api (cache missed)`, async () => {
-      redis.get.mockResolvedValue(null);
+    it(`Should error get vpn info by id when fetch from api`, async () => {
       const apiError = new Error('API call error');
       (<jest.Mock>axios.get).mockRejectedValue(apiError);
 
       const [error] = await repository.getById(inputId);
 
-      expect(redis.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
         expect.objectContaining({
@@ -548,15 +558,13 @@ describe('MystApiRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(apiError);
     });
 
-    it(`Should successfully get vpn info by id with return empty record`, async () => {
-      redis.get.mockResolvedValue(null);
+    it(`Should successfully get vpn info by id with return null`, async () => {
       (<jest.Mock>axios.get).mockResolvedValue({
         data: [],
       });
 
       const [error, result] = await repository.getById(inputId);
 
-      expect(redis.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
         expect.objectContaining({
@@ -572,15 +580,13 @@ describe('MystApiRepository', () => {
       expect(result).toBeNull();
     });
 
-    it(`Should successfully get vpn info by id with return empty record when result of api is null`, async () => {
-      redis.get.mockResolvedValue(null);
+    it(`Should successfully get vpn info by id with return null when result of api is null`, async () => {
       (<jest.Mock>axios.get).mockResolvedValue({
         data: outputNullAxiosData,
       });
 
       const [error, result] = await repository.getById(inputId);
 
-      expect(redis.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
         expect.objectContaining({
@@ -594,6 +600,68 @@ describe('MystApiRepository', () => {
       );
       expect(error).toBeNull();
       expect(result).toBeNull();
+    });
+
+    it(`Should successfully get vpn info by id with return null when result of api not found`, async () => {
+      (<jest.Mock>axios.get).mockResolvedValue({
+        data: [outputAxiosData],
+      });
+      identifierMock.generateId.mockReturnValueOnce('00000000-0000-0000-0000-000000000000');
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(axios.get).toBeCalledWith(
+        expect.stringMatching(/\/proposals$/),
+        expect.objectContaining({
+          headers: {
+            'content-type': 'application.json',
+          },
+          params: {
+            service_type: VpnServiceTypeEnum.WIREGUARD,
+          },
+        }),
+      );
+      expect(identifierMock.generateId).toHaveBeenCalled();
+      expect(identifierMock.generateId).toBeCalledWith(outputAxiosData.provider_id);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get vpn info by id with return null when result of api not found`, async () => {
+      (<jest.Mock>axios.get).mockResolvedValue({
+        data: [outputAxiosData],
+      });
+      identifierMock.generateId.mockReturnValueOnce('11111111-1111-1111-1111-111111111111');
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(axios.get).toBeCalledWith(
+        expect.stringMatching(/\/proposals$/),
+        expect.objectContaining({
+          headers: {
+            'content-type': 'application.json',
+          },
+          params: {
+            service_type: VpnServiceTypeEnum.WIREGUARD,
+          },
+        }),
+      );
+      expect(identifierMock.generateId).toHaveBeenCalled();
+      expect(identifierMock.generateId).toBeCalledWith(outputAxiosData.provider_id);
+      expect(error).toBeNull();
+      expect(result).toEqual(<VpnProviderModel>{
+        id: identifierMock.generateId(),
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: outputAxiosData.provider_id,
+        providerIpType: VpnProviderIpTypeEnum.HOSTING,
+        country: outputAxiosData.location.country,
+        isRegister: false,
+        quality: outputAxiosData.quality.quality,
+        bandwidth: outputAxiosData.quality.bandwidth,
+        latency: outputAxiosData.quality.latency,
+        insertDate: new Date(),
+      });
     });
   });
 });

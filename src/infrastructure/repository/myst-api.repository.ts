@@ -12,20 +12,12 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
-import {RedisService} from '@liaoliaots/nestjs-redis';
-import Redis from 'ioredis';
 
 @Injectable()
 export class MystApiRepository implements IProxyApiRepositoryInterface {
-  private readonly _redis: Redis;
   private readonly _myst_api_prefix;
-  private static PREFIX_KEY = 'myst_provider';
 
-  constructor(
-    private readonly _redisService: RedisService,
-    private readonly _identifier: IIdentifier,
-    myst_api_address) {
-    this._redis = this._redisService.getClient();
+  constructor(private readonly _identifier: IIdentifier, myst_api_address) {
     this._myst_api_prefix = `${myst_api_address.replace(/^(.+)\/+$/g, '$1')}/api/v3/`;
   }
 
@@ -93,12 +85,23 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
     let data;
 
     try {
-      const cacheProviderId = await this._redis.get(`${MystApiRepository.PREFIX_KEY}_${id}`);
-      if (!cacheProviderId) {
-        data = await this._getByIdAllData(id);
+      const response = await axios.get(`${this._myst_api_prefix}/proposals`, {
+        headers: {
+          'content-type': 'application.json',
+        },
+        params: {
+          service_type: VpnServiceTypeEnum.WIREGUARD,
+        },
+      });
+      if (!response.data) {
+        return [null, null];
       }
 
-      return [null, data];
+      const data = response.data.filter((v) => this._identifier.generateId(v['provider_id']) === id);
+
+      const result = data.length === 1 ? this._fillModel(data[0]) : null;
+
+      return [null, result];
     } catch (error) {
       if (error instanceof FillDataRepositoryException) {
         return [error];
@@ -106,27 +109,6 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
 
       return [new RepositoryException(error)];
     }
-  }
-
-  private async _getByIdAllData(id) {
-    const response = await axios.get(`${this._myst_api_prefix}/proposals`, {
-      headers: {
-        'content-type': 'application.json',
-      },
-      params: {
-        service_type: VpnServiceTypeEnum.WIREGUARD,
-      },
-    });
-    if (!response.data) {
-      return null;
-    }
-
-    const result = response.data.filter((v) => this._identifier.generateId(v['provider_id']) === id);
-
-    return result.length === 1 ? result[0] : null;
-  }
-
-  private async _getByIdWithProviderId(providerId: string) {
   }
 
   private _fillModel(row) {
