@@ -53,7 +53,7 @@ describe('MystService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: ProviderTokenEnum.PROXY_API_REPOSITORY,
+          provide: ProviderTokenEnum.MYST_API_REPOSITORY,
           useValue: proxyApiRepository,
         },
         {
@@ -75,7 +75,7 @@ describe('MystService', () => {
         {
           provide: MystService,
           inject: [
-            ProviderTokenEnum.PROXY_API_REPOSITORY,
+            ProviderTokenEnum.MYST_API_REPOSITORY,
             ProviderTokenEnum.RUNNER_SERVICE_DOCKER,
             ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
             ProviderTokenEnum.MYST_IDENTITY_PG_REPOSITORY,
