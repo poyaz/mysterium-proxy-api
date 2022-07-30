@@ -245,6 +245,7 @@ describe('MystService', () => {
         identity: 'user identity',
         passphrase: 'identity passphrase',
         path: '/identity/store/path/',
+        filename: 'name',
         isUse: false,
         insertDate: new Date(),
       });

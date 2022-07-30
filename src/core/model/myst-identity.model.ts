@@ -5,6 +5,7 @@ export class MystIdentityModel {
   identity: string;
   passphrase: string;
   path: string;
+  filename: string;
   isUse: boolean;
   insertDate: Date;
   updateDate?: Date;
