@@ -43,6 +43,11 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
           params['provider_id'] = getProviderIdentity.providerIdentity;
         }
 
+        const getProviderIpType = filterModel.getCondition('providerIpType');
+        if (getProviderIpType) {
+          params['ip_type'] = getProviderIpType.providerIpType;
+        }
+
         const getIsRegister = filterModel.getCondition('isRegister');
         if (getIsRegister) {
           isSkipPagination = true;

@@ -6,7 +6,6 @@ import {
   VpnProviderIpTypeEnum,
   VpnProviderModel,
   VpnProviderName,
-  VpnProviderStatusEnum,
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
 import {mock, MockProxy} from 'jest-mock-extended';
@@ -64,6 +63,7 @@ describe('MystApiRepository', () => {
     let inputCountryFilter: FilterModel<VpnProviderModel>;
     let inputIsRegisterFilter: FilterModel<VpnProviderModel>;
     let inputProviderIdFilter: FilterModel<VpnProviderModel>;
+    let inputProviderIpTypeFilter: FilterModel<VpnProviderModel>;
 
     beforeEach(() => {
       outputFailAxiosData = {
@@ -136,7 +136,6 @@ describe('MystApiRepository', () => {
         },
       };
       outputAxiosData2 = {
-
         'id': 0,
         'format': 'service-proposal/v3',
         'compatibility': 2,
@@ -215,6 +214,9 @@ describe('MystApiRepository', () => {
 
       inputProviderIdFilter = new FilterModel<VpnProviderModel>();
       inputProviderIdFilter.addCondition({$opr: 'eq', providerIdentity: outputAxiosData1.provider_id});
+
+      inputProviderIpTypeFilter = new FilterModel<VpnProviderModel>();
+      inputProviderIpTypeFilter.addCondition({$opr: 'eq', providerIpType: VpnProviderIpTypeEnum.HOSTING});
     });
 
     it(`Should error get all vpn provider when fetch from api`, async () => {
@@ -514,6 +516,44 @@ describe('MystApiRepository', () => {
           params: {
             service_type: VpnServiceTypeEnum.WIREGUARD,
             provider_id: inputProviderIdFilter.getCondition('providerIdentity').providerIdentity,
+          },
+        }),
+      );
+      expect(error).toBeNull();
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(<VpnProviderModel>{
+        id: identifierMock.generateId(),
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: outputAxiosData1.provider_id,
+        providerIpType: VpnProviderIpTypeEnum.HOSTING,
+        country: outputAxiosData1.location.country,
+        isRegister: false,
+        quality: outputAxiosData1.quality.quality,
+        bandwidth: outputAxiosData1.quality.bandwidth,
+        latency: outputAxiosData1.quality.latency,
+        insertDate: new Date(),
+      });
+      expect(totalCount).toEqual(1);
+    });
+
+    it(`Should successfully get all vpn provider with 'providerIpType' filter (get limit data)`, async () => {
+      (<jest.Mock>axios.get).mockResolvedValue({
+        data: [outputAxiosData1],
+      });
+
+      const [error, result, totalCount] = await repository.getAll(inputProviderIpTypeFilter);
+
+      expect(axios.get).toHaveBeenCalled();
+      expect(axios.get).toBeCalledWith(
+        expect.stringMatching(/\/proposals$/),
+        expect.objectContaining({
+          headers: {
+            'content-type': 'application.json',
+          },
+          params: {
+            service_type: VpnServiceTypeEnum.WIREGUARD,
+            ip_type: inputProviderIpTypeFilter.getCondition('providerIpType').providerIpType,
           },
         }),
       );
