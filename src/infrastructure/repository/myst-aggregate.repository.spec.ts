@@ -20,7 +20,6 @@ import {
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
-import Require = NodeJS.Require;
 
 describe('MystAggregateRepository', () => {
   let repository: MystAggregateRepository;
@@ -134,7 +133,6 @@ describe('MystAggregateRepository', () => {
           $namespace: VpnProviderModel.name,
           id: outputVpnProviderData1.id,
           providerIdentity: outputVpnProviderData1.providerIdentity,
-          test1: '1',
         },
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
@@ -355,6 +353,173 @@ describe('MystAggregateRepository', () => {
         isRegister: true,
       });
       expect(totalCount).toEqual(2);
+    });
+  });
+
+  describe(`Get by vpn info by id and fill aggregate data`, () => {
+    let inputId: string;
+    let outputVpnProviderData: VpnProviderModel;
+    let outputRunnerMystData1: RunnerModel<VpnProviderModel>;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputVpnProviderData = new VpnProviderModel({
+        id: '11111111-1111-1111-1111-111111111111',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.HOSTING,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+
+      outputRunnerMystData1 = new RunnerModel({
+        id: '44444444-4444-4444-4444-444444444444',
+        serial: 'myst1 runner serial',
+        name: 'myst1 runner name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: <RunnerObjectLabel<VpnProviderModel>>{
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProviderData.id,
+          providerIdentity: outputVpnProviderData.providerIdentity,
+        },
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error get vpn info by id for aggregation when fail on get by id data from vpn repository`, async () => {
+      mystApiRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toBeCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get vpn info by id for aggregation and return empty data because not found any vpn by id`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toBeCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toBeCalledTimes(0);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should error get vpn info by id for aggregation when fail on on get all data from runner`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputVpnProviderData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toBeCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect([
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('status'),
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service'),
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label'),
+      ]).toEqual(expect.arrayContaining([
+        {
+          $opr: 'eq',
+          status: RunnerStatusEnum.RUNNING,
+        },
+        {
+          $opr: 'eq',
+          service: RunnerServiceEnum.MYST,
+        },
+        {
+          $opr: 'eq',
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderData.id,
+            providerIdentity: outputVpnProviderData.providerIdentity,
+          },
+        },
+      ]));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get vpn info by id for aggregation and 'isRegister' false because not found any runner`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputVpnProviderData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toBeCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect([
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('status'),
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service'),
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label'),
+      ]).toEqual(expect.arrayContaining([
+        {
+          $opr: 'eq',
+          status: RunnerStatusEnum.RUNNING,
+        },
+        {
+          $opr: 'eq',
+          service: RunnerServiceEnum.MYST,
+        },
+        {
+          $opr: 'eq',
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderData.id,
+            providerIdentity: outputVpnProviderData.providerIdentity,
+          },
+        },
+      ]));
+      expect(error).toBeNull();
+      expect(result.isRegister).toEqual(false);
+    });
+
+    it(`Should successfully get vpn info by id for aggregation and 'isRegister' true`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputVpnProviderData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toBeCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect([
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('status'),
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service'),
+        (<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label'),
+      ]).toEqual(expect.arrayContaining([
+        {
+          $opr: 'eq',
+          status: RunnerStatusEnum.RUNNING,
+        },
+        {
+          $opr: 'eq',
+          service: RunnerServiceEnum.MYST,
+        },
+        {
+          $opr: 'eq',
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderData.id,
+            providerIdentity: outputVpnProviderData.providerIdentity,
+          },
+        },
+      ]));
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<VpnProviderModel>{
+        id: outputVpnProviderData.id,
+        runner: outputRunnerMystData1,
+        isRegister: true,
+      });
     });
   });
 });

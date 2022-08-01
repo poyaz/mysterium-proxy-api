@@ -44,8 +44,38 @@ export class MystAggregateRepository implements IProxyApiRepositoryInterface {
     return [null, result, totalCount];
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
+    const [apiError, apiData] = await this._mystApiRepository.getById(id);
+    if (apiError) {
+      return [apiError];
+    }
+    if (!apiData) {
+      return [null, null];
+    }
+
+    const runnerFilter = new FilterModel<RunnerModel>();
+    runnerFilter.addCondition({$opr: 'eq', status: RunnerStatusEnum.RUNNING});
+    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: VpnProviderModel.name,
+        id,
+        providerIdentity: apiData.providerIdentity,
+      },
+    });
+    const [runnerError, runnerDataList, runnerTotalCount] = await this._dockerRunnerRepository.getAll<VpnProviderModel>(runnerFilter);
+    if (runnerError) {
+      return [runnerError];
+    }
+    if (runnerTotalCount === 0) {
+      return [null, apiData];
+    }
+
+    apiData.isRegister = true;
+    apiData.runner = runnerDataList[0];
+
+    return [null, apiData];
   }
 
   private static _mergeData(vpnData: VpnProviderModel, runnerDataList: Array<RunnerModel<VpnProviderModel>>): VpnProviderModel {
