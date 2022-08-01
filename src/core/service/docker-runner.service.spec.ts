@@ -146,7 +146,33 @@ describe('DockerRunnerService', () => {
         socketType: outputRunnerModel.socketType,
         status: outputRunnerModel.status,
         insertDate: outputRunnerModel.insertDate,
-      })
+      });
+    });
+  });
+
+  describe(`Restart docker service`, () => {
+    let inputId: string;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+    });
+
+    it(`Should error restart docker`, async () => {
+      dockerRunnerRepository.restart.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.restart(inputId);
+
+      expect(dockerRunnerRepository.restart).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully restart docker`, async () => {
+      dockerRunnerRepository.restart.mockResolvedValue([null, null]);
+
+      const [error] = await service.restart(inputId);
+
+      expect(dockerRunnerRepository.restart).toHaveBeenCalled();
+      expect(error).toBeNull();
     });
   });
 });

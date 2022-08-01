@@ -19,7 +19,7 @@ export class DockerRunnerService implements IRunnerServiceInterface {
   }
 
   async restart(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+    return this._dockerRunnerRepository.restart(id);
   }
 
   async reload(id: string): Promise<AsyncReturn<Error, null>> {
