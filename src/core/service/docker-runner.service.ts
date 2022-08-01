@@ -15,7 +15,7 @@ export class DockerRunnerService implements IRunnerServiceInterface {
   }
 
   async create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>> {
-    return Promise.resolve(undefined);
+    return this._dockerRunnerRepository.create(model);
   }
 
   async restart(id: string): Promise<AsyncReturn<Error, null>> {
