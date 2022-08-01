@@ -1,4 +1,4 @@
-import {ModelRequireProp} from '@src-core/utility';
+import {ModelRequireProp, PickOne} from '@src-core/utility';
 
 export enum RunnerExecEnum {
   DOCKER = 'docker'
@@ -24,7 +24,9 @@ export enum RunnerStatusEnum {
   FAILED = 'failed'
 }
 
-export class RunnerModel {
+export type RunnerObjectLabel<T> = (T extends string ? Record<string, string> : { [P in keyof T]?: string } & Record<string, string>) & {$namespace?: string};
+
+export class RunnerModel<T = string> {
   id: string;
   serial: string;
   name: string;
@@ -33,7 +35,7 @@ export class RunnerModel {
   socketType: RunnerSocketTypeEnum;
   socketUri?: string;
   socketPort?: number;
-  label?: Record<string, string>;
+  label?: RunnerObjectLabel<T>;
   status: RunnerStatusEnum;
   insertDate: Date;
 
