@@ -1,9 +1,11 @@
 export type Maybe<T> = T | null;
 export type AsyncReturn<E, D> = typeof E extends null | undefined
-  ? [E] :
-  D extends Array<any> ?
-    [null | undefined, D, number] :
-    [null | undefined, D];
+  ? [E]
+  : D extends null | undefined
+    ? [null | undefined, null | undefined]
+    : D extends Array<any>
+      ? [null | undefined, D, number]
+      : [null | undefined, D];
 
 export type ModelRequireProp<T> = Pick<T, { [K in keyof T]: T[K] extends Function ? never : K }[keyof T]>;
 
