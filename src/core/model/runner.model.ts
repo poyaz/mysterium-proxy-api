@@ -24,7 +24,14 @@ export enum RunnerStatusEnum {
   FAILED = 'failed'
 }
 
-export type RunnerObjectLabel<T> = (T extends string ? Record<string, string> : { [P in keyof T]?: string } & Record<string, string>) & {$namespace?: string};
+export enum RunnerDependsOnStatusEnum {
+  STARTED = 'started',
+  HEALTHY = 'healthy',
+}
+
+export type RunnerObjectLabel<T> =
+  (T extends string ? Record<string, string> : { [P in keyof T]?: string } & Record<string, string>)
+  & { $namespace?: string };
 
 export class RunnerModel<T = string> {
   id: string;
@@ -36,6 +43,7 @@ export class RunnerModel<T = string> {
   socketUri?: string;
   socketPort?: number;
   label?: RunnerObjectLabel<T>;
+  dependsOn?: Record<string, RunnerDependsOnStatusEnum>;
   status: RunnerStatusEnum;
   insertDate: Date;
 
