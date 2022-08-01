@@ -12,4 +12,6 @@ export interface IRunnerRepositoryInterface {
   reload(id: string): Promise<AsyncReturn<Error, null>>;
 
   remove(id: string): Promise<AsyncReturn<Error, null>>;
+
+  removeStopService(): Promise<AsyncReturn<Error, null>>;
 }
