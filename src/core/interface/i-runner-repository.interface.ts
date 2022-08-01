@@ -5,7 +5,7 @@ import {RunnerModel, RunnerStatusEnum} from '@src-core/model/runner.model';
 export interface IRunnerRepositoryInterface {
   getAll<T = string>(filter: FilterModel<RunnerModel<T>>): Promise<AsyncReturn<Error, Array<RunnerModel<T>>>>;
 
-  create(model: RunnerModel): Promise<AsyncReturn<Error, RunnerModel>>;
+  create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>>;
 
   restart(id: string): Promise<AsyncReturn<Error, null>>;
 
