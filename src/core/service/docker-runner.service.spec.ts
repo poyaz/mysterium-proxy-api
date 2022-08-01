@@ -201,4 +201,30 @@ describe('DockerRunnerService', () => {
       expect(error).toBeNull();
     });
   });
+
+  describe(`Remove docker service`, () => {
+    let inputId: string;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+    });
+
+    it(`Should error remove docker`, async () => {
+      dockerRunnerRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove docker`, async () => {
+      dockerRunnerRepository.remove.mockResolvedValue([null, null]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+  });
 });
