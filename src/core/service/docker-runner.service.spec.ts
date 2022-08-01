@@ -174,5 +174,31 @@ describe('DockerRunnerService', () => {
       expect(dockerRunnerRepository.restart).toHaveBeenCalled();
       expect(error).toBeNull();
     });
+
+    describe(`Reload docker service`, () => {
+      let inputId: string;
+
+      beforeEach(() => {
+        inputId = identifierMock.generateId();
+      });
+
+      it(`Should error reload docker`, async () => {
+        dockerRunnerRepository.reload.mockResolvedValue([new UnknownException()]);
+
+        const [error] = await service.reload(inputId);
+
+        expect(dockerRunnerRepository.reload).toHaveBeenCalled();
+        expect(error).toBeInstanceOf(UnknownException);
+      });
+
+      it(`Should successfully reload docker`, async () => {
+        dockerRunnerRepository.reload.mockResolvedValue([null, null]);
+
+        const [error] = await service.reload(inputId);
+
+        expect(dockerRunnerRepository.reload).toHaveBeenCalled();
+        expect(error).toBeNull();
+      });
+    });
   });
 });
