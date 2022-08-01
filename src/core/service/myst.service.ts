@@ -11,6 +11,7 @@ import {ExistException} from '@src-core/exception/exist.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {NotFoundMystIdentityException} from '@src-core/exception/not-found-myst-identity.exception';
 import {
+  RunnerDependsOnStatusEnum,
   RunnerExecEnum,
   RunnerModel,
   RunnerServiceEnum,
@@ -25,7 +26,7 @@ import {VpnDisconnectException} from '@src-core/exception/vpn-disconnect.excepti
 export class MystService implements IProviderServiceInterface {
   constructor(
     private readonly _proxyApiRepository: IProxyApiRepositoryInterface,
-    private readonly _runnerDockerService: IRunnerServiceInterface<VpnProviderModel>,
+    private readonly _runnerDockerService: IRunnerServiceInterface,
     private readonly _systemInfoRepository: ISystemInfoRepositoryInterface,
     private readonly _mystIdentityRepository: IGenericRepositoryInterface<MystIdentityModel>,
     private readonly _fakeIdentifier: IIdentifier,
@@ -67,9 +68,9 @@ export class MystService implements IProviderServiceInterface {
   }
 
   async down(id: string): Promise<AsyncReturn<Error, null>> {
-    const runnerFilter = new FilterModel<VpnProviderModel>();
-    runnerFilter.addCondition({$opr: 'eq', providerIdentity: id});
-    const [runnerError, runnerList] = await this._runnerDockerService.findAllByMetaData(runnerFilter);
+    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    runnerFilter.addCondition({$opr: 'eq', label: {id}});
+    const [runnerError, runnerList] = await this._runnerDockerService.findAll(runnerFilter);
     if (runnerError) {
       return [runnerError];
     }
@@ -101,10 +102,21 @@ export class MystService implements IProviderServiceInterface {
     return [null];
   }
 
-  async _createRunner(providerId, mystIdentityModel, proxyModel, outgoingIp): Promise<AsyncReturn<Error, VpnProviderModel>> {
-    const runnerFilter = new FilterModel<VpnProviderModel>();
-    runnerFilter.addCondition({$opr: 'eq', userIdentity: mystIdentityModel.identity});
-    const [runnerError, runnerList] = await this._runnerDockerService.findAllByMetaData(runnerFilter);
+  async _createRunner(
+    providerId: string,
+    mystIdentityModel: MystIdentityModel,
+    proxyModel: VpnProviderModel,
+    outgoingIp: string,
+  ): Promise<AsyncReturn<Error, VpnProviderModel>> {
+    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: VpnProviderModel.name,
+        userIdentity: mystIdentityModel.identity,
+      },
+    });
+    const [runnerError, runnerList] = await this._runnerDockerService.findAll(runnerFilter);
     if (runnerError) {
       return [runnerError];
     }
@@ -151,19 +163,26 @@ export class MystService implements IProviderServiceInterface {
     return [null, proxyResultModel];
   }
 
-  async _createMystRunner(mystIdentityModel, proxyCreateModel): Promise<AsyncReturn<Error, RunnerModel>> {
-    const mystRunnerModel = new RunnerModel({
+  async _createMystRunner(mystIdentityModel: MystIdentityModel, proxyCreateModel: VpnProviderModel): Promise<AsyncReturn<Error, RunnerModel>> {
+    const mystRunnerModel = new RunnerModel<VpnProviderModel>({
       id: this._fakeIdentifier.generateId(),
       serial: '0000000000000000000000000000000000000000000000000000000000000000',
       name: `${RunnerServiceEnum.MYST}-${mystIdentityModel.identity}`,
       service: RunnerServiceEnum.MYST,
       exec: RunnerExecEnum.DOCKER,
       socketType: RunnerSocketTypeEnum.HTTP,
+      label: {
+        $namespace: VpnProviderModel.name,
+        id: proxyCreateModel.id,
+        userIdentity: mystIdentityModel.identity,
+        providerIdentity: proxyCreateModel.providerIdentity,
+        serverOutgoingIp: proxyCreateModel.serverOutgoingIp,
+      },
       status: RunnerStatusEnum.CREATING,
       insertDate: new Date(),
     });
 
-    const [createMystError, createMystData] = await this._runnerDockerService.create(mystRunnerModel, proxyCreateModel);
+    const [createMystError, createMystData] = await this._runnerDockerService.create(mystRunnerModel);
     if (createMystError) {
       return [createMystError];
     }
@@ -171,19 +190,28 @@ export class MystService implements IProviderServiceInterface {
     return [null, createMystData];
   }
 
-  async _createMystConnectRunner(mystIdentityModel, proxyCreateModel): Promise<AsyncReturn<Error, null>> {
-    const mystConnectRunnerModel = new RunnerModel({
+  async _createMystConnectRunner(mystIdentityModel: MystIdentityModel, proxyCreateModel: VpnProviderModel): Promise<AsyncReturn<Error, null>> {
+    const mystConnectRunnerModel = new RunnerModel<VpnProviderModel>({
       id: this._fakeIdentifier.generateId(),
       serial: '0000000000000000000000000000000000000000000000000000000000000000',
       name: `${RunnerServiceEnum.MYST_CONNECT}-${mystIdentityModel.identity}`,
       service: RunnerServiceEnum.MYST_CONNECT,
       exec: RunnerExecEnum.DOCKER,
       socketType: RunnerSocketTypeEnum.NONE,
+      label: {
+        $namespace: VpnProviderModel.name,
+        id: proxyCreateModel.id,
+        userIdentity: mystIdentityModel.identity,
+        providerIdentity: proxyCreateModel.providerIdentity,
+      },
+      dependsOn: {
+        [`${RunnerServiceEnum.MYST}-${mystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.STARTED,
+      },
       status: RunnerStatusEnum.CREATING,
       insertDate: new Date(),
     });
 
-    const [createMystError] = await this._runnerDockerService.create(mystConnectRunnerModel, proxyCreateModel);
+    const [createMystError] = await this._runnerDockerService.create(mystConnectRunnerModel);
     if (createMystError) {
       return [createMystError];
     }
@@ -191,7 +219,7 @@ export class MystService implements IProviderServiceInterface {
     return [null, null];
   }
 
-  async _createEnvoyRunner(mystIdentityModel, proxyCreateModel): Promise<AsyncReturn<Error, null>> {
+  async _createEnvoyRunner(mystIdentityModel: MystIdentityModel, proxyCreateModel: VpnProviderModel): Promise<AsyncReturn<Error, null>> {
     const mystConnectRunnerModel = new RunnerModel({
       id: this._fakeIdentifier.generateId(),
       serial: '0000000000000000000000000000000000000000000000000000000000000000',
@@ -199,11 +227,20 @@ export class MystService implements IProviderServiceInterface {
       service: RunnerServiceEnum.ENVOY,
       exec: RunnerExecEnum.DOCKER,
       socketType: RunnerSocketTypeEnum.NONE,
+      label: {
+        $namespace: VpnProviderModel.name,
+        id: proxyCreateModel.id,
+        userIdentity: mystIdentityModel.identity,
+        providerIdentity: proxyCreateModel.providerIdentity,
+      },
+      dependsOn: {
+        [`${RunnerServiceEnum.MYST}-${mystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.HEALTHY,
+      },
       status: RunnerStatusEnum.CREATING,
       insertDate: new Date(),
     });
 
-    const [createMystError] = await this._runnerDockerService.create(mystConnectRunnerModel, proxyCreateModel);
+    const [createMystError] = await this._runnerDockerService.create(mystConnectRunnerModel);
     if (createMystError) {
       return [createMystError];
     }

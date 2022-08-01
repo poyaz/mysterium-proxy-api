@@ -20,6 +20,7 @@ import {ExistException} from '@src-core/exception/exist.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {NotFoundMystIdentityException} from '@src-core/exception/not-found-myst-identity.exception';
 import {
+  RunnerDependsOnStatusEnum,
   RunnerExecEnum,
   RunnerModel,
   RunnerServiceEnum,
@@ -32,7 +33,7 @@ import {VpnDisconnectException} from '@src-core/exception/vpn-disconnect.excepti
 describe('MystService', () => {
   let service: MystService;
   let proxyApiRepository: MockProxy<IProxyApiRepositoryInterface>;
-  let runnerDockerService: MockProxy<IRunnerServiceInterface<VpnProviderModel>>;
+  let runnerDockerService: MockProxy<IRunnerServiceInterface>;
   let systemInfoRepository: MockProxy<ISystemInfoRepositoryInterface>;
   let mystIdentityRepository: MockProxy<IGenericRepositoryInterface<MystIdentityModel>>;
   let identifierMock: MockProxy<IIdentifier>;
@@ -40,7 +41,7 @@ describe('MystService', () => {
 
   beforeEach(async () => {
     proxyApiRepository = mock<IProxyApiRepositoryInterface>();
-    runnerDockerService = mock<IRunnerServiceInterface<VpnProviderModel>>();
+    runnerDockerService = mock<IRunnerServiceInterface>();
     systemInfoRepository = mock<ISystemInfoRepositoryInterface>();
     mystIdentityRepository = mock<IGenericRepositoryInterface<MystIdentityModel>>();
 
@@ -83,7 +84,7 @@ describe('MystService', () => {
           ],
           useFactory: (
             proxyApiRepository: IProxyApiRepositoryInterface,
-            runnerDockerService: IRunnerServiceInterface<VpnProviderModel>,
+            runnerDockerService: IRunnerServiceInterface,
             systemInfoRepository: ISystemInfoRepositoryInterface,
             mystIdentityRepository: IGenericRepositoryInterface<MystIdentityModel>,
             fakeIdentifier: IIdentifier,
@@ -367,7 +368,7 @@ describe('MystService', () => {
     it(`Should error create proxy when can't find any myst identity`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, []]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await service.up(inputId);
 
@@ -385,8 +386,8 @@ describe('MystService', () => {
     it(`Should error create proxy when get runner service for identity`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel]]);
-      runnerDockerService.findAllByMetaData.mockResolvedValue([new UnknownException()]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel], 1]);
+      runnerDockerService.findAll.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.up(inputId);
 
@@ -398,10 +399,13 @@ describe('MystService', () => {
         $opr: 'eq',
         isUse: false,
       });
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('userIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        userIdentity: 'user identity',
+        label: {
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputMystIdentityModel.identity,
+        },
       });
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -409,12 +413,16 @@ describe('MystService', () => {
     it(`Should error create proxy when all service created before`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel]]);
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
-        outputMystRunnerModel,
-        outputMystConnectRunnerModel,
-        outputEnvoyRunnerModel,
-      ]]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel], 1]);
+      runnerDockerService.findAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunnerModel,
+          outputMystConnectRunnerModel,
+          outputEnvoyRunnerModel,
+        ],
+        3,
+      ]);
       runnerDockerService.create.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.up(inputId);
@@ -427,10 +435,13 @@ describe('MystService', () => {
         $opr: 'eq',
         isUse: false,
       });
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('userIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        userIdentity: 'user identity',
+        label: {
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputMystIdentityModel.identity,
+        },
       });
       expect(error).toBeInstanceOf(ExistException);
     });
@@ -438,8 +449,8 @@ describe('MystService', () => {
     it(`Should error create proxy when create myst service runner (when all service not created before)`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel]]);
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, []]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel], 1]);
+      runnerDockerService.findAll.mockResolvedValue([null, [], 0]);
       runnerDockerService.create.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.up(inputId);
@@ -452,14 +463,17 @@ describe('MystService', () => {
         $opr: 'eq',
         isUse: false,
       });
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('userIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        userIdentity: 'user identity',
+        label: {
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputMystIdentityModel.identity,
+        },
       });
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
-      expect(runnerDockerService.create).toHaveBeenCalled();
-      expect(runnerDockerService.create).toBeCalledWith(
+      expect(runnerDockerService.create).toHaveBeenCalledTimes(1);
+      expect(runnerDockerService.create.mock.calls[0][0]).toMatchObject(
         expect.objectContaining(<RunnerModel>{
           id: fakeIdentifierMock.generateId(),
           serial: '0000000000000000000000000000000000000000000000000000000000000000',
@@ -467,20 +481,14 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.HTTP,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+            serverOutgoingIp: outputCurrentIp,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        }),
-        expect.objectContaining(<VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         }),
       );
@@ -490,8 +498,8 @@ describe('MystService', () => {
     it(`Should error create proxy when create myst connect service runner (when all service not created before)`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel]]);
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, []]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel], 1]);
+      runnerDockerService.findAll.mockResolvedValue([null, [], 0]);
       runnerDockerService.create
         .mockResolvedValueOnce([null, null])
         .mockResolvedValueOnce([new UnknownException()]);
@@ -506,10 +514,13 @@ describe('MystService', () => {
         $opr: 'eq',
         isUse: false,
       });
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('userIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        userIdentity: 'user identity',
+        label: {
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputMystIdentityModel.identity,
+        },
       });
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(2);
@@ -521,22 +532,14 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.HTTP,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+            serverOutgoingIp: outputCurrentIp,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[0][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -548,22 +551,16 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST_CONNECT,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.NONE,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+          },
+          dependsOn: {
+            [`${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.STARTED,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[1][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -573,8 +570,8 @@ describe('MystService', () => {
     it(`Should error create proxy when create envoy service runner (when all service not created before)`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel]]);
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, []]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel], 1]);
+      runnerDockerService.findAll.mockResolvedValue([null, [], 0]);
       runnerDockerService.create
         .mockResolvedValueOnce([null, null])
         .mockResolvedValueOnce([null, null])
@@ -590,10 +587,13 @@ describe('MystService', () => {
         $opr: 'eq',
         isUse: false,
       });
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('userIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        userIdentity: 'user identity',
+        label: {
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputMystIdentityModel.identity,
+        },
       });
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(3);
@@ -605,22 +605,14 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.HTTP,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+            serverOutgoingIp: outputCurrentIp,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[0][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -632,22 +624,16 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST_CONNECT,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.NONE,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+          },
+          dependsOn: {
+            [`${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.STARTED,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[1][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -659,22 +645,16 @@ describe('MystService', () => {
           service: RunnerServiceEnum.ENVOY,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.NONE,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+          },
+          dependsOn: {
+            [`${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.HEALTHY,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[2][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -684,8 +664,8 @@ describe('MystService', () => {
     it(`Should successfully create proxy (when all service not created before)`, async () => {
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputCurrentIp]);
       proxyApiRepository.getById.mockResolvedValue([null, outputFindVpnProviderModel]);
-      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel]]);
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, []]);
+      mystIdentityRepository.getAll.mockResolvedValue([null, [outputMystIdentityModel], 1]);
+      runnerDockerService.findAll.mockResolvedValue([null, [], 0]);
       runnerDockerService.create
         .mockResolvedValueOnce([null, outputCreateMystRunnerModel])
         .mockResolvedValueOnce([null, null])
@@ -701,10 +681,13 @@ describe('MystService', () => {
         $opr: 'eq',
         isUse: false,
       });
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('userIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        userIdentity: 'user identity',
+        label: {
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputMystIdentityModel.identity,
+        },
       });
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(3);
@@ -716,22 +699,14 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.HTTP,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+            serverOutgoingIp: outputCurrentIp,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[0][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -743,22 +718,16 @@ describe('MystService', () => {
           service: RunnerServiceEnum.MYST_CONNECT,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.NONE,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+          },
+          dependsOn: {
+            [`${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.STARTED,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[1][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -770,22 +739,16 @@ describe('MystService', () => {
           service: RunnerServiceEnum.ENVOY,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.NONE,
+          label: {
+            $namespace: VpnProviderModel.name,
+            id: outputFindVpnProviderModel.id,
+            userIdentity: outputMystIdentityModel.identity,
+            providerIdentity: outputFindVpnProviderModel.providerIdentity,
+          },
+          dependsOn: {
+            [`${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`]: RunnerDependsOnStatusEnum.HEALTHY,
+          },
           status: RunnerStatusEnum.CREATING,
-          insertDate: new Date(),
-        },
-      );
-      expect(runnerDockerService.create.mock.calls[2][1]).toMatchObject(
-        <VpnProviderModel>{
-          id: identifierMock.generateId(),
-          userIdentity: outputMystIdentityModel.identity,
-          serviceType: outputFindVpnProviderModel.serviceType,
-          providerName: outputFindVpnProviderModel.providerName,
-          providerIdentity: outputFindVpnProviderModel.providerIdentity,
-          providerStatus: VpnProviderStatusEnum.PENDING,
-          providerIpType: outputFindVpnProviderModel.providerIpType,
-          country: outputFindVpnProviderModel.country,
-          serverOutgoingIp: outputCurrentIp,
-          isRegister: false,
           insertDate: new Date(),
         },
       );
@@ -867,45 +830,55 @@ describe('MystService', () => {
     });
 
     it(`Should error remove proxy when fetch runner list for proxy`, async () => {
-      runnerDockerService.findAllByMetaData.mockResolvedValue([new UnknownException()]);
+      runnerDockerService.findAll.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.down(inputId);
 
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        providerIdentity: inputId,
+        label: {
+          id: inputId,
+        },
       });
       expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should error remove proxy when can't find any runner service`, async () => {
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, []]);
+      runnerDockerService.findAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await service.down(inputId);
 
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        providerIdentity: inputId,
+        label: {
+          id: inputId,
+        },
       });
       expect(error).toBeInstanceOf(NotFoundException);
     });
 
     it(`Should error remove proxy when fail to remove primary service`, async () => {
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
-        outputMystRunnerModel,
-        outputMystConnectRunnerModel,
-        outputEnvoyRunnerModel,
-      ]]);
+      runnerDockerService.findAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunnerModel,
+          outputMystConnectRunnerModel,
+          outputEnvoyRunnerModel,
+        ],
+        3,
+      ]);
       runnerDockerService.remove.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.down(inputId);
 
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        providerIdentity: inputId,
+        label: {
+          id: inputId,
+        },
       });
       expect(runnerDockerService.remove).toBeCalledTimes(1);
       expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
@@ -913,19 +886,25 @@ describe('MystService', () => {
     });
 
     it(`Should successfully remove proxy (All service remove successfully)`, async () => {
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
-        outputMystRunnerModel,
-        outputMystConnectRunnerModel,
-        outputEnvoyRunnerModel,
-      ]]);
+      runnerDockerService.findAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunnerModel,
+          outputMystConnectRunnerModel,
+          outputEnvoyRunnerModel,
+        ],
+        3,
+      ]);
       runnerDockerService.remove.mockResolvedValue([null]);
 
       const [error] = await service.down(inputId);
 
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        providerIdentity: inputId,
+        label: {
+          id: inputId,
+        },
       });
       expect(runnerDockerService.remove).toBeCalledTimes(3);
       expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
@@ -935,11 +914,15 @@ describe('MystService', () => {
     });
 
     it(`Should successfully remove proxy (If can't remove myst-connect service)`, async () => {
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
-        outputMystRunnerModel,
-        outputMystConnectRunnerModel,
-        outputEnvoyRunnerModel,
-      ]]);
+      runnerDockerService.findAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunnerModel,
+          outputMystConnectRunnerModel,
+          outputEnvoyRunnerModel,
+        ],
+        3,
+      ]);
       runnerDockerService.remove
         .mockResolvedValueOnce([null, null])
         .mockResolvedValueOnce([new UnknownException()])
@@ -947,10 +930,12 @@ describe('MystService', () => {
 
       const [error] = await service.down(inputId);
 
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        providerIdentity: inputId,
+        label: {
+          id: inputId,
+        },
       });
       expect(runnerDockerService.remove).toBeCalledTimes(3);
       expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
@@ -960,11 +945,15 @@ describe('MystService', () => {
     });
 
     it(`Should successfully remove proxy (If can't remove envoy service)`, async () => {
-      runnerDockerService.findAllByMetaData.mockResolvedValue([null, [
-        outputMystRunnerModel,
-        outputMystConnectRunnerModel,
-        outputEnvoyRunnerModel,
-      ]]);
+      runnerDockerService.findAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunnerModel,
+          outputMystConnectRunnerModel,
+          outputEnvoyRunnerModel,
+        ],
+        3,
+      ]);
       runnerDockerService.remove
         .mockResolvedValueOnce([null, null])
         .mockResolvedValueOnce([null, null])
@@ -972,10 +961,12 @@ describe('MystService', () => {
 
       const [error] = await service.down(inputId);
 
-      expect(runnerDockerService.findAllByMetaData).toHaveBeenCalled();
-      expect((<FilterModel<VpnProviderModel>>runnerDockerService.findAllByMetaData.mock.calls[0][0]).getCondition('providerIdentity')).toMatchObject({
+      expect(runnerDockerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<VpnProviderModel>>>runnerDockerService.findAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        providerIdentity: inputId,
+        label: {
+          id: inputId,
+        },
       });
       expect(runnerDockerService.remove).toBeCalledTimes(3);
       expect(runnerDockerService.remove.mock.calls[0][0]).toEqual(identifierMock.generateId());
