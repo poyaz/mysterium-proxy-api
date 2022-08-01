@@ -324,7 +324,7 @@ describe('MystCacheIdApiRepository', () => {
 
     it(`Should successfully get vpn info by id when fetch data from getAll with filter and return null when not found (Return data from redis)`, async () => {
       redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
-      mystApiRepository.getAll.mockResolvedValue([null, []]);
+      mystApiRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error, result] = await repository.getById(inputId);
 
@@ -341,7 +341,7 @@ describe('MystCacheIdApiRepository', () => {
 
     it(`Should successfully get vpn info by id when fetch data from getAll with filter (Return data from redis)`, async () => {
       redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
-      mystApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData]]);
+      mystApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
 
       const [error, result] = await repository.getById(inputId);
 

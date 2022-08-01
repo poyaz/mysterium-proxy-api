@@ -99,7 +99,7 @@ describe('AuthService', () => {
     });
 
     it(`Should error login when username not found`, async () => {
-      usersService.findAll.mockResolvedValue([null, []]);
+      usersService.findAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await service.login(inputUsername, inputPassword);
 
@@ -109,7 +109,7 @@ describe('AuthService', () => {
     });
 
     it(`Should error login when password not match`, async () => {
-      usersService.findAll.mockResolvedValue([null, [outputInvalidPasswordUserModel]]);
+      usersService.findAll.mockResolvedValue([null, [outputInvalidPasswordUserModel], 1]);
 
       const [error] = await service.login(inputUsername, inputPassword);
 
@@ -119,7 +119,7 @@ describe('AuthService', () => {
     });
 
     it(`Should successfully login`, async () => {
-      usersService.findAll.mockResolvedValue([null, [outputValidPasswordUserModel]]);
+      usersService.findAll.mockResolvedValue([null, [outputValidPasswordUserModel], 1]);
       jwtService.sign.mockReturnValue('token');
 
       const [error, result] = await service.login(inputUsername, inputPassword);

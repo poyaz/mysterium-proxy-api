@@ -192,7 +192,7 @@ describe('UsersController', () => {
     });
 
     it(`Should successfully get all users with empty record`, async () => {
-      usersService.findAll.mockResolvedValue([null, []]);
+      usersService.findAll.mockResolvedValue([null, [], 0]);
 
       const [error, result] = await controller.findAll(inputEmptyFindUserQueryDto);
 
@@ -203,7 +203,7 @@ describe('UsersController', () => {
     });
 
     it(`Should successfully get all users`, async () => {
-      usersService.findAll.mockResolvedValue([null, [outputUserModel]]);
+      usersService.findAll.mockResolvedValue([null, [outputUserModel], 1]);
 
       const [error, result] = await controller.findAll(inputEmptyFindUserQueryDto);
 

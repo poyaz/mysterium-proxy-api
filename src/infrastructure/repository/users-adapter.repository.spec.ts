@@ -101,7 +101,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when check user exist on squid`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, []]);
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputUsersModel);
@@ -116,7 +116,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when user exist on system`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel]]);
+      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, true]);
 
       const [error] = await repository.add(inputUsersModel);
@@ -131,7 +131,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when can't create on database`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, []]);
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.add.mockResolvedValue([new UnknownException()]);
 
@@ -149,7 +149,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when can't create on squid`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, []]);
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.add.mockResolvedValue([null, outputUsersModel]);
       usersSquidFileRepository.add.mockResolvedValue([new UnknownException()]);
@@ -170,7 +170,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should successfully add new user`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, []]);
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.add.mockResolvedValue([null, outputUsersModel]);
       usersSquidFileRepository.add.mockResolvedValue([null]);
@@ -192,7 +192,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when update user if user exist on database but not exist on squid`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel]]);
+      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 1]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.update.mockResolvedValue([new UnknownException()]);
 
@@ -210,7 +210,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should successfully add new user when update user if user exist on database but not exist on squid`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel]]);
+      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 1]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.update.mockResolvedValue([null]);
       usersSquidFileRepository.add.mockResolvedValue([null]);
@@ -232,7 +232,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when duplicate record on database and can't update user on database`, async () => {
-      usersPgRepository.getAll.mockResolvedValueOnce([null, []]);
+      usersPgRepository.getAll.mockResolvedValueOnce([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.add.mockResolvedValue([new ExistException()]);
       usersPgRepository.getAll.mockResolvedValueOnce([new UnknownException()]);
@@ -254,10 +254,10 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should error add new user when duplicate record on database and can't update user on database`, async () => {
-      usersPgRepository.getAll.mockResolvedValueOnce([null, []]);
+      usersPgRepository.getAll.mockResolvedValueOnce([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.add.mockResolvedValue([new ExistException()]);
-      usersPgRepository.getAll.mockResolvedValueOnce([null, [outputUsersModel]]);
+      usersPgRepository.getAll.mockResolvedValueOnce([null, [outputUsersModel], 1]);
       usersPgRepository.update.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputUsersModel);
@@ -279,10 +279,10 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should successfully add new user when duplicate record on database and user not exist on squid`, async () => {
-      usersPgRepository.getAll.mockResolvedValueOnce([null, []]);
+      usersPgRepository.getAll.mockResolvedValueOnce([null, [], 0]);
       usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
       usersPgRepository.add.mockResolvedValue([new ExistException()]);
-      usersPgRepository.getAll.mockResolvedValueOnce([null, [outputUsersModel]]);
+      usersPgRepository.getAll.mockResolvedValueOnce([null, [outputUsersModel], 1]);
       usersPgRepository.update.mockResolvedValue([null]);
       usersSquidFileRepository.add.mockResolvedValue([null]);
 
@@ -332,7 +332,7 @@ describe('UsersAdapterRepository', () => {
     });
 
     it(`Should successfully get all users`, async () => {
-      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel]]);
+      usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 1]);
 
       const [error, result] = await repository.getAll();
 
