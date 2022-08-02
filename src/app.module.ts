@@ -30,7 +30,6 @@ import {UsersSquidFileRepository} from '@src-infrastructure/repository/users-squ
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {RedisModule} from '@liaoliaots/nestjs-redis';
 import {RedisConfigInterface} from '@src-loader/configure/interface/redis-config.interface';
-import {config} from 'rxjs';
 
 @Module({
   imports: [
