@@ -4,9 +4,11 @@ import {ExistException} from '@src-core/exception/exist.exception';
 export class RepositoryException extends Error {
   readonly isOperation: boolean;
   readonly additionalInfo: Error;
+  readonly combineInfo: Array<Error>;
 
-  constructor(error) {
-    if ('code' in error && error.code === '23505') {
+  constructor(error)
+  constructor(error: Array<Error>) {
+    if (!Array.isArray(error) && 'code' in error && (<any>error).code === '23505') {
       const existError = new ExistException();
       super(existError.message);
 
@@ -20,6 +22,13 @@ export class RepositoryException extends Error {
 
     this.name = ExceptionEnum.REPOSITORY_ERROR;
     this.isOperation = false;
-    this.additionalInfo = error;
+
+    if (!Array.isArray(error)) {
+      this.additionalInfo = error;
+      this.combineInfo = [];
+    } else {
+      this.additionalInfo = error[0];
+      this.combineInfo = error;
+    }
   }
 }
