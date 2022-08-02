@@ -3,7 +3,11 @@ import {SwaggerCommand} from '@src-api/command/swagger/swagger.command';
 import {ConfigureModule} from '@src-loader/configure/configure.module';
 import {PgModule} from '@src-loader/database/pg.module';
 import {controllersExport} from '@src-loader/http/controller.export';
-import {MigrationRunCommand, MigrationUndoCommand} from '@src-api/command/migration/migration.command';
+import {
+  MigrationCreateCommand,
+  MigrationRunCommand,
+  MigrationUndoCommand,
+} from '@src-api/command/migration/migration.command';
 import {PgConfigService} from '@src-loader/database/pg-config.service';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
@@ -12,6 +16,13 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
   controllers: [...controllersExport],
   providers: [
     SwaggerCommand,
+    {
+      provide: MigrationCreateCommand,
+      useFactory: (connection) => {
+        return new MigrationCreateCommand(connection);
+      },
+      inject: [PgConfigService],
+    },
     {
       provide: MigrationRunCommand,
       useFactory: (connection) => {
