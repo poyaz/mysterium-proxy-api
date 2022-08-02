@@ -474,7 +474,7 @@ describe('MystService', () => {
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(1);
       expect(runnerDockerService.create.mock.calls[0][0]).toMatchObject(
-        expect.objectContaining(<RunnerModel>{
+        <RunnerModel<VpnProviderModel & MystIdentityModel>>{
           id: fakeIdentifierMock.generateId(),
           serial: '0000000000000000000000000000000000000000000000000000000000000000',
           name: `${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`,
@@ -487,10 +487,11 @@ describe('MystService', () => {
             userIdentity: outputMystIdentityModel.identity,
             providerIdentity: outputFindVpnProviderModel.providerIdentity,
             serverOutgoingIp: outputCurrentIp,
+            passphrase: outputMystIdentityModel.passphrase,
           },
           status: RunnerStatusEnum.CREATING,
           insertDate: new Date(),
-        }),
+        },
       );
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -525,7 +526,7 @@ describe('MystService', () => {
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(2);
       expect(runnerDockerService.create.mock.calls[0][0]).toMatchObject(
-        <RunnerModel>{
+        <RunnerModel<VpnProviderModel & MystIdentityModel>>{
           id: fakeIdentifierMock.generateId(),
           serial: '0000000000000000000000000000000000000000000000000000000000000000',
           name: `${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`,
@@ -538,6 +539,7 @@ describe('MystService', () => {
             userIdentity: outputMystIdentityModel.identity,
             providerIdentity: outputFindVpnProviderModel.providerIdentity,
             serverOutgoingIp: outputCurrentIp,
+            passphrase: outputMystIdentityModel.passphrase,
           },
           status: RunnerStatusEnum.CREATING,
           insertDate: new Date(),
@@ -598,7 +600,7 @@ describe('MystService', () => {
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(3);
       expect(runnerDockerService.create.mock.calls[0][0]).toMatchObject(
-        <RunnerModel>{
+        <RunnerModel<VpnProviderModel & MystIdentityModel>>{
           id: fakeIdentifierMock.generateId(),
           serial: '0000000000000000000000000000000000000000000000000000000000000000',
           name: `${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`,
@@ -611,6 +613,7 @@ describe('MystService', () => {
             userIdentity: outputMystIdentityModel.identity,
             providerIdentity: outputFindVpnProviderModel.providerIdentity,
             serverOutgoingIp: outputCurrentIp,
+            passphrase: outputMystIdentityModel.passphrase,
           },
           status: RunnerStatusEnum.CREATING,
           insertDate: new Date(),
@@ -692,7 +695,7 @@ describe('MystService', () => {
       expect(fakeIdentifierMock.generateId).toHaveBeenCalled();
       expect(runnerDockerService.create).toHaveBeenCalledTimes(3);
       expect(runnerDockerService.create.mock.calls[0][0]).toMatchObject(
-        <RunnerModel>{
+        <RunnerModel<VpnProviderModel & MystIdentityModel>>{
           id: fakeIdentifierMock.generateId(),
           serial: '0000000000000000000000000000000000000000000000000000000000000000',
           name: `${RunnerServiceEnum.MYST}-${outputMystIdentityModel.identity}`,
@@ -705,6 +708,7 @@ describe('MystService', () => {
             userIdentity: outputMystIdentityModel.identity,
             providerIdentity: outputFindVpnProviderModel.providerIdentity,
             serverOutgoingIp: outputCurrentIp,
+            passphrase: outputMystIdentityModel.passphrase,
           },
           status: RunnerStatusEnum.CREATING,
           insertDate: new Date(),

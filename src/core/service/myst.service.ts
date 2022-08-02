@@ -13,7 +13,7 @@ import {NotFoundMystIdentityException} from '@src-core/exception/not-found-myst-
 import {
   RunnerDependsOnStatusEnum,
   RunnerExecEnum,
-  RunnerModel,
+  RunnerModel, RunnerObjectLabel,
   RunnerServiceEnum,
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
@@ -164,19 +164,20 @@ export class MystService implements IProviderServiceInterface {
   }
 
   async _createMystRunner(mystIdentityModel: MystIdentityModel, proxyCreateModel: VpnProviderModel): Promise<AsyncReturn<Error, RunnerModel>> {
-    const mystRunnerModel = new RunnerModel<VpnProviderModel>({
+    const mystRunnerModel = new RunnerModel<VpnProviderModel & MystIdentityModel>({
       id: this._fakeIdentifier.generateId(),
       serial: '0000000000000000000000000000000000000000000000000000000000000000',
       name: `${RunnerServiceEnum.MYST}-${mystIdentityModel.identity}`,
       service: RunnerServiceEnum.MYST,
       exec: RunnerExecEnum.DOCKER,
       socketType: RunnerSocketTypeEnum.HTTP,
-      label: {
+      label: <RunnerObjectLabel<VpnProviderModel & MystIdentityModel>>{
         $namespace: VpnProviderModel.name,
         id: proxyCreateModel.id,
         userIdentity: mystIdentityModel.identity,
         providerIdentity: proxyCreateModel.providerIdentity,
         serverOutgoingIp: proxyCreateModel.serverOutgoingIp,
+        passphrase: mystIdentityModel.passphrase,
       },
       status: RunnerStatusEnum.CREATING,
       insertDate: new Date(),
