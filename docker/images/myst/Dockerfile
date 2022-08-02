@@ -1,4 +1,4 @@
-FROM mysteriumnetwork/myst:latest
+FROM mysteriumnetwork/myst:1.10.0-alpine
 
 RUN set -eux; \
     apk add --no-cache curl jq; \
