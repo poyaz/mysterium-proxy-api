@@ -4,7 +4,14 @@ import {DataSource} from 'typeorm';
 import {DataSourceOptions} from 'typeorm/data-source/DataSourceOptions';
 import {spawn} from 'child_process';
 
-@Command({name: 'migration:create', description: 'Create migration file', arguments: '<name>'})
+@Command({
+  name: 'migration:create',
+  description: 'Create migration file',
+  arguments: '<name>',
+  argsDescription: {
+    name: 'The name of migration file',
+  },
+})
 export class MigrationCreateCommand implements CommandRunner {
   constructor(
     private readonly _dataSourceFactory: TypeOrmOptionsFactory,
