@@ -5,7 +5,7 @@ export interface IAccountIdentityFileRepository {
 
   getByFilename(name: string): Promise<AsyncReturn<Error, string>>;
 
-  moveAndCreateFile(filePath: string): Promise<AsyncReturn<Error, string>>;
+  moveAndRenameFile(filePath: string, renameFile: string): Promise<AsyncReturn<Error, string>>;
 
   remove(filePath: string): Promise<AsyncReturn<Error, null>>;
 }

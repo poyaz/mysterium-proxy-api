@@ -17,15 +17,19 @@ export type PartialSort<T> = {
 export class FilterModel<T> {
   readonly page: number = 1;
   readonly limit: number = 100;
+  readonly skipPagination: boolean = false;
   private _sort: Array<PartialSort<T>> = [];
   private readonly _conditions: Array<FilterInstanceType<T> & { $opr: FilterOperationType }> = [];
 
-  constructor(props?: { page?: number, limit?: number }) {
+  constructor(props?: { page?: number, limit?: number, skipPagination?: boolean }) {
     if (props?.page && props?.page > 0) {
       this.page = props.page;
     }
     if (props?.limit && props?.limit > 0) {
       this.limit = props.limit;
+    }
+    if (props?.skipPagination) {
+      this.skipPagination = props.skipPagination;
     }
   }
 
@@ -43,6 +47,10 @@ export class FilterModel<T> {
     return find[0][key];
   }
 
+  getSortByList(): Array<PartialSort<T>> {
+    return this._sort;
+  }
+
   getLengthOfSortBy(): number {
     return this._sort.length;
   }
@@ -58,6 +66,10 @@ export class FilterModel<T> {
     }
 
     return find[0];
+  }
+
+  getConditionList(): Array<FilterInstanceType<T> & { $opr: FilterOperationType }> {
+    return this._conditions;
   }
 
   getLengthOfCondition(): number {
