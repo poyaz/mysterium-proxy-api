@@ -39,8 +39,30 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [null, result, totalCount];
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, MystIdentityModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, MystIdentityModel | null>> {
+    const [errorIdentity, dataIdentity] = await this._mystIdentityPgRepository.getById(id);
+    if (errorIdentity) {
+      return [errorIdentity];
+    }
+    if (!dataIdentity) {
+      return [null, null];
+    }
+
+    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    runnerFilter.addCondition({$opr: 'eq', label: {userIdentity: dataIdentity.identity}});
+
+    const [
+      [errorFile, dataFileList, totalFileCount],
+      [errorRunner, dataRunnerList],
+    ] = await Promise.all([
+      this._mystIdentityFileRepository.getAll(),
+      this._dockerRunnerRepository.getAll(runnerFilter),
+    ]);
+    const fetchError = errorFile || errorRunner;
+    if (fetchError) {
+      return [fetchError];
+    }
   }
 
   add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
