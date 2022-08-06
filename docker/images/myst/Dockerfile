@@ -8,5 +8,5 @@ COPY docker-entrypoint.sh docker-healcheck.sh /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
-HEALTHCHECK --start-period=3s --interval=10s --timeout=9s \
+HEALTHCHECK --interval=20s --timeout=9s \
     CMD bash /usr/local/bin/docker-healcheck.sh || pkill -SIGILL -f 1

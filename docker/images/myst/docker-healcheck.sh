@@ -25,28 +25,28 @@ docker_setup_env() {
 }
 
 check_vpn_interface_exist() {
-  local RES=$(ip -o a show | cut -d ' ' -f 2 | grep "$VPN_INTERFACE_NAME")
-  if [ $? -eq 1 ] || [ -z "$RES" ]; then
+  declare -r RES=$(ip -o a show | cut -d ' ' -f 2 | grep "$VPN_INTERFACE_NAME")
+  if [ -z "$RES" ]; then
     echo "[ERR] The interface \"$VPN_INTERFACE_NAME\" not found!"
     exit 1
   fi
 }
 
 check_vpn_connected() {
-  RES=$(myst connection info | cut -d ' ' -f2-)
-  if [ $? -eq 1 ]; then
+  declare -r RES=$(myst connection info | cut -d ' ' -f2-)
+  if [ -z "$RES" ]; then
     echo "[ERR] Can't fetch connection info"
     exit 1
   fi
 
-  local STATUS=$(echo "$RES" | grep 'Connected')
-  if [ $? -eq 1 ] || [ -z "$STATUS" ]; then
+  declare -r STATUS=$(echo "$RES" | grep 'Connected')
+  if [ -z "$STATUS" ]; then
     echo "[ERR] The VPN connection is not connected!"
     exit 1
   fi
 
-  local IP=$(echo "$RES" | grep "$SERVER_REAL_IP_ADDRESS")
-  if [ $? -eq 1 ] || ! [ -z "$IP" ]; then
+  declare -r IP=$(echo "$RES" | grep "$SERVER_REAL_IP_ADDRESS")
+  if ! [ -z "$IP" ]; then
     echo "[ERR] The output of ip address is equal with server ip (That means VPN not connected)!"
     exit 1
   fi

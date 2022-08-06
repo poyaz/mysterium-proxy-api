@@ -30,7 +30,7 @@ _main() {
   if [ -z "$MYST_IDENTITY" ] && [ -z "$MYST_IDENTITY_PASS" ]; then
     /usr/local/bin/myst-entrypoint.sh "$@"
   else
-    /usr/local/bin/myst-entrypoint.sh "$@" --identity "$MYST_IDENTITY" --identity.passphrase "$MYST_IDENTITY_PASS"
+    /usr/local/bin/myst-entrypoint.sh "$@" --identity "${MYST_IDENTITY}" --identity.passphrase "${MYST_IDENTITY_PASS}"
   fi
 }
 

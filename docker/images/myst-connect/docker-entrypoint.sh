@@ -32,45 +32,53 @@ docker_setup_env() {
 }
 
 check_total_interface_count() {
-  local RES=$(ip -o a show | cut -d ' ' -f 2 | wc -l)
-  if [ $? -eq 1 ] || [ $RES -eq 1 ]; then
+  declare -r RES=$(ip -o a show | cut -d ' ' -f 2 | wc -l)
+  if [ -z "$RES" ] || [ $RES -eq 1 ]; then
     echo "[ERR] The interface count not valid (Can't found primary interface for execute)!"
     exit 1
   fi
 }
 
 create_token() {
-  local RES=$(
-    curl -f -s \
+  declare -r RES=$(
+    curl -s \
+      -w "\n%{http_code}" \
       -X POST \
       -H 'content-type: application/json' \
       -d '{"username": "'$MYST_TEQUILAPI_API_USERNAME'", "password": "'$MYST_TEQUILAPI_API_PASSWORD'"}' \
       "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/auth/login"
   )
-  if [ $? -eq 1 ]; then
+  declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
+  declare -r CONTENT=$(sed '$ d' <<<"$RES")
+
+  if [ $HTTP_CODE -ne 200 ]; then
     echo "[ERR] Fail after execute authenticate!"
     exit 1
   fi
 
-  echo $(echo "$RES" | jq -r .token)
+  echo $(echo "$CONTENT" | jq -r .token)
 }
 
 check_vpn_connected() {
-  local TOKEN=$1
+  declare -r TOKEN=$1
 
-  local RES=$(
-    curl -f -s \
+  declare -r RES=$(
+    curl -s \
+      -w "\n%{http_code}" \
       -X GET \
       -H 'content-type: application/json' \
       -H 'authorization: Bearer '$TOKEN \
       "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/connection"
   )
-  if [ $? -eq 1 ]; then
+  declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
+  declare -r CONTENT=$(sed '$ d' <<<"$RES")
+
+  if [ $HTTP_CODE -ne 200 ]; then
     echo "[ERR] Fail after execute get connection info!"
     exit 1
   fi
 
-  local STATUS=$(echo "$RES" | jq -r .status)
+  local STATUS=$(echo "$CONTENT" | jq -r .status)
   if [ $STATUS == 'Connected' ]; then
     echo 1
   else
@@ -79,34 +87,41 @@ check_vpn_connected() {
 }
 
 connect_vpn() {
-  local TOKEN=$1
+  declare -r TOKEN=$1
 
-  consumer_id=$MYST_CONSUMER_ID
+  local consumer_id=$MYST_CONSUMER_ID
   if [ -z $MYST_CONSUMER_ID ]; then
-    local RES_CONSUMER=$(
-      curl -f -s \
+    declare -r RES_CONSUMER=$(
+      curl -s \
+        -w "\n%{http_code}" \
         -X GET \
         -H 'content-type: application/json' \
         -H 'authorization: Bearer '$TOKEN \
         "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/connection"
     )
-    if [ $? -eq 1 ]; then
+    declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
+    declare -r CONTENT_CONSUMER=$(sed '$ d' <<<"$RES")
+
+    if [ $HTTP_CODE -ne 200 ]; then
       echo "[ERR] Fail after execute get customer id from connection info!"
       exit 1
     fi
 
-    consumer_id=$(echo "$RES_CONSUMER" | jq -r .consumer_id)
+    consumer_id=$(echo "$CONTENT_CONSUMER" | jq -r .consumer_id)
   fi
 
-  local RES=$(
-    curl -f -s \
+  declare -r RES=$(
+    curl -s \
+      -w "\n%{http_code}" \
       -X PUT \
       -H 'content-type: application/json' \
       -H 'authorization: Bearer '$TOKEN \
       -d '{"consumer_id": "'$consumer_id'", "provider_id": "'$MYST_PROVIDER_ID'", "service_type": "wireguard"}' \
       "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/connection"
   )
-  if [ $? -eq 1 ]; then
+  declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
+
+  if [ $HTTP_CODE -ne 201 ]; then
     echo "[ERR] Fail after execute connect to provider API!"
     exit 1
   fi
@@ -124,7 +139,7 @@ run() {
 
 _main() {
   if [ $1 = 'myst' ]; then
-    sleep 3
+    sleep 2
 
     docker_setup_env
 
