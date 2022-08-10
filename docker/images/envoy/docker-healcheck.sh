@@ -31,10 +31,25 @@ check_total_interface_count() {
   fi
 }
 
+check_vpn_interface_exist() {
+  declare -r IS_MAIN_PROCESS_START=$(ps aux | grep -v wait4x | grep envoy | grep -v grep | wc -l)
+  if [ $IS_MAIN_PROCESS_START -eq 0 ]; then
+    return
+  fi
+
+  declare -r RES=$(ip -o a show | cut -d ' ' -f 2 | grep "$VPN_INTERFACE_NAME")
+  if [ -z "$RES" ]; then
+    echo "[ERR] The interface \"$VPN_INTERFACE_NAME\" not found!"
+    exit 1
+  fi
+}
+
 _main() {
   docker_setup_env
 
   check_total_interface_count
+
+  check_vpn_interface_exist
 }
 
 _main "$@"
