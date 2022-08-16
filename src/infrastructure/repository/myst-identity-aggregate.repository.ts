@@ -19,20 +19,21 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     const [
       [errorFile, dataFileList, totalFileCount],
       [errorIdentity, dataIdentityList, totalIdentityCount],
-      [errorRunner, dataRunnerList],
+      [errorRunner, dataRunnerList, totalRunnerCount],
     ] = await this._getAllData(filter);
     const fetchError = errorFile || errorIdentity || errorRunner;
     if (fetchError) {
       return [fetchError];
     }
-    if (totalFileCount === 0 || totalIdentityCount === 0) {
+    if (totalFileCount === 0 || totalIdentityCount === 0 || totalRunnerCount === 0) {
       return [null, [], 0];
     }
 
     const dataList = dataIdentityList
       .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, dataFileList))
       .filter((v) => v)
-      .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeRunnerData(v, dataRunnerList));
+      .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeRunnerData(v, dataRunnerList))
+      .filter((v) => v);
 
     const [result, totalCount] = MystIdentityAggregateRepository._paginationData(dataList, filter);
 
@@ -49,7 +50,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     }
 
     const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
-    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST_CONNECT});
     runnerFilter.addCondition({$opr: 'eq', label: {userIdentity: dataIdentity.identity}});
 
     const [
@@ -91,8 +92,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       }
     }
 
-    const runnerFilter = new FilterModel<RunnerModel>();
-    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    const runnerFilter = new FilterModel<RunnerModel>({skipPagination: true});
 
     return Promise.all([
       this._mystIdentityFileRepository.getAll(),
@@ -116,16 +116,28 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   private static _mergeRunnerData(identityData: MystIdentityModel, runnerDataList: Array<RunnerModel<VpnProviderModel>>): MystIdentityModel {
-    const findRunner = runnerDataList.find((v) => v.label.userIdentity === identityData.identity);
-    if (findRunner) {
+    const identityRunnerList = runnerDataList.filter((v) => v.label.userIdentity === identityData.identity);
+    if (identityRunnerList.length === 0) {
+      return null;
+    }
+
+    const findMystRunner = identityRunnerList.find((v) => v.service === RunnerServiceEnum.MYST);
+    if (!findMystRunner) {
+      return null;
+    }
+
+    const findMystConnectRunner = identityRunnerList.find((v) => v.service === RunnerServiceEnum.MYST_CONNECT);
+    if (findMystConnectRunner) {
       identityData.isUse = true;
     }
 
     return identityData;
   }
 
-  private static _paginationData<F>(identityList: Array<MystIdentityModel>, filter: F): [Array<MystIdentityModel>, number] {
-    const filterModel = <FilterModel<MystIdentityModel>><any>filter;
+  private static _paginationData<F>(identityList: Array<MystIdentityModel>, filter?: F): [Array<MystIdentityModel>, number] {
+    const filterModel = filter instanceof FilterModel
+      ? <FilterModel<MystIdentityModel>><any>filter
+      : new FilterModel<MystIdentityModel>();
     let dataList: Array<MystIdentityModel> = identityList;
 
     const getIdentity = filterModel.getCondition('identity');
