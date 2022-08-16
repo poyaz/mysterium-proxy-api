@@ -98,10 +98,10 @@ describe('MystIdentityAggregateRepository', () => {
     let outputFileData2: string;
     let outputFileData3: string;
     let outputFileNotMatchData4: string;
-    let outputMystRunnerMystData1: RunnerModel<VpnProviderModel>;
-    let outputMystConnectRunnerMystData2: RunnerModel<VpnProviderModel>;
-    let outputMystRunnerMystData3: RunnerModel<VpnProviderModel>;
-    let outputMystConnectRunnerMystData4: RunnerModel<VpnProviderModel>;
+    let outputRunnerMystData1: RunnerModel<VpnProviderModel>;
+    let outputRunnerMystConnectData2: RunnerModel<VpnProviderModel>;
+    let outputRunnerMystData3: RunnerModel<VpnProviderModel>;
+    let outputRunnerMystConnectData4: RunnerModel<VpnProviderModel>;
     let outputRunnerMystNotMatchData5: RunnerModel<VpnProviderModel>;
 
     beforeEach(() => {
@@ -155,7 +155,7 @@ describe('MystIdentityAggregateRepository', () => {
         insertDate: new Date(),
       });
 
-      outputMystRunnerMystData1 = new RunnerModel({
+      outputRunnerMystData1 = new RunnerModel({
         id: '55555555-5555-5555-5555-555555555555',
         serial: 'myst1 runner serial',
         name: 'myst1 runner name',
@@ -169,7 +169,7 @@ describe('MystIdentityAggregateRepository', () => {
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
       });
-      outputMystConnectRunnerMystData2 = new RunnerModel({
+      outputRunnerMystConnectData2 = new RunnerModel({
         id: '66666666-6666-6666-6666-666666666666',
         serial: 'myst-connect1 runner serial',
         name: 'myst-connect1 runner name',
@@ -183,7 +183,7 @@ describe('MystIdentityAggregateRepository', () => {
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
       });
-      outputMystRunnerMystData3 = new RunnerModel({
+      outputRunnerMystData3 = new RunnerModel({
         id: '77777777-7777-7777-7777-777777777777',
         serial: 'myst2 runner serial',
         name: 'myst2 runner name',
@@ -197,7 +197,7 @@ describe('MystIdentityAggregateRepository', () => {
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
       });
-      outputMystConnectRunnerMystData4 = new RunnerModel({
+      outputRunnerMystConnectData4 = new RunnerModel({
         id: '88888888-8888-8888-8888-888888888888',
         serial: 'myst-connect2 runner serial',
         name: 'myst-connect2 runner name',
@@ -276,7 +276,7 @@ describe('MystIdentityAggregateRepository', () => {
     it(`Should successfully get all identity for aggregation (return empty records because not found any file data)`, async () => {
       mystIdentityFileRepository.getAll.mockResolvedValue([null, [], 0]);
       mystIdentityPgRepository.getAll.mockResolvedValue([null, [outputIdentityData1], 1]);
-      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputMystRunnerMystData1], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
 
       const [error, result, totalCount] = await repository.getAll();
 
@@ -293,7 +293,7 @@ describe('MystIdentityAggregateRepository', () => {
     it(`Should successfully get all identity for aggregation (return empty records because not found any identity data)`, async () => {
       mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1, outputFileData2], 2]);
       mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
-      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputMystRunnerMystData1], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
 
       const [error, result, totalCount] = await repository.getAll();
 
@@ -344,7 +344,7 @@ describe('MystIdentityAggregateRepository', () => {
     it(`Should successfully get all identity for aggregation (join file data with 'isUse' false because not found any myst-connect runner)`, async () => {
       mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
       mystIdentityPgRepository.getAll.mockResolvedValue([null, [outputIdentityData1], 1]);
-      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputMystRunnerMystData1], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
 
       const [error, result, totalCount] = await repository.getAll(new FilterModel());
 
@@ -379,7 +379,7 @@ describe('MystIdentityAggregateRepository', () => {
       ]);
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
-        [outputMystRunnerMystData1, outputMystRunnerMystData3],
+        [outputRunnerMystData1, outputRunnerMystData3],
         2,
       ]);
 
@@ -412,7 +412,7 @@ describe('MystIdentityAggregateRepository', () => {
       mystIdentityPgRepository.getAll.mockResolvedValue([null, [outputIdentityData1], 1]);
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
-        [outputMystRunnerMystData1, outputMystRunnerMystData3],
+        [outputRunnerMystData1, outputRunnerMystData3],
         2,
       ]);
 
@@ -449,7 +449,7 @@ describe('MystIdentityAggregateRepository', () => {
       mystIdentityPgRepository.getAll.mockResolvedValue([null, [outputIdentityData1], 1]);
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
-        [outputMystRunnerMystData1, outputMystRunnerMystData3],
+        [outputRunnerMystData1, outputRunnerMystData3],
         2,
       ]);
 
@@ -483,10 +483,10 @@ describe('MystIdentityAggregateRepository', () => {
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
         [
-          outputMystRunnerMystData1,
-          outputMystConnectRunnerMystData2,
-          outputMystRunnerMystData3,
-          outputMystConnectRunnerMystData4,
+          outputRunnerMystData1,
+          outputRunnerMystConnectData2,
+          outputRunnerMystData3,
+          outputRunnerMystConnectData4,
           outputRunnerMystNotMatchData5,
         ],
         5,
@@ -526,10 +526,10 @@ describe('MystIdentityAggregateRepository', () => {
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
         [
-          outputMystRunnerMystData1,
-          outputMystConnectRunnerMystData2,
-          outputMystRunnerMystData3,
-          outputMystConnectRunnerMystData4,
+          outputRunnerMystData1,
+          outputRunnerMystConnectData2,
+          outputRunnerMystData3,
+          outputRunnerMystConnectData4,
           outputRunnerMystNotMatchData5,
         ],
         5,
@@ -562,7 +562,8 @@ describe('MystIdentityAggregateRepository', () => {
     let outputFileNotMatchData2: string;
     let outputIdentityData: MystIdentityModel;
     let outputRunnerMystData1: RunnerModel<VpnProviderModel>;
-    let outputRunnerMystNotMatchData2: RunnerModel<VpnProviderModel>;
+    let outputConnectRunnerMystConnectData2: RunnerModel<VpnProviderModel>;
+    let outputRunnerMystNotMatchData3: RunnerModel<VpnProviderModel>;
 
     beforeEach(() => {
       inputId = identifierMock.generateId();
@@ -594,7 +595,21 @@ describe('MystIdentityAggregateRepository', () => {
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
       });
-      outputRunnerMystNotMatchData2 = new RunnerModel({
+      outputConnectRunnerMystConnectData2 = new RunnerModel({
+        id: '66666666-6666-6666-6666-666666666666',
+        serial: 'myst-connect1 runner serial',
+        name: 'myst-connect1 runner name',
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: <RunnerObjectLabel<VpnProviderModel>>{
+          $namespace: VpnProviderModel.name,
+          userIdentity: outputIdentityData.identity,
+        },
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputRunnerMystNotMatchData3 = new RunnerModel({
         id: '77777777-7777-7777-7777-777777777777',
         serial: 'myst3 runner serial',
         name: 'myst3 runner name',
@@ -619,7 +634,7 @@ describe('MystIdentityAggregateRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully get identity for aggregation and return null when can't found identity with id`, async () => {
+    it(`Should successfully get identity for aggregation with return null when can't found identity with id`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, null]);
 
       const [error, result] = await repository.getById(inputId);
@@ -639,10 +654,7 @@ describe('MystIdentityAggregateRepository', () => {
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
       expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
-        $opr: 'eq',
-        service: RunnerServiceEnum.MYST_CONNECT,
-      });
+      expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
         label: {
@@ -652,27 +664,106 @@ describe('MystIdentityAggregateRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    // it(`Should successfully get identity for aggregation and return null if identity null`, async () => {
-    //   mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-    //   mystIdentityFileRepository.getAll.mockResolvedValue([new UnknownException()]);
-    //   dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-    //
-    //   const [error] = await repository.getById(inputId);
-    //
-    //   expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-    //   expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
-    //     $opr: 'eq',
-    //     service: RunnerServiceEnum.MYST_CONNECT,
-    //   });
-    //   expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
-    //     $opr: 'eq',
-    //     label: {
-    //       userIdentity: outputIdentityData.identity,
-    //     },
-    //   });
-    //   expect(error).toBeInstanceOf(UnknownException);
-    // });
+    it(`Should successfully get identity for aggregation with return null if myst runner not found`, async () => {
+      mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
+      mystIdentityFileRepository.getAll.mockResolvedValue([null, [], 0]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {
+          userIdentity: outputIdentityData.identity,
+        },
+      });
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get identity for aggregation with return null if not match myst runner`, async () => {
+      mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
+      mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystNotMatchData3], 1]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {
+          userIdentity: outputIdentityData.identity,
+        },
+      });
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get identity for aggregation with with 'isUse' false`, async () => {
+      mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
+      mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {
+          userIdentity: outputIdentityData.identity,
+        },
+      });
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<MystIdentityModel>{
+        id: outputIdentityData.id,
+        identity: outputIdentityData.identity,
+        path: `${outputFileData1.split(/\//g).slice(0, -1).join('/')}/`,
+        filename: outputFileData1.split(/\//g).splice(-1)[0],
+        isUse: false,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should successfully get identity for aggregation with with 'isUse' true`, async () => {
+      mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
+      mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([
+        null,
+        [outputRunnerMystData1, outputConnectRunnerMystConnectData2],
+        2,
+      ]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {
+          userIdentity: outputIdentityData.identity,
+        },
+      });
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<MystIdentityModel>{
+        id: outputIdentityData.id,
+        identity: outputIdentityData.identity,
+        path: `${outputFileData1.split(/\//g).slice(0, -1).join('/')}/`,
+        filename: outputFileData1.split(/\//g).splice(-1)[0],
+        isUse: true,
+        insertDate: new Date(),
+      });
+    });
   });
 });

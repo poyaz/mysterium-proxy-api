@@ -49,13 +49,12 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       return [null, null];
     }
 
-    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
-    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST_CONNECT});
+    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>({skipPagination: true});
     runnerFilter.addCondition({$opr: 'eq', label: {userIdentity: dataIdentity.identity}});
 
     const [
       [errorFile, dataFileList, totalFileCount],
-      [errorRunner, dataRunnerList],
+      [errorRunner, dataRunnerList, totalRunnerCount],
     ] = await Promise.all([
       this._mystIdentityFileRepository.getAll(),
       this._dockerRunnerRepository.getAll(runnerFilter),
@@ -64,6 +63,20 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     if (fetchError) {
       return [fetchError];
     }
+    if (totalFileCount === 0 || totalRunnerCount === 0) {
+      return [null, null];
+    }
+
+    const dataList = [dataIdentity].map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, dataFileList))
+      .filter((v) => v)
+      .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeRunnerData(v, dataRunnerList))
+      .filter((v) => v);
+
+    if (dataList.length === 0) {
+      return [null, null];
+    }
+
+    return [null, dataList[0]];
   }
 
   add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
