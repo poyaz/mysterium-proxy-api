@@ -14,15 +14,20 @@ import {
   RunnerModel,
   RunnerObjectLabel,
   RunnerServiceEnum,
-  RunnerSocketTypeEnum, RunnerStatusEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
 } from '@src-core/model/runner.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
+import {ExistException} from '@src-core/exception/exist.exception';
+import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
+import {NotFoundException} from '@src-core/exception/not-found.exception';
 
 describe('MystIdentityAggregateRepository', () => {
   let repository: MystIdentityAggregateRepository;
   let mystIdentityFileRepository: MockProxy<IAccountIdentityFileRepository>;
   let mystIdentityPgRepository: MockProxy<IGenericRepositoryInterface<MystIdentityModel>>;
   let dockerRunnerRepository: MockProxy<IRunnerRepositoryInterface>;
+  let proxyApiRepository: MockProxy<IProxyApiRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
   let fakeIdentifierMock: MockProxy<IIdentifier>;
 
@@ -30,6 +35,7 @@ describe('MystIdentityAggregateRepository', () => {
     mystIdentityFileRepository = mock<IAccountIdentityFileRepository>();
     mystIdentityPgRepository = mock<IGenericRepositoryInterface<MystIdentityModel>>();
     dockerRunnerRepository = mock<IRunnerRepositoryInterface>();
+    proxyApiRepository = mock<IProxyApiRepositoryInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
@@ -52,21 +58,28 @@ describe('MystIdentityAggregateRepository', () => {
           useValue: dockerRunnerRepository,
         },
         {
+          provide: ProviderTokenEnum.MYST_API_REPOSITORY,
+          useValue: proxyApiRepository,
+        },
+        {
           provide: MystIdentityAggregateRepository,
           inject: [
             ProviderTokenEnum.MYST_IDENTITY_FILE_REPOSITORY,
             ProviderTokenEnum.MYST_IDENTITY_PG_REPOSITORY,
             ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+            ProviderTokenEnum.MYST_API_REPOSITORY,
           ],
           useFactory: (
             mystIdentityFileRepository: IAccountIdentityFileRepository,
             mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
             dockerRunnerRepository: IRunnerRepositoryInterface,
+            proxyApiRepository: IProxyApiRepositoryInterface,
           ) =>
             new MystIdentityAggregateRepository(
               mystIdentityFileRepository,
               mystIdentityPgRepository,
               dockerRunnerRepository,
+              proxyApiRepository,
             ),
         },
       ],
@@ -762,6 +775,268 @@ describe('MystIdentityAggregateRepository', () => {
         path: `${outputFileData1.split(/\//g).slice(0, -1).join('/')}/`,
         filename: outputFileData1.split(/\//g).splice(-1)[0],
         isUse: true,
+        insertDate: new Date(),
+      });
+    });
+  });
+
+  describe(`Add new identity`, () => {
+    let identityBasePath: string;
+    let repositoryGetAllStub: jest.SpyInstance;
+    let inputModel: MystIdentityModel;
+    let outputMystExistData: MystIdentityModel;
+    let outputMystRunnerData: RunnerModel<VpnProviderModel & MystIdentityModel>;
+    let outputMystAddData: MystIdentityModel;
+
+    beforeEach(() => {
+      repositoryGetAllStub = jest.spyOn(repository, 'getAll');
+
+      identityBasePath = '/new/path/';
+
+      inputModel = new MystIdentityModel({
+        id: fakeIdentifierMock.generateId(),
+        identity: 'identity 1',
+        passphrase: 'pass 1',
+        path: '/old/path/',
+        filename: 'old-identity-file-1',
+        isUse: false,
+        insertDate: new Date(),
+      });
+
+      outputMystExistData = new MystIdentityModel({
+        id: fakeIdentifierMock.generateId(),
+        identity: 'identity 1',
+        passphrase: 'pass 1',
+        path: '/old/path',
+        filename: 'old-identity-file-1',
+        isUse: false,
+        insertDate: new Date(),
+      });
+
+      outputMystRunnerData = new RunnerModel<VpnProviderModel & MystIdentityModel>(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
+        id: identifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: 'http://10.10.10.1',
+        socketPort: 4449,
+        label: {
+          $namespace: [VpnProviderModel.name, MystIdentityModel.name],
+          userIdentity: inputModel.identity,
+        },
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+
+      outputMystAddData = new MystIdentityModel({
+        id: inputModel.id,
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+    });
+
+    afterEach(() => {
+      repositoryGetAllStub.mockClear();
+    });
+
+    it(`Should error add new identity when error on check identity is exist or not`, async () => {
+      repositoryGetAllStub.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when identity is exist`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [outputMystExistData], 1]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(error).toBeInstanceOf(ExistException);
+    });
+
+    it(`Should error add new identity when move file`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when create identity runner`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      dockerRunnerRepository.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
+        id: fakeIdentifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: {
+          $namespace: [VpnProviderModel.name, MystIdentityModel.name],
+          userIdentity: inputModel.identity,
+          passphrase: inputModel.passphrase,
+          path: `${identityBasePath}${inputModel.identity}/`,
+        },
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when add identity on database`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
+      mystIdentityPgRepository.add.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
+        id: fakeIdentifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: {
+          $namespace: [VpnProviderModel.name, MystIdentityModel.name],
+          userIdentity: inputModel.identity,
+          passphrase: inputModel.passphrase,
+          path: `${identityBasePath}${inputModel.identity}/`,
+        },
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully add new identity`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
+      mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
+
+      const [error, result] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
+        id: fakeIdentifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: {
+          $namespace: [VpnProviderModel.name, MystIdentityModel.name],
+          userIdentity: inputModel.identity,
+          passphrase: inputModel.passphrase,
+          path: `${identityBasePath}${inputModel.identity}/`,
+        },
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
         insertDate: new Date(),
       });
     });

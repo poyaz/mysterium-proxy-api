@@ -31,7 +31,7 @@ export enum RunnerDependsOnStatusEnum {
 
 export type RunnerObjectLabel<T> =
   (T extends string ? Record<string, string> : { [P in keyof T]?: string } & Record<string, string>)
-  & { $namespace?: string };
+  & { $namespace?: string | Array<string> };
 
 export class RunnerModel<T = string> {
   id: string;

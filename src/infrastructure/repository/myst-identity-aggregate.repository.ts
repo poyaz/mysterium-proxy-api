@@ -4,14 +4,25 @@ import {AsyncReturn} from '@src-core/utility';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
 import {FilterModel} from '@src-core/model/filter.model';
-import {RunnerModel, RunnerServiceEnum} from '@src-core/model/runner.model';
+import {
+  RunnerExecEnum,
+  RunnerModel,
+  RunnerServiceEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
+} from '@src-core/model/runner.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
+import {ExistException} from '@src-core/exception/exist.exception';
+import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 
 export class MystIdentityAggregateRepository implements IGenericRepositoryInterface<MystIdentityModel> {
+  private static RUNNER_FAKE_SERIAL = '0000000000000000000000000000000000000000000000000000000000000000';
+
   constructor(
     private readonly _mystIdentityFileRepository: IAccountIdentityFileRepository,
     private readonly _mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
     private readonly _dockerRunnerRepository: IRunnerRepositoryInterface,
+    private readonly _proxyApiRepository: IProxyApiRepositoryInterface,
   ) {
   }
 
@@ -79,8 +90,54 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [null, dataList[0]];
   }
 
-  add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
-    return Promise.resolve(undefined);
+  async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
+    const filter = new FilterModel<MystIdentityModel>();
+    filter.addCondition({$opr: 'eq', identity: model.identity});
+
+    const [errorIdentity, , totalIdentityCount] = await this.getAll(filter);
+    if (errorIdentity) {
+      return [errorIdentity];
+    }
+    if (totalIdentityCount > 0) {
+      return [new ExistException()];
+    }
+
+    const [errorMovePath, dataMovePath] = await this._mystIdentityFileRepository.moveAndRenameFile(
+      `${model.path}${model.filename}`,
+      `${model.identity}.json`,
+    );
+    if (errorMovePath) {
+      return [errorMovePath];
+    }
+
+    const [, identityPath, identityFilename] = /^(.+\/)(.+\..+)$/.exec(dataMovePath);
+
+    const mystRunner = new RunnerModel<MystIdentityModel & VpnProviderModel>(<RunnerModel<MystIdentityModel & VpnProviderModel>>{
+      id: model.id,
+      serial: MystIdentityAggregateRepository.RUNNER_FAKE_SERIAL,
+      name: `${RunnerServiceEnum.MYST}-${model.identity}`,
+      service: RunnerServiceEnum.MYST,
+      exec: RunnerExecEnum.DOCKER,
+      socketType: RunnerSocketTypeEnum.HTTP,
+      label: {
+        $namespace: [VpnProviderModel.name, MystIdentityModel.name],
+        userIdentity: model.identity,
+        passphrase: model.passphrase,
+        path: identityPath,
+      },
+      status: RunnerStatusEnum.CREATING,
+      insertDate: new Date(),
+    });
+    const [errorCreateRunner] = await this._dockerRunnerRepository.create(mystRunner);
+    if (errorCreateRunner) {
+      return [errorCreateRunner];
+    }
+
+    const addMystIdentityModel = model.clone();
+    addMystIdentityModel.path = identityPath;
+    addMystIdentityModel.filename = identityFilename;
+
+    return this._mystIdentityPgRepository.add(addMystIdentityModel);
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
