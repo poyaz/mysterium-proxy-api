@@ -144,10 +144,6 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return Promise.resolve(undefined);
   }
 
-  update<F>(model: F): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
-  }
-
   private async _getAllData<F>(filter?: F) {
     const identityFilter = new FilterModel<MystIdentityModel>({skipPagination: true});
     if (filter instanceof FilterModel) {
