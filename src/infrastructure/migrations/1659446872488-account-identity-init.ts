@@ -26,6 +26,10 @@ export class accountIdentityInit1659446872488 implements MigrationInterface {
             length: '100',
           },
           {
+            name: 'path',
+            type: 'text',
+          },
+          {
             name: 'insert_date',
             type: 'timestamp',
             default: 'now()',

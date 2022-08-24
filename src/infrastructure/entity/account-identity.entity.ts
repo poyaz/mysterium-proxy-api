@@ -12,6 +12,9 @@ export class AccountIdentityEntity extends BaseEntity {
   @Column({type: 'varchar', length: 100})
   passphrase: string;
 
+  @Column({type: 'text'})
+  path: string;
+
   @CreateDateColumn({type: 'timestamp', name: 'insert_date'})
   insertDate!: Date;
 
