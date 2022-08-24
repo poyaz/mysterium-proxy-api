@@ -90,7 +90,6 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [null, dataList[0]];
   }
 
-  // @todo: For sure container not exist should delete container before create new container if result of `totalIdentityCount` is equal zero
   async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
     const filter = new FilterModel<MystIdentityModel>();
     filter.addCondition({$opr: 'eq', identity: model.identity});
