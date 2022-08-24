@@ -90,6 +90,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [null, dataList[0]];
   }
 
+  // @todo: For sure container not exist should delete container before create new container if result of `totalIdentityCount` is equal zero
   async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
     const filter = new FilterModel<MystIdentityModel>();
     filter.addCondition({$opr: 'eq', identity: model.identity});
@@ -140,8 +141,25 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return this._mystIdentityPgRepository.add(addMystIdentityModel);
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    const [errorFetch, dataFetch] = await this.getById(id);
+    if (errorFetch) {
+      return [errorFetch];
+    }
+
+    if (dataFetch) {
+      return this._removeWhenIdentityExist(dataFetch);
+    }
+
+    const [errorDbIdentity, dataDbIdentity] = await this._mystIdentityPgRepository.getById(id);
+    if (errorDbIdentity) {
+      return [errorDbIdentity];
+    }
+    if (!dataDbIdentity) {
+      return [null];
+    }
+
+    return this._removeWhenUncompletedDelete(dataDbIdentity);
   }
 
   private async _getAllData<F>(filter?: F) {
@@ -168,15 +186,19 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   private static _mergeFileData(identityData: MystIdentityModel, fileDataList: Array<string>): MystIdentityModel | null {
-    const findFile = fileDataList.find((v) => v.replace(/^.+\/(.+)\..+$/, '$1') === identityData.identity);
+    const findFile = fileDataList.find((v) =>
+      v.split(/\//g).slice(0, -1).join('/').replace(/(.+)\/$/g, '$1') === identityData.path.replace(/(.+)\/$/g, '$1'),
+    );
     if (!findFile) {
       return null;
     }
 
-    const [, path, filename] = /^(.+\/)(.+\..+)$/.exec(findFile);
+    const lastPart = findFile.split(/\//g).splice(-1);
+    if (lastPart.length === 0) {
+      return null;
+    }
 
-    identityData.path = path;
-    identityData.filename = filename;
+    identityData.filename = lastPart[0];
 
     return identityData;
   }
@@ -221,5 +243,83 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     const resultPagination = dataList.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
 
     return [resultPagination, dataList.length];
+  }
+
+  private async _removeWhenIdentityExist(mystIdentity): Promise<AsyncReturn<Error, null>> {
+    const mystRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    mystRunnerFilter.addCondition({
+      $opr: 'eq',
+      service: RunnerServiceEnum.MYST,
+    });
+    mystRunnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: VpnProviderModel.name,
+        userIdentity: mystIdentity.identity,
+      },
+    });
+    const [errorRunner, dataRunnerList] = await this._dockerRunnerRepository.getAll(mystRunnerFilter);
+    if (errorRunner) {
+      return [errorRunner];
+    }
+
+    const tasks = [];
+
+    tasks.push(this._mystIdentityPgRepository.remove(mystIdentity.id));
+    tasks.push(this._mystIdentityFileRepository.remove(`${mystIdentity.path}${mystIdentity.filename}`));
+    tasks.push(this._dockerRunnerRepository.remove(dataRunnerList[0].id));
+
+    const results = await Promise.all(tasks);
+    for (const [taskError] of results) {
+      if (taskError) {
+        return [taskError];
+      }
+    }
+
+    return [null];
+  }
+
+  private async _removeWhenUncompletedDelete(mystIdentity): Promise<AsyncReturn<Error, null>> {
+    const [errorFile, dataFileList, totalFileCount] = await this._mystIdentityFileRepository.getAll();
+    if (errorFile) {
+      return [errorFile];
+    }
+    if (totalFileCount === 0) {
+      return [null];
+    }
+
+    const mystIdentityFileAgg = MystIdentityAggregateRepository._mergeFileData(mystIdentity, dataFileList);
+    if (!mystIdentityFileAgg) {
+      return [null];
+    }
+
+    const runnerFilter = new FilterModel<RunnerModel>();
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      service: RunnerServiceEnum.MYST,
+    });
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      volumes: [{source: mystIdentityFileAgg.path, dest: '-'}],
+    });
+    const [errorRunner, dataRunnerList, totalRunnerCount] = await this._dockerRunnerRepository.getAll(runnerFilter);
+    if (errorRunner) {
+      return [errorRunner];
+    }
+    if (totalRunnerCount > 0) {
+      const tasks = [];
+      for (let i = 0; i < dataRunnerList.length; i++) {
+        tasks.push(this._dockerRunnerRepository.remove(dataRunnerList[i].id));
+      }
+
+      const taskResultList = await Promise.all(tasks);
+      for (const [errorRemoveRunner] of taskResultList) {
+        if (errorRemoveRunner) {
+          return [errorRemoveRunner];
+        }
+      }
+    }
+
+    return this._mystIdentityFileRepository.remove(`${mystIdentityFileAgg.path}${mystIdentityFileAgg.filename}`);
   }
 }

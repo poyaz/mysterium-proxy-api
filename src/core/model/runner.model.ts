@@ -43,6 +43,7 @@ export class RunnerModel<T = string> {
   socketUri?: string;
   socketPort?: number;
   label?: RunnerObjectLabel<T>;
+  volumes?: Array<{ source: string, dest: string }>;
   dependsOn?: Record<string, RunnerDependsOnStatusEnum>;
   status: RunnerStatusEnum;
   insertDate: Date;
