@@ -890,12 +890,80 @@ describe('MystIdentityAggregateRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
+    it(`Should error add new identity when fail on check runner exist (check for sure no unsuspected runner exist)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when fail on remove exist runner (check for sure no unsuspected runner exist)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputMystRunnerData], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputMystRunnerData.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
     it(`Should error add new identity when create identity runner`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
       ]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
       dockerRunnerRepository.create.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputModel);
@@ -936,6 +1004,7 @@ describe('MystIdentityAggregateRepository', () => {
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
       ]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
       dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
       mystIdentityPgRepository.add.mockResolvedValue([new UnknownException()]);
 
@@ -987,6 +1056,7 @@ describe('MystIdentityAggregateRepository', () => {
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
       ]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
       dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
       mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
 
