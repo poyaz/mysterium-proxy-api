@@ -4,6 +4,9 @@ import {AsyncReturn} from '@src-core/utility';
 import * as fsAsync from 'fs/promises';
 import * as path from 'path';
 import {RepositoryException} from '@src-core/exception/repository.exception';
+import {NotFoundException} from '@src-core/exception/not-found.exception';
+import {ParseIdentityException} from '@src-core/exception/parse-identity.exception';
+import {NoAddressIdentityException} from '@src-core/exception/no-address-identity.exception';
 
 export class MystIdentityFileRepository implements IAccountIdentityFileRepository {
   private readonly _storeBasePath: string;
@@ -31,8 +34,26 @@ export class MystIdentityFileRepository implements IAccountIdentityFileRepositor
     }
   }
 
-  getIdentityByFilepath(name: string): Promise<AsyncReturn<Error, string>> {
-    return Promise.resolve(undefined);
+  async getIdentityByFilePath(filePath: string): Promise<AsyncReturn<Error, string>> {
+    try {
+      const row = await fsAsync.readFile(filePath, 'utf-8');
+
+      const data = JSON.parse(row);
+      if (!('address' in data)) {
+        return [new NoAddressIdentityException()];
+      }
+
+      return [null, `0x${data.address}`];
+    } catch (error) {
+      if ('errno' in error && error.errno === -2) {
+        return [new NotFoundException()];
+      }
+      if (error instanceof SyntaxError) {
+        return [new ParseIdentityException()];
+      }
+
+      return [new RepositoryException(error)];
+    }
   }
 
   moveAndRenameFile(filePath: string, renameFile: string): Promise<AsyncReturn<Error, string>> {
