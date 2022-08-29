@@ -7,12 +7,13 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {ParseIdentityException} from '@src-core/exception/parse-identity.exception';
 import {NoAddressIdentityException} from '@src-core/exception/no-address-identity.exception';
+import {InvalidFileTypeException} from '@src-core/exception/invalid-file-type.exception';
 
 export class MystIdentityFileRepository implements IAccountIdentityFileRepository {
   private readonly _storeBasePath: string;
 
   constructor(storeBasePath: string) {
-    this._storeBasePath = `${storeBasePath.replace(/(.+)\/$/g, '$1')}/`;
+    this._storeBasePath = path.join(storeBasePath, path.sep);
   }
 
   async getAll(): Promise<AsyncReturn<Error, Array<string>>> {
@@ -56,8 +57,25 @@ export class MystIdentityFileRepository implements IAccountIdentityFileRepositor
     }
   }
 
-  moveAndRenameFile(filePath: string, renameFile: string): Promise<AsyncReturn<Error, string>> {
-    return Promise.resolve(undefined);
+  async moveAndRenameFile(filePath: string, renameFile: string): Promise<AsyncReturn<Error, string>> {
+    if (!/\.json$/.exec(renameFile)) {
+      return [new InvalidFileTypeException()];
+    }
+
+    const [errorFetchIdentity, dataFetchIdentity] = await this.getIdentityByFilePath(filePath);
+    if (errorFetchIdentity) {
+      return [errorFetchIdentity];
+    }
+
+    const destinationFile = path.join(this._storeBasePath, dataFetchIdentity, path.sep, renameFile);
+    try {
+      await fsAsync.mkdir(path.dirname(destinationFile), {recursive: true});
+      await fsAsync.rename(filePath, destinationFile);
+
+      return [null, destinationFile];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   remove(filePath: string): Promise<AsyncReturn<Error, null>> {

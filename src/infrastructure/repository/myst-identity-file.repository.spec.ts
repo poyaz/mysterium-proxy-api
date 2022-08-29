@@ -2,14 +2,18 @@ import {MystIdentityFileRepository} from './myst-identity-file.repository';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {Test, TestingModule} from '@nestjs/testing';
-
-jest.mock('fs/promises');
-import * as fsAsync from 'fs/promises';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {Dirent} from 'fs';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {ParseIdentityException} from '@src-core/exception/parse-identity.exception';
 import {NoAddressIdentityException} from '@src-core/exception/no-address-identity.exception';
+import {InvalidFileTypeException} from '@src-core/exception/invalid-file-type.exception';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import * as path from 'path';
+
+jest.mock('fs/promises');
+import * as fsAsync from 'fs/promises';
+
 
 describe('MystIdentityFileRepository', () => {
   let repository: MystIdentityFileRepository;
@@ -183,6 +187,91 @@ describe('MystIdentityFileRepository', () => {
       expect(fsAsync.readFile).toHaveBeenCalledWith(inputFilePath, 'utf-8');
       expect(error).toBeNull();
       expect(result).toEqual(`0x${JSON.parse(outputFileData1).address}`);
+    });
+  });
+
+  describe(`Move and rename file`, () => {
+    let inputFilePath: string;
+    let inputRenameFile1: string;
+    let inputRenameFileInvalid2: string;
+    let repositoryGetIdentityByFilePathStub: jest.SpyInstance;
+
+    beforeEach(() => {
+      inputFilePath = '/tmp/upload/identity1.json';
+      inputRenameFile1 = 'identity1.json';
+      inputRenameFileInvalid2 = 'identity1';
+
+      repositoryGetIdentityByFilePathStub = jest.spyOn(repository, 'getIdentityByFilePath');
+    });
+
+    afterEach(() => {
+      repositoryGetIdentityByFilePathStub.mockClear();
+    });
+
+    it(`Should error move and rename file if rename file type not valid type`, async () => {
+      const [error] = await repository.moveAndRenameFile(inputFilePath, inputRenameFileInvalid2);
+
+      expect(error).toBeInstanceOf(InvalidFileTypeException);
+    });
+
+    it(`Should error move and rename file when read identity address from file`, async () => {
+      repositoryGetIdentityByFilePathStub.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
+
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalled();
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error move and rename file when create recursive folder`, async () => {
+      repositoryGetIdentityByFilePathStub.mockResolvedValue([null, 'identity1']);
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.mkdir).mockRejectedValue(fileError);
+
+      const [error] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
+
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalled();
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
+      expect(fsAsync.mkdir).toHaveBeenCalled();
+      expect(fsAsync.mkdir).toHaveBeenCalledWith(path.join(storeBasePath, 'identity1'), {recursive: true});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should error move and rename file when move file`, async () => {
+      repositoryGetIdentityByFilePathStub.mockResolvedValue([null, 'identity1']);
+      (<jest.Mock>fsAsync.mkdir).mockResolvedValue(null);
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.rename).mockRejectedValue(fileError);
+
+      const [error] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
+
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalled();
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
+      expect(fsAsync.mkdir).toHaveBeenCalled();
+      expect(fsAsync.mkdir).toHaveBeenCalledWith(path.join(storeBasePath, 'identity1'), {recursive: true});
+      expect(fsAsync.rename).toHaveBeenCalled();
+      expect(fsAsync.rename).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully move and rename file`, async () => {
+      repositoryGetIdentityByFilePathStub.mockResolvedValue([null, 'identity1']);
+      (<jest.Mock>fsAsync.mkdir).mockResolvedValue(null);
+      (<jest.Mock>fsAsync.rename).mockResolvedValue(null);
+
+      const [error, result] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
+
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalled();
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
+      expect(fsAsync.mkdir).toHaveBeenCalled();
+      expect(fsAsync.mkdir).toHaveBeenCalledWith(path.join(storeBasePath, 'identity1'), {recursive: true});
+      expect(fsAsync.rename).toHaveBeenCalled();
+      expect(fsAsync.rename).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(error).toBeNull();
+      expect(result).toEqual(path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
     });
   });
 });
