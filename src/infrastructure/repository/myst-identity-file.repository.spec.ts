@@ -274,4 +274,42 @@ describe('MystIdentityFileRepository', () => {
       expect(result).toEqual(path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
     });
   });
+
+  describe(`Remove file identity`, () => {
+    let inputFilePath1: string;
+    let inputFilePathInvalid2: string;
+
+    beforeEach(() => {
+      inputFilePath1 = '/new/path/identity1/identity.json';
+      inputFilePathInvalid2 = '/new/path/identity1/identity';
+    });
+
+    it(`Should error remove file identity if file path not valid type`, async () => {
+      const [error] = await repository.remove(inputFilePathInvalid2);
+
+      expect(error).toBeInstanceOf(InvalidFileTypeException);
+    });
+
+    it(`Should error remove file identity when execute remove dir`, async () => {
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.rm).mockRejectedValue(fileError);
+
+      const [error] = await repository.remove(inputFilePath1);
+
+      expect(fsAsync.rm).toHaveBeenCalled();
+      expect(fsAsync.rm).toHaveBeenCalledWith(path.dirname(inputFilePath1), {recursive: true, force: true});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully remove file identity when execute remove dir`, async () => {
+      (<jest.Mock>fsAsync.rm).mockResolvedValue(null);
+
+      const [error] = await repository.remove(inputFilePath1);
+
+      expect(fsAsync.rm).toHaveBeenCalled();
+      expect(fsAsync.rm).toHaveBeenCalledWith(path.dirname(inputFilePath1), {recursive: true, force: true});
+      expect(error).toBeNull();
+    });
+  });
 });

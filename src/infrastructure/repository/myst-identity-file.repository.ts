@@ -78,8 +78,18 @@ export class MystIdentityFileRepository implements IAccountIdentityFileRepositor
     }
   }
 
-  remove(filePath: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(filePath: string): Promise<AsyncReturn<Error, null>> {
+    if (!/\.json$/.exec(filePath)) {
+      return [new InvalidFileTypeException()];
+    }
+
+    try {
+      await fsAsync.rm(path.dirname(filePath), {recursive: true, force: true});
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private static async* getFiles(dirPath) {
