@@ -13,4 +13,8 @@ export class MystIdentityModel {
   constructor(props: ModelRequireProp<typeof MystIdentityModel.prototype>) {
     Object.assign(this, props);
   }
+
+  clone() {
+    return Object.assign(Object.create(this), this);
+  }
 }
