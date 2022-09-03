@@ -386,4 +386,75 @@ describe('MystIdentityPgRepository', () => {
       expect((<DefaultModel<MystIdentityModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
     });
   });
+
+  describe(`Remove identity by id`, () => {
+    let inputId: string;
+    let outputAccountIdentityEntity: AccountIdentityEntity;
+    let entityRemoveMock;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputAccountIdentityEntity = new AccountIdentityEntity();
+      outputAccountIdentityEntity.id = identifierMock.generateId();
+      outputAccountIdentityEntity.identity = 'identity1';
+      outputAccountIdentityEntity.passphrase = 'identity pass 1';
+      outputAccountIdentityEntity.path = '/store/path/identity1/';
+      outputAccountIdentityEntity.insertDate = defaultDate;
+      outputAccountIdentityEntity.updateDate = null;
+      entityRemoveMock = outputAccountIdentityEntity.softRemove = jest.fn();
+    });
+
+    afterEach(() => {
+      entityRemoveMock.mockClear();
+    });
+
+    it(`Should error remove identity by id when fetch identity by id`, async () => {
+      const executeError = new Error('Error in create on database');
+      accountIdentityDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully escape remove identity by id when identity not found`, async () => {
+      accountIdentityDb.findOneBy.mockResolvedValue(null);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeNull();
+    });
+
+    it(`Should error remove identity by id`, async () => {
+      accountIdentityDb.findOneBy.mockResolvedValue(outputAccountIdentityEntity);
+      const executeError = new Error('Error in create on database');
+      entityRemoveMock.mockRejectedValue(executeError);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(entityRemoveMock).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully remove identity by id`, async () => {
+      accountIdentityDb.findOneBy.mockResolvedValue(outputAccountIdentityEntity);
+      entityRemoveMock.mockResolvedValue();
+
+      const [error] = await repository.remove(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(entityRemoveMock).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+  });
 });

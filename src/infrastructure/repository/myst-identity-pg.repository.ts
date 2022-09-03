@@ -93,8 +93,19 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     }
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    try {
+      const row = await this._db.findOneBy({id});
+      if (!row) {
+        return [null];
+      }
+
+      await row.softRemove({transaction: false});
+
+      return [null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private static _fillModel(entity) {
