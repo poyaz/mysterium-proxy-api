@@ -9,6 +9,7 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {FilterModel, SortEnum} from '@src-core/model/filter.model';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
+import {defaultModelFactory} from '@src-core/model/defaultModel';
 
 export class MystIdentityPgRepository implements IGenericRepositoryInterface<MystIdentityModel> {
   constructor(
@@ -73,8 +74,23 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     }
   }
 
-  add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
-    return Promise.resolve(undefined);
+  async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
+    const data = instanceToPlain(model, {excludePrefixes: ['id', 'insertDate', 'updateDate', 'deleteDate', 'isUse', 'filename']});
+    data.identity = model.identity;
+
+    const entity = plainToInstance(AccountIdentityEntity, data);
+
+    entity.id = this._identifier.generateId();
+    entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
+
+    try {
+      const row = await this._db.save(entity, {transaction: false});
+      const result = MystIdentityPgRepository._fillModel(row);
+
+      return [null, result];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
@@ -82,7 +98,17 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
   }
 
   private static _fillModel(entity) {
-    const data = instanceToPlain(entity, {});
-    return plainToInstance(MystIdentityModel, data);
+    const modelValue = new MystIdentityModel({
+      id: entity.id,
+      identity: entity.identity,
+      passphrase: entity.passphrase,
+      path: entity.path,
+      filename: '',
+      isUse: false,
+      insertDate: entity.insertDate,
+      updateDate: entity.updateDate,
+    });
+
+    return defaultModelFactory<MystIdentityModel>(MystIdentityModel, modelValue, ['filename', 'isUse']);
   }
 }

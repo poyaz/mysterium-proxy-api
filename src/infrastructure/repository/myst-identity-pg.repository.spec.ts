@@ -11,11 +11,14 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {FilterModel, SortEnum} from '@src-core/model/filter.model';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {RepositoryException} from '@src-core/exception/repository.exception';
+import exp from 'constants';
+import {DefaultModel} from '@src-core/model/defaultModel';
 
 describe('MystIdentityPgRepository', () => {
   let repository: MystIdentityPgRepository;
   let accountIdentityDb: MockProxy<Repository<AccountIdentityEntity>>;
   let identifierMock: MockProxy<IIdentifier>;
+  let fakeIdentifierMock: MockProxy<IIdentifier>;
   let dateTimeMock: MockProxy<IDateTime>;
   const defaultDate = new Date('2020-01-01');
 
@@ -24,6 +27,9 @@ describe('MystIdentityPgRepository', () => {
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
+
+    fakeIdentifierMock = mock<IIdentifier>();
+    fakeIdentifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
 
     dateTimeMock = mock<IDateTime>();
     dateTimeMock.gregorianCurrentDateWithTimezone.mockReturnValue(defaultDate);
@@ -150,6 +156,11 @@ describe('MystIdentityPgRepository', () => {
         insertDate: defaultDate,
         updateDate: null,
       });
+      expect(result[0]).toEqual(expect.objectContaining({
+        isDefaultProperty: expect.anything(),
+        getDefaultProperties: expect.anything(),
+      }));
+      expect((<DefaultModel<MystIdentityModel>><unknown>result[0]).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
     });
 
     it(`Should successfully get all identity (with filter) and return records`, async () => {
@@ -173,6 +184,11 @@ describe('MystIdentityPgRepository', () => {
         insertDate: defaultDate,
         updateDate: null,
       });
+      expect(result[0]).toEqual(expect.objectContaining({
+        isDefaultProperty: expect.anything(),
+        getDefaultProperties: expect.anything(),
+      }));
+      expect((<DefaultModel<MystIdentityModel>><unknown>result[0]).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
     });
 
     it(`Should successfully get all identity (with sort) and return records`, async () => {
@@ -197,6 +213,11 @@ describe('MystIdentityPgRepository', () => {
         insertDate: defaultDate,
         updateDate: null,
       });
+      expect(result[0]).toEqual(expect.objectContaining({
+        isDefaultProperty: expect.anything(),
+        getDefaultProperties: expect.anything(),
+      }));
+      expect((<DefaultModel<MystIdentityModel>><unknown>result[0]).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
     });
 
     it(`Should successfully get all identity (with skip pagination) and return records`, async () => {
@@ -219,6 +240,11 @@ describe('MystIdentityPgRepository', () => {
         insertDate: defaultDate,
         updateDate: null,
       });
+      expect(result[0]).toEqual(expect.objectContaining({
+        isDefaultProperty: expect.anything(),
+        getDefaultProperties: expect.anything(),
+      }));
+      expect((<DefaultModel<MystIdentityModel>><unknown>result[0]).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
     });
   });
 
@@ -277,6 +303,87 @@ describe('MystIdentityPgRepository', () => {
         insertDate: defaultDate,
         updateDate: null,
       });
+      expect(result).toEqual(expect.objectContaining({
+        isDefaultProperty: expect.anything(),
+        getDefaultProperties: expect.anything(),
+      }));
+      expect((<DefaultModel<MystIdentityModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
+    });
+  });
+
+  describe(`Create identity`, () => {
+    let inputIdentityModel: MystIdentityModel;
+    let outputAccountIdentityEntity: AccountIdentityEntity;
+
+    beforeEach(() => {
+      inputIdentityModel = new MystIdentityModel({
+        id: fakeIdentifierMock.generateId(),
+        identity: 'identity1',
+        passphrase: 'identity pass 1',
+        path: '/store/path/identity1/',
+        filename: 'identity1.json',
+        isUse: false,
+        insertDate: new Date(),
+      });
+
+      outputAccountIdentityEntity = new AccountIdentityEntity();
+      outputAccountIdentityEntity.id = identifierMock.generateId();
+      outputAccountIdentityEntity.identity = inputIdentityModel.identity;
+      outputAccountIdentityEntity.passphrase = inputIdentityModel.passphrase;
+      outputAccountIdentityEntity.path = inputIdentityModel.path;
+      outputAccountIdentityEntity.insertDate = defaultDate;
+      outputAccountIdentityEntity.updateDate = null;
+    });
+
+    it(`Should error create identity`, async () => {
+      const executeError = new Error('Error in create on database');
+      accountIdentityDb.save.mockRejectedValue(executeError);
+
+      const [error] = await repository.add(inputIdentityModel);
+
+      expect(identifierMock.generateId).toHaveBeenCalled();
+      expect(dateTimeMock.gregorianCurrentDateWithTimezone).toHaveBeenCalled();
+      expect(accountIdentityDb.save).toHaveBeenCalled();
+      expect(accountIdentityDb.save).toBeCalledWith(<AccountIdentityEntity>{
+        id: identifierMock.generateId(),
+        identity: inputIdentityModel.identity,
+        passphrase: inputIdentityModel.passphrase,
+        path: inputIdentityModel.path,
+        insertDate: defaultDate,
+      }, {transaction: false});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully create identity`, async () => {
+      accountIdentityDb.save.mockResolvedValue(outputAccountIdentityEntity);
+
+      const [error, result] = await repository.add(inputIdentityModel);
+
+      expect(identifierMock.generateId).toHaveBeenCalled();
+      expect(dateTimeMock.gregorianCurrentDateWithTimezone).toHaveBeenCalled();
+      expect(accountIdentityDb.save).toHaveBeenCalled();
+      expect(accountIdentityDb.save).toBeCalledWith(<AccountIdentityEntity>{
+        id: identifierMock.generateId(),
+        identity: inputIdentityModel.identity,
+        passphrase: inputIdentityModel.passphrase,
+        path: inputIdentityModel.path,
+        insertDate: defaultDate,
+      }, {transaction: false});
+      expect(error).toBeNull();
+      expect(result).toMatchObject<Omit<MystIdentityModel, 'clone' | 'filename' | 'isUse'>>({
+        id: outputAccountIdentityEntity.id,
+        identity: outputAccountIdentityEntity.identity,
+        passphrase: outputAccountIdentityEntity.passphrase,
+        path: outputAccountIdentityEntity.path,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+      expect(result).toEqual(expect.objectContaining({
+        isDefaultProperty: expect.anything(),
+        getDefaultProperties: expect.anything(),
+      }));
+      expect((<DefaultModel<MystIdentityModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
     });
   });
 });
