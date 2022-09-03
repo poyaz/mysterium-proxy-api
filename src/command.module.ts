@@ -2,7 +2,7 @@ import {Module} from '@nestjs/common';
 import {SwaggerCommand} from '@src-api/command/swagger/swagger.command';
 import {ConfigureModule} from '@src-loader/configure/configure.module';
 import {PgModule} from '@src-loader/database/pg.module';
-import {controllersExport} from '@src-loader/http/controller.export';
+import {controllersExport} from '@src-api/http/controller.export';
 import {
   MigrationCreateCommand,
   MigrationRunCommand,

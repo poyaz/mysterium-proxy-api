@@ -15,7 +15,7 @@ import {DateTime} from './infrastructure/system/date-time';
 import {PgModule} from '@src-loader/database/pg.module';
 import {ConfigureModule} from '@src-loader/configure/configure.module';
 import {getRepositoryToken, TypeOrmModule} from '@nestjs/typeorm';
-import {controllersExport} from '@src-loader/http/controller.export';
+import {controllersExport} from '@src-api/http/controller.export';
 import {PgConfigService} from '@src-loader/database/pg-config.service';
 import {UsersPgRepository} from '@src-infrastructure/repository/users-pg.repository';
 import {UsersEntity} from '@src-infrastructure/entity/users.entity';
