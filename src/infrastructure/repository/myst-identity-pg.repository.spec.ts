@@ -87,7 +87,7 @@ describe('MystIdentityPgRepository', () => {
       inputFilterSkipPaginationModel = new FilterModel<MystIdentityModel>({skipPagination: true});
     });
 
-    it(`Should error get all users (without filter)`, async () => {
+    it(`Should error get all identity (without filter)`, async () => {
       const executeError = new Error('Error in create on database');
       accountIdentityDb.findAndCount.mockRejectedValue(executeError);
 
@@ -101,7 +101,7 @@ describe('MystIdentityPgRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
     });
 
-    it(`Should error get all users (with filter)`, async () => {
+    it(`Should error get all identity (with filter)`, async () => {
       const executeError = new Error('Error in create on database');
       accountIdentityDb.findAndCount.mockRejectedValue(executeError);
 
@@ -116,7 +116,7 @@ describe('MystIdentityPgRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(executeError);
     });
 
-    it(`Should successfully get all users (without filter) and return empty records`, async () => {
+    it(`Should successfully get all identity (without filter) and return empty records`, async () => {
       accountIdentityDb.findAndCount.mockResolvedValue([[], 0]);
 
       const [error, result, count] = await repository.getAll();
@@ -130,7 +130,7 @@ describe('MystIdentityPgRepository', () => {
       expect(count).toEqual(0);
     });
 
-    it(`Should successfully get all users (without filter) and return records`, async () => {
+    it(`Should successfully get all identity (without filter) and return records`, async () => {
       accountIdentityDb.findAndCount.mockResolvedValue([[outputAccountIdentityEntity1], 1]);
 
       const [error, result, count] = await repository.getAll();
@@ -152,7 +152,7 @@ describe('MystIdentityPgRepository', () => {
       });
     });
 
-    it(`Should successfully get all users (with filter) and return records`, async () => {
+    it(`Should successfully get all identity (with filter) and return records`, async () => {
       accountIdentityDb.findAndCount.mockResolvedValue([[outputAccountIdentityEntity1], 1]);
 
       const [error, result, count] = await repository.getAll(inputIdentityFilterModel);
@@ -175,7 +175,7 @@ describe('MystIdentityPgRepository', () => {
       });
     });
 
-    it(`Should successfully get all users (with sort) and return records`, async () => {
+    it(`Should successfully get all identity (with sort) and return records`, async () => {
       accountIdentityDb.findAndCount.mockResolvedValue([[outputAccountIdentityEntity1], 1]);
 
       const [error, result, count] = await repository.getAll(inputFilterSortModel);
@@ -199,7 +199,7 @@ describe('MystIdentityPgRepository', () => {
       });
     });
 
-    it(`Should successfully get all users (with skip pagination) and return records`, async () => {
+    it(`Should successfully get all identity (with skip pagination) and return records`, async () => {
       accountIdentityDb.findAndCount.mockResolvedValue([[outputAccountIdentityEntity1], 1]);
 
       const [error, result, count] = await repository.getAll(inputFilterSkipPaginationModel);
@@ -216,6 +216,64 @@ describe('MystIdentityPgRepository', () => {
         identity: outputAccountIdentityEntity1.identity,
         passphrase: outputAccountIdentityEntity1.passphrase,
         path: outputAccountIdentityEntity1.path,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+    });
+  });
+
+  describe(`Get by id`, () => {
+    let inputId: string;
+    let outputAccountIdentityEntity: AccountIdentityEntity;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputAccountIdentityEntity = new AccountIdentityEntity();
+      outputAccountIdentityEntity.id = identifierMock.generateId();
+      outputAccountIdentityEntity.identity = 'identity1';
+      outputAccountIdentityEntity.passphrase = 'identity pass 1';
+      outputAccountIdentityEntity.path = '/store/path/identity1/';
+      outputAccountIdentityEntity.insertDate = defaultDate;
+      outputAccountIdentityEntity.updateDate = null;
+    });
+
+    it(`Should error get identity by id`, async () => {
+      const executeError = new Error('Error in create on database');
+      accountIdentityDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully get identity by id but can't find and return null`, async () => {
+      accountIdentityDb.findOneBy.mockResolvedValue(null);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get identity by id`, async () => {
+      accountIdentityDb.findOneBy.mockResolvedValue(outputAccountIdentityEntity);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(accountIdentityDb.findOneBy).toHaveBeenCalled();
+      expect(accountIdentityDb.findOneBy).toBeCalledWith({id: inputId});
+      expect(error).toBeNull();
+      expect(result).toMatchObject<Omit<MystIdentityModel, 'clone' | 'filename' | 'isUse'>>({
+        id: outputAccountIdentityEntity.id,
+        identity: outputAccountIdentityEntity.identity,
+        passphrase: outputAccountIdentityEntity.passphrase,
+        path: outputAccountIdentityEntity.path,
         insertDate: defaultDate,
         updateDate: null,
       });

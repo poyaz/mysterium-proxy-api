@@ -58,8 +58,19 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     }
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, MystIdentityModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, MystIdentityModel | null>> {
+    try {
+      const row = await this._db.findOneBy({id});
+      if (!row) {
+        return [null, null];
+      }
+
+      const result = MystIdentityPgRepository._fillModel(row);
+
+      return [null, result];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
