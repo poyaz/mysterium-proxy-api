@@ -64,21 +64,21 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     runnerFilter.addCondition({$opr: 'eq', label: {userIdentity: dataIdentity.identity}});
 
     const [
-      [errorFile, dataFileList, totalFileCount],
+      [errorFile, dataFile],
       [errorRunner, dataRunnerList, totalRunnerCount],
     ] = await Promise.all([
-      this._mystIdentityFileRepository.getAll(),
+      this._mystIdentityFileRepository.getIdentityByFilePath(dataIdentity.path),
       this._dockerRunnerRepository.getAll(runnerFilter),
     ]);
     const fetchError = errorFile || errorRunner;
     if (fetchError) {
       return [fetchError];
     }
-    if (totalFileCount === 0 || totalRunnerCount === 0) {
+    if (!dataFile) {
       return [null, null];
     }
 
-    const dataList = [dataIdentity].map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, dataFileList))
+    const dataList = [dataIdentity].map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, [dataFile]))
       .filter((v) => v)
       .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeRunnerData(v, dataRunnerList))
       .filter((v) => v);

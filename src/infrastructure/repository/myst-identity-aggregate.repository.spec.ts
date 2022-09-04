@@ -571,7 +571,7 @@ describe('MystIdentityAggregateRepository', () => {
 
   describe(`Get identity with id and fill aggregate data`, () => {
     let inputId: string;
-    let outputFileData1: string;
+    let outputFileData: string;
     let outputFileNotMatchData2: string;
     let outputIdentityData: MystIdentityModel;
     let outputRunnerMystData1: RunnerModel<VpnProviderModel>;
@@ -581,7 +581,7 @@ describe('MystIdentityAggregateRepository', () => {
     beforeEach(() => {
       inputId = identifierMock.generateId();
 
-      outputFileData1 = '/path/identity-1/identity-1.json';
+      outputFileData = '/path/identity-1/identity-1.json';
       outputFileNotMatchData2 = '/path/identity-2/not-match.json';
 
       outputIdentityData = new MystIdentityModel({
@@ -659,13 +659,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error get identity for aggregation when fail on get all data from file`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getAll.mockResolvedValue([new UnknownException()]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([new UnknownException()]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -679,13 +680,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with return null if myst runner not found`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, null]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -700,13 +702,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with return null if not match myst runner`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystNotMatchData3], 1]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -721,13 +724,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with with 'isUse' false`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -740,8 +744,8 @@ describe('MystIdentityAggregateRepository', () => {
       expect(result).toMatchObject(<MystIdentityModel>{
         id: outputIdentityData.id,
         identity: outputIdentityData.identity,
-        path: `${outputFileData1.split(/\//g).slice(0, -1).join('/')}/`,
-        filename: outputFileData1.split(/\//g).splice(-1)[0],
+        path: `${outputFileData.split(/\//g).slice(0, -1).join('/')}/`,
+        filename: outputFileData.split(/\//g).splice(-1)[0],
         isUse: false,
         insertDate: new Date(),
       });
@@ -749,7 +753,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with with 'isUse' true`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getAll.mockResolvedValue([null, [outputFileData1], 1]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
         [outputRunnerMystData1, outputConnectRunnerMystConnectData2],
@@ -759,7 +763,8 @@ describe('MystIdentityAggregateRepository', () => {
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getAll).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -772,8 +777,8 @@ describe('MystIdentityAggregateRepository', () => {
       expect(result).toMatchObject(<MystIdentityModel>{
         id: outputIdentityData.id,
         identity: outputIdentityData.identity,
-        path: `${outputFileData1.split(/\//g).slice(0, -1).join('/')}/`,
-        filename: outputFileData1.split(/\//g).splice(-1)[0],
+        path: `${outputFileData.split(/\//g).slice(0, -1).join('/')}/`,
+        filename: outputFileData.split(/\//g).splice(-1)[0],
         isUse: true,
         insertDate: new Date(),
       });
