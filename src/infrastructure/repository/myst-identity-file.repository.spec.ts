@@ -118,6 +118,58 @@ describe('MystIdentityFileRepository', () => {
     });
   });
 
+  describe(`Get file identity with dir path`, () => {
+    let inputDirPath: string;
+    let dirListFirstLevelFile: Dirent;
+    let dirListFirstLevelFileRemember: Dirent;
+
+    beforeEach(() => {
+      inputDirPath = '/new/path/identity1/';
+
+      dirListFirstLevelFile = new Dirent();
+      dirListFirstLevelFile.name = 'identity1.json';
+      dirListFirstLevelFile.isDirectory = jest.fn().mockReturnValue(false);
+
+      dirListFirstLevelFileRemember = new Dirent();
+      dirListFirstLevelFileRemember.name = 'remember.json';
+      dirListFirstLevelFileRemember.isDirectory = jest.fn().mockReturnValue(false);
+    });
+
+    it(`Should error get file identity with dir path when execute fs read dir`, async () => {
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.readdir).mockRejectedValue(fileError);
+
+      const [error] = await repository.getByDirPath(inputDirPath);
+
+      expect(fsAsync.readdir).toHaveBeenCalled();
+      expect((<jest.Mock>fsAsync.readdir).mock.calls[0][0]).toEqual(inputDirPath);
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully get file identity with dir path and return empty if not found`, async () => {
+      (<jest.Mock>fsAsync.readdir).mockResolvedValue([]);
+
+      const [error, result] = await repository.getByDirPath(inputDirPath);
+
+      expect(fsAsync.readdir).toHaveBeenCalled();
+      expect((<jest.Mock>fsAsync.readdir).mock.calls[0][0]).toEqual(inputDirPath);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get file identity with dir path`, async () => {
+      (<jest.Mock>fsAsync.readdir).mockResolvedValue([dirListFirstLevelFile, dirListFirstLevelFileRemember]);
+
+      const [error, result] = await repository.getByDirPath(inputDirPath);
+
+      expect(fsAsync.readdir).toHaveBeenCalled();
+      expect((<jest.Mock>fsAsync.readdir).mock.calls[0][0]).toEqual(inputDirPath);
+      expect(error).toBeNull();
+      expect(result).toEqual(`${inputDirPath}${dirListFirstLevelFile.name}`);
+    });
+  });
+
   describe(`Get identity by file path`, () => {
     let inputFilePath: string;
     let outputFileData1: string;

@@ -35,6 +35,28 @@ export class MystIdentityFileRepository implements IAccountIdentityFileRepositor
     }
   }
 
+  async getByDirPath(dirPath: string): Promise<AsyncReturn<Error, string | null>> {
+    const identityList = [];
+
+    try {
+      const fileList = MystIdentityFileRepository.getFiles(dirPath);
+      for await (const file of fileList) {
+        if (!/\.json$/.exec(file) || /remember\.json$/.exec(file)) {
+          continue;
+        }
+
+        identityList.push(file);
+      }
+      if (identityList.length === 0) {
+        return [null, null];
+      }
+
+      return [null, identityList[0]];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
+  }
+
   async getIdentityByFilePath(filePath: string): Promise<AsyncReturn<Error, string>> {
     try {
       const row = await fsAsync.readFile(filePath, 'utf-8');
