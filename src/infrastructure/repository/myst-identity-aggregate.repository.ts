@@ -77,6 +77,9 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     if (!dataFile) {
       return [null, null];
     }
+    if (totalRunnerCount === 0) {
+      return [null, null];
+    }
 
     const dataList = [dataIdentity].map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, [dataFile]))
       .filter((v) => v)
