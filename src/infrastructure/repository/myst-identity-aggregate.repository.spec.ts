@@ -21,6 +21,7 @@ import {UnknownException} from '@src-core/exception/unknown.exception';
 import {ExistException} from '@src-core/exception/exist.exception';
 import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
+import {UpdateModel} from '@src-core/model/update.model';
 
 describe('MystIdentityAggregateRepository', () => {
   let repository: MystIdentityAggregateRepository;
@@ -1136,6 +1137,21 @@ describe('MystIdentityAggregateRepository', () => {
         isUse: false,
         insertDate: new Date(),
       });
+    });
+  });
+
+  describe(`Update identity`, () => {
+    let inputModel: UpdateModel<MystIdentityModel>;
+
+    beforeEach(() => {
+      inputModel = new UpdateModel<MystIdentityModel>(identifierMock.generateId(), {passphrase: 'new password'});
+    });
+
+    it(`Should successfully update identity`, async () => {
+      const [error, result] = await repository.update<UpdateModel<MystIdentityModel>>(inputModel);
+
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 

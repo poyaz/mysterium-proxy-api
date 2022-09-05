@@ -13,6 +13,7 @@ import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import exp from 'constants';
 import {DefaultModel} from '@src-core/model/defaultModel';
+import {UpdateModel} from '@src-core/model/update.model';
 
 describe('MystIdentityPgRepository', () => {
   let repository: MystIdentityPgRepository;
@@ -384,6 +385,21 @@ describe('MystIdentityPgRepository', () => {
         getDefaultProperties: expect.anything(),
       }));
       expect((<DefaultModel<MystIdentityModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['filename', 'isUse']));
+    });
+  });
+
+  describe(`Update identity`, () => {
+    let inputModel: UpdateModel<MystIdentityModel>;
+
+    beforeEach(() => {
+      inputModel = new UpdateModel<MystIdentityModel>(identifierMock.generateId(), {passphrase: 'new password'});
+    });
+
+    it(`Should successfully update identity`, async () => {
+      const [error, result] = await repository.update<UpdateModel<MystIdentityModel>>(inputModel);
+
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 

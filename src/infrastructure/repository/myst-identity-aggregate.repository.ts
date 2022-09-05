@@ -127,6 +127,10 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return this._mystIdentityPgRepository.add(addMystIdentityModel);
   }
 
+  async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
+    return [null, null];
+  }
+
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
     const [errorFetch, dataFetch] = await this.getById(id);
     if (errorFetch) {

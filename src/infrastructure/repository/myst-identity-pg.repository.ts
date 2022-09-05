@@ -93,6 +93,10 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     }
   }
 
+  async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
+    return [null, null];
+  }
+
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
     try {
       const row = await this._db.findOneBy({id});
