@@ -1,6 +1,7 @@
 import {registerAs} from '@nestjs/config';
 import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
 import {convertStringToBoolean} from '@src-loader/configure/util';
+import {resolve} from 'path';
 
 export default registerAs('server', (): ServerConfigInterface => {
   return {
@@ -12,5 +13,6 @@ export default registerAs('server', (): ServerConfigInterface => {
       port: Number(process.env.SERVER_HTTPS_PORT || 3443),
       force: convertStringToBoolean(process.env.SERVER_HTTPS_FORCE),
     },
+    uploadPath: process.env.SERVER_UPLOAD_PATH || resolve('storage', 'upload'),
   };
 });

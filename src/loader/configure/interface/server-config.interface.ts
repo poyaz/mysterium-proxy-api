@@ -7,4 +7,5 @@ export interface ServerConfigInterface {
     readonly port: number,
     readonly force: boolean,
   }
+  readonly uploadPath: string;
 }

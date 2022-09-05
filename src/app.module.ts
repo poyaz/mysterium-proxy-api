@@ -30,6 +30,8 @@ import {UsersSquidFileRepository} from '@src-infrastructure/repository/users-squ
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {RedisModule} from '@liaoliaots/nestjs-redis';
 import {RedisConfigInterface} from '@src-loader/configure/interface/redis-config.interface';
+import {MulterModule} from '@nestjs/platform-express';
+import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
 
 @Module({
   imports: [
@@ -54,6 +56,13 @@ import {RedisConfigInterface} from '@src-loader/configure/interface/redis-config
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET_KEY'),
+      }),
+    }),
+    MulterModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        dest: configService.get<ServerConfigInterface>('server').uploadPath,
       }),
     }),
   ],

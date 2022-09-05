@@ -37,6 +37,10 @@ export class EnvConfigDto {
 
   @IsOptional()
   @IsString()
+  SERVER_UPLOAD_PATH?: string;
+
+  @IsOptional()
+  @IsString()
   DB_PG_HOST?: string;
 
   @IsOptional()
