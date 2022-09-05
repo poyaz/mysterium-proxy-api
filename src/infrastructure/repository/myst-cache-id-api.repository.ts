@@ -6,6 +6,7 @@ import {AsyncReturn} from '@src-core/utility';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {FilterModel} from '@src-core/model/filter.model';
+import {RunnerModel} from '@src-core/model/runner.model';
 
 @Injectable()
 export class MystCacheIdApiRepository implements IProxyApiRepositoryInterface {
@@ -83,5 +84,9 @@ export class MystCacheIdApiRepository implements IProxyApiRepositoryInterface {
 
       return null;
     }
+  }
+
+  registerIdentity(runner: RunnerModel): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
   }
 }

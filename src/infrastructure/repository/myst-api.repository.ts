@@ -12,6 +12,7 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
+import {RunnerModel} from '@src-core/model/runner.model';
 
 @Injectable()
 export class MystApiRepository implements IProxyApiRepositoryInterface {
@@ -148,5 +149,9 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
       default:
         throw new FillDataRepositoryException<VpnProviderModel>(['serviceType']);
     }
+  }
+
+  registerIdentity(runner: RunnerModel): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
   }
 }

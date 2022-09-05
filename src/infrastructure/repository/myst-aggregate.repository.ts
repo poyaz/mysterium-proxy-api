@@ -78,6 +78,10 @@ export class MystAggregateRepository implements IProxyApiRepositoryInterface {
     return [null, apiData];
   }
 
+  async registerIdentity(runner: RunnerModel): Promise<AsyncReturn<Error, null>> {
+    return [null];
+  }
+
   private static _mergeData(vpnData: VpnProviderModel, runnerDataList: Array<RunnerModel<VpnProviderModel>>): VpnProviderModel {
     const findRunner = runnerDataList.find((v) => v.label.id === vpnData.id && v.label.providerIdentity === vpnData.providerIdentity);
     if (findRunner) {
