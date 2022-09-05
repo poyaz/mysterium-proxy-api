@@ -32,9 +32,9 @@ import {FindIdentityOutputDto} from '@src-api/http/controller/identity/dto/find-
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {FileInterceptor} from '@nestjs/platform-express';
-import {IdentityJsonFileValidationPipe} from '@src-api/http/controller/users/pipe/identity-json-file-validation.pipe';
 import {CreateIdentityInputDto} from '@src-api/http/controller/identity/dto/create-identity-input.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
+import {IdentityJsonFileValidationPipe} from '@src-api/http/controller/identity/pipe/identity-json-file-validation.pipe';
 
 const mystIdentityModelList = [
   new MystIdentityModel({
