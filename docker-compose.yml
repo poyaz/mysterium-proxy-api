@@ -59,7 +59,7 @@ services:
 
   build-myst-connect-image:
     build:
-      context: ./docker/images/connect
+      context: ./docker/images/myst-connect
       dockerfile: Dockerfile
     image: myst-connect-service:latest
     network_mode: "bridge"

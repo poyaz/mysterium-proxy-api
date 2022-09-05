@@ -138,7 +138,7 @@ run() {
 }
 
 _main() {
-  if [ $1 = 'myst' ]; then
+  if [ "$1" = 'myst' ]; then
     sleep 2
 
     docker_setup_env
