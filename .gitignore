@@ -11,6 +11,9 @@ build/*
 storage/tmp/*
 !storage/tmp/.gitkeep
 
+storage/upload/*
+!storage/upload/.gitkeep
+
 docker/custom/*
 !docker/custom/.gitkeep
 
