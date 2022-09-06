@@ -1,5 +1,5 @@
 import {Test, TestingModule} from '@nestjs/testing';
-import {IdentityController} from './identity.controller';
+import {IdentityHttpController} from './identity.controller';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
@@ -7,7 +7,7 @@ import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interf
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 describe('IdentityController', () => {
-  let controller: IdentityController;
+  let controller: IdentityHttpController;
   let mystIdentityService: MockProxy<IMystIdentityServiceInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
@@ -18,7 +18,7 @@ describe('IdentityController', () => {
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [IdentityController],
+      controllers: [IdentityHttpController],
       providers: [
         {
           provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE,
@@ -27,7 +27,7 @@ describe('IdentityController', () => {
       ],
     }).compile();
 
-    controller = module.get<IdentityController>(IdentityController);
+    controller = module.get<IdentityHttpController>(IdentityHttpController);
   });
 
   it('should be defined', () => {

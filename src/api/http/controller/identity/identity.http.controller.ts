@@ -69,7 +69,7 @@ const mystIdentityModelList = [
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
-export class IdentityController {
+export class IdentityHttpController {
 
   @Get()
   @Roles(UserRoleEnum.ADMIN)
@@ -210,8 +210,9 @@ export class IdentityController {
         {
           properties: {
             data: {
-              type: 'object',
-              $ref: getSchemaPath(FindIdentityOutputDto),
+              type: 'string',
+              description: 'The id of job. You should check result of job with this id',
+              example: '00000000-0000-0000-0000-000000000000',
             },
           },
         },
@@ -223,7 +224,7 @@ export class IdentityController {
     @Body() createIdentityDto: CreateIdentityInputDto,
     @UploadedFile(IdentityJsonFileValidationPipe) file: Express.Multer.File,
   ) {
-    return [null, mystIdentityModelList[0]];
+    return [null, '00000000-0000-0000-0000-000000000000'];
   }
 
   @Delete(':identityId')
