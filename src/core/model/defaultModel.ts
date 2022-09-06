@@ -21,7 +21,7 @@ export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Par
     }
   };
 
-  const genericExtendInstance = new (<any>GenericExtendClass)({...defaultProperties, ...properties}, defaultProperties);
+  const genericExtendInstance = new (<any>GenericExtendClass)(properties, defaultProperties);
   const proxyInstance = new Proxy(genericExtendInstance, {
     get(target, prop, receiver) {
       return Reflect.get(target, prop, receiver);
