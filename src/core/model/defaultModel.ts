@@ -4,9 +4,11 @@ export interface DefaultModel<T> {
   isDefaultProperty(property: keyof T): boolean;
 
   getDefaultProperties(): Array<keyof T>;
+
+  clone(): Omit<T, 'clone'> & DefaultModel<T>;
 }
 
-export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Partial<T>, defaultProperties: Array<keyof T>): T & DefaultModel<T> {
+export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Partial<T>, defaultProperties: Array<keyof T>): Omit<T, 'clone'> & DefaultModel<T> {
   const GenericExtendClass = class extends (<any>cls) implements DefaultModel<T> {
     constructor(props: ModelRequireProp<typeof cls.prototype>, private readonly _defaultProperties: Array<keyof T>) {
       super(props);
@@ -18,6 +20,14 @@ export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Par
 
     getDefaultProperties(): Array<keyof T> {
       return this._defaultProperties;
+    }
+
+    clone(): Omit<T, 'clone'> & DefaultModel<T> {
+      const cloneDefaultProperties = [...this._defaultProperties];
+      const obj = Object.assign(Object.create(this), this);
+      obj._defaultProperties = cloneDefaultProperties;
+
+      return obj;
     }
   };
 
@@ -35,5 +45,5 @@ export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Par
     },
   });
 
-  return <T & DefaultModel<T>>proxyInstance;
+  return <Omit<T, 'clone'> & DefaultModel<T>>proxyInstance;
 }
