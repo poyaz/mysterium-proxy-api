@@ -220,12 +220,12 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
 
     const getIdentity = filterModel.getCondition('identity');
     if (getIdentity) {
-      dataList = identityList.filter((v) => v.identity === getIdentity.identity);
+      dataList = dataList.filter((v) => v.identity === getIdentity.identity);
     }
 
     const getIsUse = filterModel.getCondition('isUse');
     if (getIsUse) {
-      dataList = identityList.filter((v) => v.isUse === getIsUse.isUse);
+      dataList = dataList.filter((v) => v.isUse === getIsUse.isUse);
     }
 
     const pageNumber = filterModel.page;
