@@ -1,14 +1,16 @@
 import {ClassConstructor, ModelRequireProp} from '@src-core/utility';
 
+export type defaultModelType<T> = Omit<T, 'clone'> & DefaultModel<T>;
+
 export interface DefaultModel<T> {
   isDefaultProperty(property: keyof T): boolean;
 
   getDefaultProperties(): Array<keyof T>;
 
-  clone(): Omit<T, 'clone'> & DefaultModel<T>;
+  clone(): defaultModelType<T>;
 }
 
-export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Partial<T>, defaultProperties: Array<keyof T>): Omit<T, 'clone'> & DefaultModel<T> {
+export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Partial<T>, defaultProperties: Array<keyof T>): defaultModelType<T> {
   const GenericExtendClass = class extends (<any>cls) implements DefaultModel<T> {
     constructor(props: ModelRequireProp<typeof cls.prototype>, private readonly _defaultProperties: Array<keyof T>) {
       super(props);
@@ -22,7 +24,7 @@ export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Par
       return this._defaultProperties;
     }
 
-    clone(): Omit<T, 'clone'> & DefaultModel<T> {
+    clone(): defaultModelType<T> {
       const cloneDefaultProperties = [...this._defaultProperties];
       const obj = Object.assign(Object.create(this), this);
       obj._defaultProperties = cloneDefaultProperties;
@@ -37,7 +39,7 @@ export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Par
       return Reflect.get(target, prop, receiver);
     },
     set(obj, prop, value) {
-      obj['_defaultProperties'] = obj['_defaultProperties'].filter((v) => v != prop);
+      obj['_defaultProperties'] = obj['_defaultProperties'].filter((v) => v !== prop);
 
       obj[prop] = value;
 
@@ -45,5 +47,5 @@ export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Par
     },
   });
 
-  return <Omit<T, 'clone'> & DefaultModel<T>>proxyInstance;
+  return <defaultModelType<T>>proxyInstance;
 }
