@@ -493,4 +493,28 @@ describe('MystIdentityService', () => {
       });
     });
   });
+
+  describe(`Remove identity`, () => {
+    let inputId: string;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+    });
+
+    it(`Should error remove identity`, async () => {
+      mystIdentityAggRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove identity`, async () => {
+      mystIdentityAggRepository.remove.mockResolvedValue([null, null]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(error).toBeNull();
+    });
+  });
 });

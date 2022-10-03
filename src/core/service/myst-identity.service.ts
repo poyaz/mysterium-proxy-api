@@ -85,7 +85,7 @@ export class MystIdentityService implements IMystIdentityServiceInterface {
     return [null, createIdentityData];
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    return this._mystIdentityRepository.remove(id);
   }
 }
