@@ -59,10 +59,10 @@ describe('IdentityController', () => {
 
       outputMystIdentityModel1 = new MystIdentityModel({
         id: identifierMock.generateId(),
-        identity: 'identity2',
-        passphrase: 'pass2',
-        path: '/path/of/identity2',
-        filename: 'identity2.json',
+        identity: 'identity1',
+        passphrase: 'pass1',
+        path: '/path/of/identity1',
+        filename: 'identity1.json',
         isUse: true,
         insertDate: new Date(),
       });
@@ -118,6 +118,51 @@ describe('IdentityController', () => {
         id: outputMystIdentityModel1.id,
         identity: outputMystIdentityModel1.identity,
         isUse: outputMystIdentityModel1.isUse,
+        insertDate: new Date(),
+      });
+    });
+  });
+
+  describe(`Find one myst identity`, () => {
+    let inputIdentityId: string;
+    let outputMystIdentityModel: MystIdentityModel;
+
+    beforeEach(() => {
+      inputIdentityId = identifierMock.generateId();
+
+      outputMystIdentityModel = new MystIdentityModel({
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+        passphrase: 'pass1',
+        path: '/path/of/identity1',
+        filename: 'identity1.json',
+        isUse: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error find one myst identity`, async () => {
+      mystIdentityService.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findOne(inputIdentityId);
+
+      expect(mystIdentityService.getById).toHaveBeenCalled();
+      expect(mystIdentityService.getById).toBeCalledWith(inputIdentityId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully find one myst identity`, async () => {
+      mystIdentityService.getById.mockResolvedValue([null, outputMystIdentityModel]);
+
+      const [error, result] = await controller.findOne(inputIdentityId);
+
+      expect(mystIdentityService.getById).toHaveBeenCalled();
+      expect(mystIdentityService.getById).toBeCalledWith(inputIdentityId);
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<MystIdentityModel>{
+        id: outputMystIdentityModel.id,
+        identity: outputMystIdentityModel.identity,
+        isUse: outputMystIdentityModel.isUse,
         insertDate: new Date(),
       });
     });

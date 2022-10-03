@@ -182,12 +182,7 @@ export class IdentityHttpController {
     },
   })
   async findOne(@Param('identityId') identityId: string) {
-    const find = mystIdentityModelList.find((v) => v.id === identityId);
-    if (!find) {
-      return [new NotFoundException()];
-    }
-
-    return [null, find];
+    return this._mystIdentityService.getById(identityId);
   }
 
   @Post()
