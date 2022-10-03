@@ -1,7 +1,7 @@
 import {
   Body,
   Controller, Delete,
-  Get, HttpCode, HttpStatus,
+  Get, HttpCode, HttpStatus, Inject,
   Param, Post,
   Query,
   UploadedFile,
@@ -35,6 +35,8 @@ import {FileInterceptor} from '@nestjs/platform-express';
 import {CreateIdentityInputDto} from '@src-api/http/controller/identity/dto/create-identity-input.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
 import {IdentityJsonFileValidationPipe} from '@src-api/http/controller/identity/pipe/identity-json-file-validation.pipe';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
 
 const mystIdentityModelList = [
   new MystIdentityModel({
@@ -70,6 +72,11 @@ const mystIdentityModelList = [
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 export class IdentityHttpController {
+  constructor(
+    @Inject(ProviderTokenEnum.MYST_IDENTITY_SERVICE_DEFAULT)
+    private readonly _mystIdentityService: IMystIdentityServiceInterface,
+  ) {
+  }
 
   @Get()
   @Roles(UserRoleEnum.ADMIN)
@@ -137,7 +144,7 @@ export class IdentityHttpController {
     },
   })
   async findAll(@Query() queryFilterDto: FindIdentityQueryDto) {
-    return [null, mystIdentityModelList, mystIdentityModelList.length];
+    return this._mystIdentityService.getAll(FindIdentityQueryDto.toModel(queryFilterDto));
   }
 
   @Get(':identityId')

@@ -1,10 +1,15 @@
 import {Test, TestingModule} from '@nestjs/testing';
-import {IdentityHttpController} from './identity.controller';
+import {IdentityHttpController} from './identity.http.controller';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
 import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {FindIdentityQueryDto} from '@src-api/http/controller/identity/dto/find-identity-query.dto';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import {FilterInstanceType, FilterModel, FilterOperationType} from '@src-core/model/filter.model';
+import {UsersModel} from '@src-core/model/users.model';
 
 describe('IdentityController', () => {
   let controller: IdentityHttpController;
@@ -28,9 +33,93 @@ describe('IdentityController', () => {
     }).compile();
 
     controller = module.get<IdentityHttpController>(IdentityHttpController);
+
+    jest.useFakeTimers().setSystemTime(new Date('2020-01-01'));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe(`Find all myst identity`, () => {
+    let inputFindMystIdentityQueryDto: FindIdentityQueryDto;
+    let inputEmptyFindMystIdentityQueryDto: FindIdentityQueryDto;
+    let outputMystIdentityModel1: MystIdentityModel;
+
+    beforeEach(() => {
+      inputFindMystIdentityQueryDto = new FindIdentityQueryDto();
+      inputFindMystIdentityQueryDto.filters = {isUse: true};
+
+      inputEmptyFindMystIdentityQueryDto = new FindIdentityQueryDto();
+
+      outputMystIdentityModel1 = new MystIdentityModel({
+        id: identifierMock.generateId(),
+        identity: 'identity2',
+        passphrase: 'pass2',
+        path: '/path/of/identity2',
+        filename: 'identity2.json',
+        isUse: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error find all myst identity without filter`, async () => {
+      mystIdentityService.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findAll(inputEmptyFindMystIdentityQueryDto);
+
+      expect(mystIdentityService.getAll).toHaveBeenCalled();
+      expect(mystIdentityService.getAll).toBeCalledWith(new FilterModel<MystIdentityModel>());
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error find all myst identity with filter`, async () => {
+      mystIdentityService.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findAll(inputFindMystIdentityQueryDto);
+
+      expect(mystIdentityService.getAll).toHaveBeenCalled();
+      expect(mystIdentityService.getAll.mock.calls[0][0].getCondition('isUse')).toMatchObject(<FilterInstanceType<MystIdentityModel> & { $opr: FilterOperationType }>{
+        $opr: 'eq',
+        isUse: true,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error find all myst identity with empty record`, async () => {
+      mystIdentityService.getAll.mockResolvedValue([null, [], 0]);
+
+      const [error, result] = await controller.findAll(inputEmptyFindMystIdentityQueryDto);
+
+      expect(mystIdentityService.getAll).toHaveBeenCalled();
+      expect(mystIdentityService.getAll).toBeCalledWith(new FilterModel<MystIdentityModel>());
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+    });
+
+    it(`Should error find all myst identity with empty record`, async () => {
+      mystIdentityService.getAll.mockResolvedValue([null, [outputMystIdentityModel1], 1]);
+
+      const [error, result] = await controller.findAll(inputFindMystIdentityQueryDto);
+
+      expect(mystIdentityService.getAll).toHaveBeenCalled();
+      expect(mystIdentityService.getAll.mock.calls[0][0].getCondition('isUse')).toMatchObject(<FilterInstanceType<MystIdentityModel> & { $opr: FilterOperationType }>{
+        $opr: 'eq',
+        isUse: true,
+      });
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject(<MystIdentityModel>{
+        id: outputMystIdentityModel1.id,
+        identity: outputMystIdentityModel1.identity,
+        isUse: outputMystIdentityModel1.isUse,
+        insertDate: new Date(),
+      });
+    });
   });
 });
