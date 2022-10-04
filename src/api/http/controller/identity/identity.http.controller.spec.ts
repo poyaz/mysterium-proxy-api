@@ -237,4 +237,33 @@ describe('IdentityController', () => {
       });
     });
   });
+
+  describe(`Remove myst identity`, () => {
+    let inputIdentityId: string;
+
+    beforeEach(() => {
+      inputIdentityId = identifierMock.generateId();
+    });
+
+    it(`Should error remove myst identity`, async () => {
+      mystIdentityService.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.remove(inputIdentityId);
+
+      expect(mystIdentityService.remove).toHaveBeenCalled();
+      expect(mystIdentityService.remove).toBeCalledWith(inputIdentityId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove myst identity`, async () => {
+      mystIdentityService.remove.mockResolvedValue([null, null]);
+
+      const [error, result] = await controller.remove(inputIdentityId);
+
+      expect(mystIdentityService.remove).toHaveBeenCalled();
+      expect(mystIdentityService.remove).toBeCalledWith(inputIdentityId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });

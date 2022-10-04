@@ -253,11 +253,6 @@ export class IdentityHttpController {
     },
   })
   async remove(@Param('identityId') identityId: string) {
-    const find = mystIdentityModelList.find((v) => v.id === identityId);
-    if (!find) {
-      return [new NotFoundException()];
-    }
-
-    return [null];
+    return this._mystIdentityService.remove(identityId);
   }
 }
