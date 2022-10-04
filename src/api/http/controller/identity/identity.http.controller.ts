@@ -226,7 +226,7 @@ export class IdentityHttpController {
     @Body() createIdentityDto: CreateIdentityInputDto,
     @UploadedFile(IdentityJsonFileValidationPipe) file: Express.Multer.File,
   ) {
-    return [null, '00000000-0000-0000-0000-000000000000'];
+    return this._mystIdentityService.create(CreateIdentityInputDto.toModel(createIdentityDto, file));
   }
 
   @Delete(':identityId')

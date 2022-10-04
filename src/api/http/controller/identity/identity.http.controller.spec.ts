@@ -10,6 +10,8 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {FilterInstanceType, FilterModel, FilterOperationType} from '@src-core/model/filter.model';
 import {UsersModel} from '@src-core/model/users.model';
+import {CreateIdentityInputDto} from '@src-api/http/controller/identity/dto/create-identity-input.dto';
+import {PassThrough} from 'stream';
 
 describe('IdentityController', () => {
   let controller: IdentityHttpController;
@@ -158,6 +160,74 @@ describe('IdentityController', () => {
 
       expect(mystIdentityService.getById).toHaveBeenCalled();
       expect(mystIdentityService.getById).toBeCalledWith(inputIdentityId);
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<MystIdentityModel>{
+        id: outputMystIdentityModel.id,
+        identity: outputMystIdentityModel.identity,
+        isUse: outputMystIdentityModel.isUse,
+        insertDate: new Date(),
+      });
+    });
+  });
+
+  describe(`Create myst identity`, () => {
+    let inputCreateMystIdentityDto: CreateIdentityInputDto;
+    let inputFileUpload: Express.Multer.File;
+    let outputMystIdentityModel: MystIdentityModel;
+
+    beforeEach(() => {
+      inputCreateMystIdentityDto = new CreateIdentityInputDto();
+      inputCreateMystIdentityDto.passphrase = 'pass';
+
+      inputFileUpload = {
+        fieldname: 'file',
+        originalname: 'identity.json',
+        encoding: '7bit',
+        mimetype: 'application/octet-stream',
+        destination: '/path/of/upload/file',
+        filename: 'random-filename',
+        path: '/path/of/upload/file/random-filename',
+        size: 489,
+        stream: new PassThrough(),
+        buffer: Buffer.from('data'),
+      };
+
+      outputMystIdentityModel = new MystIdentityModel({
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+        passphrase: 'pass1',
+        path: '/path/of/identity1',
+        filename: 'identity1.json',
+        isUse: false,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create new myst identity`, async () => {
+      mystIdentityService.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.create(inputCreateMystIdentityDto, inputFileUpload);
+
+      expect(mystIdentityService.create).toHaveBeenCalled();
+      expect(mystIdentityService.create).toBeCalledWith(expect.objectContaining(<MystIdentityModel>{
+        passphrase: inputCreateMystIdentityDto.passphrase,
+        path: inputFileUpload.destination,
+        filename: inputFileUpload.filename,
+      }));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully create new myst identity`, async () => {
+      mystIdentityService.create.mockResolvedValue([null, outputMystIdentityModel]);
+
+      const [error, result] = await controller.create(inputCreateMystIdentityDto, inputFileUpload);
+
+      expect(mystIdentityService.create).toHaveBeenCalled();
+      expect(mystIdentityService.create).toBeCalledWith(expect.objectContaining(<MystIdentityModel>{
+        passphrase: inputCreateMystIdentityDto.passphrase,
+        path: inputFileUpload.destination,
+        filename: inputFileUpload.filename,
+      }));
       expect(error).toBeNull();
       expect(result).toMatchObject(<MystIdentityModel>{
         id: outputMystIdentityModel.id,
