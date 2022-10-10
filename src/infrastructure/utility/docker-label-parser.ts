@@ -1,7 +1,7 @@
 import {ClassConstructor, Return} from '@src-core/utility';
 import {RunnerLabelNamespace} from '@src-core/model/runner.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
-import {DefaultModel, defaultModelFactory} from '@src-core/model/defaultModel';
+import {defaultModelType, defaultModelFactory} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {
   VpnProviderIpTypeEnum,
@@ -60,7 +60,7 @@ export class DockerLabelParser<T> {
       Object
         .keys(dataModel.data)
         .filter((v) => v !== 'clone' && v.match(/^[^_].+/))
-        .filter((v) => !(<DefaultModel<any>><unknown>dataModel.data).isDefaultProperty(v))
+        .filter((v) => !(<defaultModelType<any>><unknown>dataModel.data).isDefaultProperty(v))
         .map((v) => {
           const key = v.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
 
