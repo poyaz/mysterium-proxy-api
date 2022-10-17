@@ -1,5 +1,5 @@
-import {ClassConstructor, Return} from '@src-core/utility';
-import {RunnerLabelNamespace} from '@src-core/model/runner.model';
+import {ClassConstructor, Return, UniqueArray} from '@src-core/utility';
+import {RunnerLabelNamespace, RunnerObjectLabel} from '@src-core/model/runner.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {defaultModelType, defaultModelFactory} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
@@ -51,7 +51,7 @@ export class DockerLabelParser<T> {
     return <Return<Error, S>>[null, find.data];
   }
 
-  convertLabelToObject(prefixNamespace: string): Record<string, string> {
+  convertLabelToObject<S>(prefixNamespace: string, ignoreKeys: Array<keyof S> = []): Record<string, string> {
     const obj = {};
 
     this._models.map((dataModel) => {
@@ -61,6 +61,7 @@ export class DockerLabelParser<T> {
         .keys(dataModel.data)
         .filter((v) => v !== 'clone' && v.match(/^[^_].+/))
         .filter((v) => !(<defaultModelType<any>><unknown>dataModel.data).isDefaultProperty(v))
+        .filter((v) => ignoreKeys.indexOf(<any><unknown>v) === -1)
         .map((v) => {
           const key = v.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
 

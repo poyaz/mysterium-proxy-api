@@ -1,4 +1,4 @@
-import {ModelRequireProp, PickOne} from '@src-core/utility';
+import {ModelRequireProp, PickOne, UniqueArray} from '@src-core/utility';
 
 export enum RunnerExecEnum {
   DOCKER = 'docker'
@@ -16,6 +16,10 @@ export enum RunnerServiceEnum {
   MYST = 'myst',
 }
 
+export enum RunnerServiceVolumeEnum {
+  MYST_KEYSTORE = 'keystore'
+}
+
 export enum RunnerStatusEnum {
   CREATING = 'creating',
   RUNNING = 'running',
@@ -30,8 +34,17 @@ export enum RunnerDependsOnStatusEnum {
 }
 
 export type RunnerObjectLabel<T> =
-  (T extends string ? Record<string, string> : { [P in keyof T]?: string } & Record<string, string>)
-  & { $namespace?: string | Array<string> };
+  (T extends string ? Record<string, string> : { [P in keyof T]?: string })
+  & { $namespace: string };
+
+export type RunnerLabelNamespace<T> =
+  T extends Array<any>
+    ? UniqueArray<T> extends never
+    ? ['Encountered value with duplicates']
+    : T extends readonly [infer X, ...infer Rest]
+      ? [RunnerObjectLabel<X>, ...RunnerLabelNamespace<Rest>]
+      : RunnerObjectLabel<T>
+    : RunnerObjectLabel<T>;
 
 export class RunnerModel<T = string> {
   id: string;
@@ -42,8 +55,8 @@ export class RunnerModel<T = string> {
   socketType: RunnerSocketTypeEnum;
   socketUri?: string;
   socketPort?: number;
-  label?: RunnerObjectLabel<T>;
-  volumes?: Array<{ source: string, dest: string }>;
+  label?: RunnerLabelNamespace<T>;
+  volumes?: Array<{ source: string, dest: string, name?: RunnerServiceVolumeEnum }>;
   dependsOn?: Record<string, RunnerDependsOnStatusEnum>;
   status: RunnerStatusEnum;
   insertDate: Date;

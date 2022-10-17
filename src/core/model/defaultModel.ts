@@ -10,7 +10,7 @@ export interface DefaultModel<T> {
   clone(): defaultModelType<T>;
 }
 
-export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Partial<T>, defaultProperties: Array<keyof T>): defaultModelType<T> {
+export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Omit<T, 'clone'>, defaultProperties: Array<keyof T>): defaultModelType<T> {
   const GenericExtendClass = class extends (<any>cls) implements DefaultModel<T> {
     constructor(props: ModelRequireProp<typeof cls.prototype>, private readonly _defaultProperties: Array<keyof T>) {
       super(props);

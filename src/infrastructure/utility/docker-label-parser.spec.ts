@@ -205,6 +205,18 @@ describe('DockerLabelParser', () => {
       });
     });
 
+    it(`Should return object label for myst identity (ignore custom key)`, () => {
+      parser2.parseLabel();
+
+      const result = parser2.convertLabelToObject<MystIdentityModel>(prefixNamespace, ['passphrase']);
+
+      expect(Object.keys(result)).toHaveLength(2);
+      expect(result).toEqual({
+        [`${prefixNamespace}.myst-identity-model.id`]: label2.id,
+        [`${prefixNamespace}.myst-identity-model.identity`]: label2.identity,
+      });
+    });
+
     it(`Should return object label for vpn provider`, () => {
       parser3.parseLabel();
 
