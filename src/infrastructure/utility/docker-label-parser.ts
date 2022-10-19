@@ -69,8 +69,6 @@ export class DockerLabelParser<T> {
         });
     });
 
-    console.log(obj);
-
     return obj;
   }
 
