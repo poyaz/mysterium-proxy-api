@@ -114,8 +114,8 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     }
   }
 
-  create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>> {
-    return Promise.resolve(undefined);
+  async create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>> {
+    return this._createDockerRepository.create<T>(model);
   }
 
   restart(id: string): Promise<AsyncReturn<Error, null>> {

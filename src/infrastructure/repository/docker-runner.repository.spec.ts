@@ -28,6 +28,7 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {filterAndSortRunner} from '@src-infrastructure/utility/filterAndSortRunner';
 import Dockerode from 'dockerode';
 import Docker = require('dockerode');
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 jest.mock('@src-infrastructure/utility/docker-label-parser');
 jest.mock('@src-infrastructure/utility/filterAndSortRunner');
@@ -35,7 +36,7 @@ jest.mock('@src-infrastructure/utility/filterAndSortRunner');
 describe('DockerRunnerRepository', () => {
   let repository: DockerRunnerRepository;
   let docker: MockProxy<Docker>;
-  let mystCreateDockerRepository: MockProxy<ICreateRunnerRepository>;
+  let dockerCreateStrategy: MockProxy<ICreateRunnerRepository>;
   let identifierMock: MockProxy<IIdentifier>;
   let mystDataVolume: string;
   let networkName: string;
@@ -43,7 +44,7 @@ describe('DockerRunnerRepository', () => {
 
   beforeEach(async () => {
     docker = mock<Docker>();
-    mystCreateDockerRepository = mock<ICreateRunnerRepository>();
+    dockerCreateStrategy = mock<ICreateRunnerRepository>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
@@ -59,14 +60,14 @@ describe('DockerRunnerRepository', () => {
           useValue: docker,
         },
         {
-          provide: ProviderTokenEnum.MYST_CREATE_DOCKER_REPOSITORY,
-          useValue: mystCreateDockerRepository,
+          provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY,
+          useValue: dockerCreateStrategy,
         },
         {
           provide: DockerRunnerRepository,
-          inject: [ProviderTokenEnum.DOCKER_DYNAMIC_MODULE, ProviderTokenEnum.MYST_CREATE_DOCKER_REPOSITORY],
-          useFactory: (docker: Docker, mystCreateDockerRepository: ICreateRunnerRepository) =>
-            new DockerRunnerRepository(docker, mystCreateDockerRepository, {
+          inject: [ProviderTokenEnum.DOCKER_DYNAMIC_MODULE, ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY],
+          useFactory: (docker: Docker, dockerCreateStrategy: ICreateRunnerRepository) =>
+            new DockerRunnerRepository(docker, dockerCreateStrategy, {
               networkName,
               baseVolumePath: {myst: mystDataVolume},
             }, namespace),
@@ -747,6 +748,71 @@ describe('DockerRunnerRepository', () => {
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       });
+    });
+  });
+
+  describe(`Create container`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let outputRunner: RunnerModel<MystIdentityModel>;
+
+    beforeEach(() => {
+      inputRunner = defaultModelFactory<RunnerModel<MystIdentityModel>>(
+        RunnerModel,
+        {
+          id: 'default-id',
+          serial: 'default-serial',
+          name: 'myst',
+          service: RunnerServiceEnum.MYST,
+          exec: RunnerExecEnum.DOCKER,
+          socketType: RunnerSocketTypeEnum.HTTP,
+          label: {
+            $namespace: MystIdentityModel.name,
+            id: identifierMock.generateId(),
+            identity: 'identity-1',
+            passphrase: 'passphrase-1',
+          },
+          volumes: [
+            {
+              source: '/path/of/identity-1',
+              dest: '-',
+              name: RunnerServiceVolumeEnum.MYST_KEYSTORE,
+            },
+          ],
+          status: RunnerStatusEnum.CREATING,
+          insertDate: new Date(),
+        },
+        ['id', 'serial', 'status', 'insertDate'],
+      );
+
+      outputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'serial',
+        name: `${RunnerServiceEnum.MYST}1`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.NONE,
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create myst container`, async () => {
+      dockerCreateStrategy.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.create(inputRunner);
+
+      expect(dockerCreateStrategy.create).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create myst container`, async () => {
+      dockerCreateStrategy.create.mockResolvedValue([null, outputRunner]);
+
+      const [error, result] = await repository.create(inputRunner);
+
+      expect(dockerCreateStrategy.create).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toBeInstanceOf(RunnerModel);
     });
   });
 });
