@@ -1,7 +1,8 @@
 import {Injectable} from '@nestjs/common';
 import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
 import {
-  RunnerExecEnum, RunnerLabelNamespace,
+  RunnerExecEnum,
+  RunnerLabelNamespace,
   RunnerModel,
   RunnerServiceEnum,
   RunnerServiceVolumeEnum,
@@ -18,8 +19,8 @@ import {defaultModelType} from '@src-core/model/defaultModel';
 import {DockerLabelParser} from '@src-infrastructure/utility/docker-label-parser';
 import {IPv4CidrRange} from 'ip-num';
 import {EndpointSettings} from 'dockerode';
-import Docker = require('dockerode');
 import {setTimeout} from 'timers/promises';
+import Docker = require('dockerode');
 
 export type MystDockerContainerOption = {
   imageName: string,
@@ -30,6 +31,8 @@ export type MystDockerContainerOption = {
 
 @Injectable()
 export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository {
+  readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.MYST;
+
   private readonly _namespace: string;
   private readonly _maxRetry: number = 3;
 
