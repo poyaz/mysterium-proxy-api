@@ -1,27 +1,158 @@
 export enum ProviderTokenEnum {
-  IDENTIFIER_UUID = 'IDENTIFIER_UUID',
-  IDENTIFIER_UUID_NULL = 'IDENTIFIER_UUID_NULL',
-  DATE_TIME_DEFAULT = 'DATE_TIME_DEFAULT',
+  DOCKER_DYNAMIC_MODULE = 'DOCKER_DYNAMIC_MODULE',
 
-  USER_SERVICE_DEFAULT = 'USER_SERVICE',
-  AUTH_SERVICE_DEFAULT = 'AUTH_SERVICE_DEFAULT',
+  /**
+   *
+   * {@link AUTH_SERVICE}
+   * @implements IDateTime
+   */
+  AUTH_SERVICE_DEFAULT = 'AUTH_SERVICE',
+  /**
+   *
+   * {@link DATE_TIME}
+   * @implements IDateTime
+   */
+  DATE_TIME_DEFAULT = 'DATE_TIME',
+  /**
+   *
+   * {@link MYST_IDENTITY_SERVICE}
+   * @implements IMystIdentityServiceInterface
+   */
   MYST_IDENTITY_SERVICE_DEFAULT = 'MYST_IDENTITY_SERVICE',
+  /**
+   *
+   * {@link USER_SERVICE}
+   * @implements IUsersServiceInterface
+   */
+  USER_SERVICE_DEFAULT = 'USER_SERVICE',
 
+  /**
+   *
+   * {@link AuthService}
+   * @implements IAuthServiceInterface
+   */
+  AUTH_SERVICE = 'AUTH_SERVICE',
+  /**
+   *
+   * {@link DockerRunnerService}
+   * @implements IRunnerServiceInterface
+   */
+  DOCKER_RUNNER_SERVICE = 'DOCKER_RUNNER_SERVICE',
+  /**
+   *
+   * {@link MystService}
+   * @implements IProviderServiceInterface
+   */
+  MYST_SERVICE = 'MYST_SERVICE',
+  /**
+   *
+   * {@link MystIdentityService}
+   * @implements IMystIdentityServiceInterface
+   */
   MYST_IDENTITY_SERVICE = 'MYST_IDENTITY_SERVICE',
-  RUNNER_SERVICE_DOCKER = 'RUNNER_SERVICE_DOCKER',
+  /**
+   *
+   * {@link UsersService}
+   * @implements IUsersServiceInterface
+   */
+  USER_SERVICE = 'USER_SERVICE',
 
+  /**
+   *
+   * {@link DockerRunnerRepository}
+   * @implements ICreateRunnerRepository
+   */
+  DOCKER_RUNNER_REPOSITORY = 'DOCKER_RUNNER_REPOSITORY',
+  /**
+   *
+   * {@link DockerRunnerCreateMystRepository}
+   * @implements ICreateRunnerRepository
+   */
+  DOCKER_RUNNER_CREATE_MYST_REPOSITORY = 'DOCKER_RUNNER_CREATE_MYST_REPOSITORY',
+  /**
+   *
+   * {@link DockerRunnerCreateStrategyRepository}
+   * @implements ICreateRunnerRepository
+   */
+  DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY = 'DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY',
+  /**
+   *
+   * {@link MystAggregateRepository}
+   * @implements IProxyApiRepositoryInterface
+   */
+  MYST_AGGREGATE_REPOSITORY = 'MYST_AGGREGATE_REPOSITORY',
+  /**
+   *
+   * {@link MystApiRepository}
+   * @implements IProxyApiRepositoryInterface
+   */
+  MYST_API_REPOSITORY = 'MYST_API_REPOSITORY',
+  /**
+   *
+   * {@link MystCacheIdApiRepository}
+   * @implements IProxyApiRepositoryInterface
+   */
+  MYST_CACHE_ID_API_REPOSITORY = 'MYST_CACHE_ID_API_REPOSITORY',
+  /**
+   *
+   * {@link MystIdentityAggregateRepository}
+   * @implements IGenericRepositoryInterface<MystIdentityModel>
+   */
+  MYST_IDENTITY_AGGREGATE_REPOSITORY = 'MYST_IDENTITY_AGGREGATE_REPOSITORY',
+  /**
+   *
+   * {@link MystIdentityFileRepository}
+   * @implements IAccountIdentityFileRepository
+   */
+  MYST_IDENTITY_FILE_REPOSITORY = 'MYST_IDENTITY_FILE_REPOSITORY',
+  /**
+   *
+   * {@link MystIdentityPgRepository}
+   * @implements IGenericRepositoryInterface<MystIdentityModel>
+   */
+  MYST_IDENTITY_PG_REPOSITORY = 'MYST_IDENTITY_PG_REPOSITORY',
+  /**
+   *
+   * {@link UsersAdapterRepository}
+   * @implements IGenericRepositoryInterface<UsersModel>
+   */
+  USER_ADAPTER_REPOSITORY = 'USER_ADAPTER_REPOSITORY',
+  /**
+   *
+   * {@link UsersPgRepository}
+   * @implements IGenericRepositoryInterface<UsersModel>
+   */
   USER_PG_REPOSITORY = 'USER_PG_REPOSITORY',
 
-  MYST_IDENTITY_PG_REPOSITORY = 'MYST_IDENTITY_PG_REPOSITORY',
-  MYST_IDENTITY_FILE_REPOSITORY = 'MYST_IDENTITY_FILE_REPOSITORY',
-
+  /**
+   *
+   * {@link UsersSquidFileRepository}
+   * @implements IUsersSquidFileInterface
+   */
   USERS_SQUID_FILE_REPOSITORY = 'USERS_SQUID_FILE_REPOSITORY',
 
-  MYST_API_REPOSITORY = 'MYST_API_REPOSITORY',
-  MYST_CACHE_ID_API_REPOSITORY = 'MYST_CACHE_ID_API_REPOSITORY',
-  MYST_AGGREGATE_REPOSITORY = 'MYST_AGGREGATE_REPOSITORY',
-
-  DOCKER_RUNNER_REPOSITORY = 'DOCKER_RUNNER_REPOSITORY',
-
+  /**
+   *
+   * {@link DateTime}
+   * @implements IDateTime
+   */
+  DATE_TIME = 'DATE_TIME',
+  /**
+   *
+   * {@link NullUuidIdentifier}
+   * @implements IIdentifier
+   */
+  IDENTIFIER_UUID_NULL = 'IDENTIFIER_UUID_NULL',
+  /**
+   *
+   * {@link SystemInfoRepository}
+   * @implements ISystemInfoRepositoryInterface
+   */
   SYSTEM_INFO_REPOSITORY = 'SYSTEM_INFO_REPOSITORY',
+  /**
+   *
+   * {@link UuidIdentifier}
+   * @implements IIdentifier
+   */
+  IDENTIFIER_UUID = 'IDENTIFIER_UUID',
 }
