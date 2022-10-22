@@ -74,6 +74,9 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
         all: true,
         filters: JSON.stringify(filtersObj),
       });
+      if (containerFetchList.length === 0) {
+        return [null, [], 0];
+      }
 
       const networkDependencyObj = await this._getAllNetworkDependency(containerFetchList);
 
@@ -87,8 +90,28 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     }
   }
 
-  getById<T = string>(id: string): Promise<AsyncReturn<Error, RunnerModel<T>>> {
-    return Promise.resolve(undefined);
+  async getById<T = string>(id: string): Promise<AsyncReturn<Error, RunnerModel<T> | null>> {
+    const filtersObj = {
+      label: [`${this._namespace}.id=${id}`],
+    };
+
+    try {
+      const containerFetchList = await this._docker.listContainers({
+        all: true,
+        filters: JSON.stringify(filtersObj),
+      });
+      if (containerFetchList.length === 0) {
+        return [null, null];
+      }
+
+      const networkDependencyObj = await this._getAllNetworkDependency(containerFetchList);
+
+      const result = this._fillModel<T>(containerFetchList[0], networkDependencyObj);
+
+      return [null, result];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>> {

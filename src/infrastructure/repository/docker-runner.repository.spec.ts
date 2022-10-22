@@ -368,6 +368,42 @@ describe('DockerRunnerRepository', () => {
       expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
 
+    it(`Should successfully get all and return empty array if not found any container`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          convertLabelToObject: convertLabelToObjectMock,
+        };
+      });
+      docker.listContainers.mockResolvedValueOnce([]);
+
+
+      const [error, result, total] = await repository.getAll(inputLabelMystFilter);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          name: [`/${inputLabelMystFilter.getCondition('name').name}`],
+          label: [
+            `${namespace}.project=${inputLabelMystFilter.getCondition('service').service}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+            `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
+          ],
+        }),
+      });
+      expect(error).toBeNull();
+      expect(result.length).toEqual(0);
+      expect(total).toEqual(0);
+    });
+
     it(`Should successfully get all`, async () => {
       const parseLabelMock = jest.fn().mockReturnValue([null]);
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
@@ -490,6 +526,227 @@ describe('DockerRunnerRepository', () => {
       expect(error).toBeNull();
       expect(result.length).toEqual(2);
       expect(total).toEqual(2);
+    });
+  });
+
+  describe(`Get by id`, () => {
+    let inputId: string;
+    let outputMystIdentityValid: defaultModelType<MystIdentityModel>;
+    let outputVpnProviderValid: defaultModelType<VpnProviderModel>;
+    let outputDocker1: Dockerode.ContainerInfo;
+    let outputDocker2: Dockerode.ContainerInfo;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputMystIdentityValid = defaultModelFactory<MystIdentityModel>(
+        MystIdentityModel,
+        {
+          id: identifierMock.generateId(),
+          identity: 'identity1',
+          passphrase: 'passphrase1',
+          path: 'default-path',
+          filename: 'default-filename',
+          isUse: false,
+          insertDate: new Date(),
+        },
+        ['path', 'filename', 'isUse', 'insertDate'],
+      );
+
+      outputVpnProviderValid = defaultModelFactory<VpnProviderModel>(
+        VpnProviderModel,
+        {
+          id: identifierMock.generateId(),
+          userIdentity: 'identity1',
+          serviceType: VpnServiceTypeEnum.WIREGUARD,
+          providerName: VpnProviderName.MYSTERIUM,
+          providerIdentity: 'provider-identity1',
+          providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+          country: 'GB',
+          isRegister: true,
+          insertDate: new Date(),
+        },
+        ['serviceType', 'providerName', 'providerIpType', 'providerIpType', 'country', 'isRegister', 'insertDate'],
+      );
+
+      outputDocker1 = {
+        Id: 'container-id1',
+        Names: [`/${RunnerServiceEnum.MYST}1`],
+        Image: 'image-name:image-tag',
+        ImageID: 'sha256:image-id',
+        Command: '/bin/sh',
+        Created: new Date().getTime() / 1000,
+        Ports: [],
+        Labels: {
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.MYST,
+          [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
+        },
+        State: 'running',
+        Status: 'Running',
+        HostConfig: {NetworkMode: 'bridge'},
+        NetworkSettings: {
+          Networks: {
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '10.101.0.2',
+              },
+              NetworkID: 'network-id',
+              EndpointID: 'endpoint-id',
+              Gateway: '10.101.0.1',
+              IPAddress: '10.101.0.2',
+              IPPrefixLen: 29,
+              IPv6Gateway: '',
+              GlobalIPv6Address: '',
+              GlobalIPv6PrefixLen: 0,
+              MacAddress: '02:42:0a:65:00:02',
+            },
+          },
+        },
+        Mounts: [
+          {
+            Type: 'bind',
+            Source: '/etc/localtime',
+            Destination: '/etc/localtime',
+            Mode: 'ro',
+            RW: false,
+            Propagation: 'rprivate',
+          },
+          {
+            Type: 'volume',
+            Name: 'test-a',
+            Source: '/home/docker/volumes/test-a/_data',
+            Destination: `${mystDataVolume}/identity-1/`,
+            Driver: 'local',
+            Mode: 'z',
+            RW: true,
+            Propagation: '',
+          },
+        ],
+      };
+      outputDocker2 = {
+        Id: 'container-id2',
+        Names: [`/${RunnerServiceEnum.MYST_CONNECT}1`],
+        Image: 'image-name:image-tag',
+        ImageID: 'sha256:image-id',
+        Command: '/bin/sh',
+        Created: new Date().getTime() / 1000,
+        Ports: [],
+        Labels: {
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.MYST_CONNECT,
+          [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
+        },
+        State: 'created',
+        Status: 'Created',
+        HostConfig: {NetworkMode: 'container:container-id1'},
+        NetworkSettings: {Networks: {}},
+        Mounts: [],
+      };
+    });
+
+    it(`Should error get by id when fetch container lists`, async () => {
+      const executeError = new Error('Error in get list of container');
+      docker.listContainers.mockRejectedValue(executeError);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully get by id and return null if not found any container with id`, async () => {
+      docker.listContainers.mockResolvedValueOnce([]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get by id`, async () => {
+      docker.listContainers
+        .mockResolvedValueOnce([outputDocker2])
+        .mockResolvedValueOnce([outputDocker1]);
+      (<jest.Mock>DockerLabelParser.convertObjectToLabel)
+        .mockReturnValueOnce(<RunnerLabelNamespace<[MystIdentityModel, VpnProviderModel]>>[
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystIdentityValid.id,
+            identity: outputMystIdentityValid.identity,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderValid.id,
+            userIdentity: outputVpnProviderValid.userIdentity,
+            providerIdentity: outputVpnProviderValid.providerIdentity,
+          },
+        ]);
+
+      const [error, result] = await repository.getById(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(docker.listContainers.mock.calls[1][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          id: [outputDocker1.Id],
+        }),
+      });
+      expect(error).toBeNull();
+      expect(result).toEqual({
+        id: outputDocker2.Labels[`${namespace}.id`],
+        serial: outputDocker2.Id,
+        name: outputDocker2.Names[0].replace(/^\/(.+)/, '$1'),
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.NONE,
+        socketUri: outputDocker1.NetworkSettings.Networks[networkName].IPAddress,
+        socketPort: null,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystIdentityValid.id,
+            identity: outputMystIdentityValid.identity,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderValid.id,
+            userIdentity: outputVpnProviderValid.userIdentity,
+            providerIdentity: outputVpnProviderValid.providerIdentity,
+          },
+        ],
+        volumes: [],
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
     });
   });
 });

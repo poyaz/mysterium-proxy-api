@@ -5,7 +5,7 @@ import {RunnerModel} from '@src-core/model/runner.model';
 export interface IRunnerRepositoryInterface {
   getAll<T = string>(filter: FilterModel<RunnerModel<T>>): Promise<AsyncReturn<Error, Array<RunnerModel<T>>>>;
 
-  getById<T = string>(id: string): Promise<AsyncReturn<Error, RunnerModel<T>>>;
+  getById<T = string>(id: string): Promise<AsyncReturn<Error, RunnerModel<T> | null>>;
 
   create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>>;
 
