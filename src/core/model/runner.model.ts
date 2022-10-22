@@ -21,7 +21,7 @@ export enum RunnerServiceVolumeEnum {
 }
 
 export enum RunnerStatusEnum {
-  CREATING = 'creating',
+  CREATING = 'created',
   RUNNING = 'running',
   RESTARTING = 'restarting',
   EXITED = 'exited',
