@@ -29,8 +29,4 @@ export class DockerRunnerService implements IRunnerServiceInterface {
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
     return this._dockerRunnerRepository.remove(id);
   }
-
-  async removeStopService(): Promise<AsyncReturn<Error, null>> {
-    return this._dockerRunnerRepository.removeStopService();
-  }
 }

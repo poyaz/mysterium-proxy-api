@@ -152,10 +152,6 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     return Promise.resolve(undefined);
   }
 
-  removeStopService(): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
-  }
-
   private async _getAllNetworkDependency(containerList: Array<Dockerode.ContainerInfo>): Promise<Record<string, NetworkInfo>> {
     const networkDependencyContainerList = [];
     for (const container of containerList) {

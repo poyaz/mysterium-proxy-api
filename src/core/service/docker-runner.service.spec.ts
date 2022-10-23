@@ -227,24 +227,4 @@ describe('DockerRunnerService', () => {
       expect(error).toBeNull();
     });
   });
-
-  describe(`Remove stopped docker service`, () => {
-    it(`Should error remove stopped docker`, async () => {
-      dockerRunnerRepository.removeStopService.mockResolvedValue([new UnknownException()]);
-
-      const [error] = await service.removeStopService();
-
-      expect(dockerRunnerRepository.removeStopService).toHaveBeenCalled();
-      expect(error).toBeInstanceOf(UnknownException);
-    });
-
-    it(`Should successfully remove stopped docker`, async () => {
-      dockerRunnerRepository.removeStopService.mockResolvedValue([null, null]);
-
-      const [error] = await service.removeStopService();
-
-      expect(dockerRunnerRepository.removeStopService).toHaveBeenCalled();
-      expect(error).toBeNull();
-    });
-  });
 });
