@@ -148,8 +148,19 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     }
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    try {
+      const container = await this._getContainer(id);
+      if (!container) {
+        return [null, null];
+      }
+
+      await container.remove({v: true, force: true});
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private async _getAllNetworkDependency(containerList: Array<Dockerode.ContainerInfo>): Promise<Record<string, NetworkInfo>> {
