@@ -52,46 +52,51 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   async getById(id: string): Promise<AsyncReturn<Error, MystIdentityModel | null>> {
-    return [null];
-    // const [errorIdentity, dataIdentity] = await this._mystIdentityPgRepository.getById(id);
-    // if (errorIdentity) {
-    //   return [errorIdentity];
-    // }
-    // if (!dataIdentity) {
-    //   return [null, null];
-    // }
-    //
-    // const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>({skipPagination: true});
-    // runnerFilter.addCondition({$opr: 'eq', label: {userIdentity: dataIdentity.identity}});
-    //
-    // const [
-    //   [errorFile, dataFile],
-    //   [errorRunner, dataRunnerList, totalRunnerCount],
-    // ] = await Promise.all([
-    //   this._mystIdentityFileRepository.getIdentityByFilePath(dataIdentity.path),
-    //   this._dockerRunnerRepository.getAll(runnerFilter),
-    // ]);
-    // const fetchError = errorFile || errorRunner;
-    // if (fetchError) {
-    //   return [fetchError];
-    // }
-    // if (!dataFile) {
-    //   return [null, null];
-    // }
-    // if (totalRunnerCount === 0) {
-    //   return [null, null];
-    // }
-    //
-    // const dataList = [dataIdentity].map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, [dataFile]))
-    //   .filter((v) => v)
-    //   .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeRunnerData(v, dataRunnerList))
-    //   .filter((v) => v);
-    //
-    // if (dataList.length === 0) {
-    //   return [null, null];
-    // }
-    //
-    // return [null, dataList[0]];
+    const [errorIdentity, dataIdentity] = await this._mystIdentityPgRepository.getById(id);
+    if (errorIdentity) {
+      return [errorIdentity];
+    }
+    if (!dataIdentity) {
+      return [null, null];
+    }
+
+    const runnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>({skipPagination: true});
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: MystIdentityModel.name,
+        identity: dataIdentity.identity,
+      },
+    });
+
+    const [
+      [errorFile, dataFile],
+      [errorRunner, dataRunnerList, totalRunnerCount],
+    ] = await Promise.all([
+      this._mystIdentityFileRepository.getIdentityByFilePath(dataIdentity.path),
+      this._dockerRunnerRepository.getAll(runnerFilter),
+    ]);
+    const fetchError = errorFile || errorRunner;
+    if (fetchError) {
+      return [fetchError];
+    }
+    if (!dataFile) {
+      return [null, null];
+    }
+    if (totalRunnerCount === 0) {
+      return [null, null];
+    }
+
+    const dataList = [dataIdentity].map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeFileData(v, [dataFile]))
+      .filter((v) => v)
+      .map((v: MystIdentityModel) => MystIdentityAggregateRepository._mergeRunnerData(v, dataRunnerList))
+      .filter((v) => v);
+
+    if (dataList.length === 0) {
+      return [null, null];
+    }
+
+    return [null, dataList[0]];
   }
 
   async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
