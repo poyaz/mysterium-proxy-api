@@ -133,8 +133,19 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     }
   }
 
-  reload(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async reload(id: string): Promise<AsyncReturn<Error, null>> {
+    try {
+      const container = await this._getContainer(id);
+      if (!container) {
+        return [null, null];
+      }
+
+      await container.kill({signal: 'HUP'});
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
