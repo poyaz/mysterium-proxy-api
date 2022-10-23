@@ -6,7 +6,8 @@ import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-iden
 import {FilterModel} from '@src-core/model/filter.model';
 import {
   RunnerExecEnum,
-  RunnerModel, RunnerObjectLabel,
+  RunnerModel,
+  RunnerObjectLabel,
   RunnerServiceEnum,
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
@@ -14,6 +15,8 @@ import {
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {ExistException} from '@src-core/exception/exist.exception';
 import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
+import {RepositoryException} from '@src-core/exception/repository.exception';
+import {NotFoundException} from '@src-core/exception/not-found.exception';
 
 export class MystIdentityAggregateRepository implements IGenericRepositoryInterface<MystIdentityModel> {
   private static RUNNER_FAKE_SERIAL = '0000000000000000000000000000000000000000000000000000000000000000';
@@ -100,38 +103,43 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
-    return [null];
-    // const filter = new FilterModel<MystIdentityModel>();
-    // filter.addCondition({$opr: 'eq', identity: model.identity});
-    //
-    // const [errorIdentity, , totalIdentityCount] = await this.getAll(filter);
-    // if (errorIdentity) {
-    //   return [errorIdentity];
-    // }
-    // if (totalIdentityCount > 0) {
-    //   return [new ExistException()];
-    // }
-    //
-    // const [errorMovePath, dataMovePath] = await this._mystIdentityFileRepository.moveAndRenameFile(
-    //   `${model.path}${model.filename}`,
-    //   `${model.identity}.json`,
-    // );
-    // if (errorMovePath) {
-    //   return [errorMovePath];
-    // }
-    //
-    // const [, identityPath, identityFilename] = /^(.+\/)(.+\..+)$/.exec(dataMovePath);
-    //
-    // const [errorCreateRunner] = await this._createRunner(model, identityPath);
-    // if (errorCreateRunner) {
-    //   return [errorCreateRunner];
-    // }
-    //
-    // const addMystIdentityModel = model.clone();
-    // addMystIdentityModel.path = identityPath;
-    // addMystIdentityModel.filename = identityFilename;
-    //
-    // return this._mystIdentityPgRepository.add(addMystIdentityModel);
+    const filter = new FilterModel<MystIdentityModel>();
+    filter.addCondition({$opr: 'eq', identity: model.identity});
+
+    const [errorIdentity, , totalIdentityCount] = await this.getAll(filter);
+    if (errorIdentity) {
+      return [errorIdentity];
+    }
+    if (totalIdentityCount > 0) {
+      return [new ExistException()];
+    }
+
+    const [errorMovePath, dataMovePath] = await this._mystIdentityFileRepository.moveAndRenameFile(
+      `${model.path}${model.filename}`,
+      `${model.identity}.json`,
+    );
+    if (errorMovePath) {
+      return [errorMovePath];
+    }
+
+    const [, identityPath, identityFilename] = /^(.+\/)(.+\..+)$/.exec(dataMovePath);
+
+    const addMystIdentityModel = model.clone();
+    addMystIdentityModel.path = identityPath;
+    addMystIdentityModel.filename = identityFilename;
+
+    const [errorAddIdentity, dataAddIdentity] = await this._addIdentity(addMystIdentityModel);
+    if (errorAddIdentity) {
+      return [errorAddIdentity];
+    }
+
+    const [errorCreateRunner] = await this._createRunner(dataAddIdentity);
+    if (errorCreateRunner) {
+      return [errorCreateRunner];
+    }
+
+
+    return [null, dataAddIdentity];
   }
 
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
@@ -262,127 +270,160 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [resultPagination, dataList.length];
   }
 
-  // private async _createRunner(model: MystIdentityModel, identityPath: string) {
-  //   const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
-  //   runnerFilter.addCondition({
-  //     $opr: 'eq',
-  //     service: RunnerServiceEnum.MYST,
-  //   });
-  //   runnerFilter.addCondition({
-  //     $opr: 'eq',
-  //     label: {
-  //       userIdentity: model.identity,
-  //     },
-  //   });
-  //   const [errorRemoveRunner] = await this._removeRunnerList(runnerFilter);
-  //   if (errorRemoveRunner) {
-  //     return [errorRemoveRunner];
-  //   }
-  //
-  //   const mystRunner = new RunnerModel<MystIdentityModel & VpnProviderModel>(<RunnerModel<MystIdentityModel & VpnProviderModel>>{
-  //     id: model.id,
-  //     serial: MystIdentityAggregateRepository.RUNNER_FAKE_SERIAL,
-  //     name: `${RunnerServiceEnum.MYST}-${model.identity}`,
-  //     service: RunnerServiceEnum.MYST,
-  //     exec: RunnerExecEnum.DOCKER,
-  //     socketType: RunnerSocketTypeEnum.HTTP,
-  //     label: {
-  //       $namespace: [VpnProviderModel.name, MystIdentityModel.name],
-  //       userIdentity: model.identity,
-  //       passphrase: model.passphrase,
-  //       path: identityPath,
-  //     },
-  //     status: RunnerStatusEnum.CREATING,
-  //     insertDate: new Date(),
-  //   });
-  //
-  //   return this._dockerRunnerRepository.create(mystRunner);
-  // }
-  //
-  // private async _removeWhenIdentityExist(mystIdentity): Promise<AsyncReturn<Error, null>> {
-  //   const mystRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
-  //   mystRunnerFilter.addCondition({
-  //     $opr: 'eq',
-  //     service: RunnerServiceEnum.MYST,
-  //   });
-  //   mystRunnerFilter.addCondition({
-  //     $opr: 'eq',
-  //     label: {
-  //       $namespace: VpnProviderModel.name,
-  //       userIdentity: mystIdentity.identity,
-  //     },
-  //   });
-  //   const [errorRunner, dataRunnerList] = await this._dockerRunnerRepository.getAll(mystRunnerFilter);
-  //   if (errorRunner) {
-  //     return [errorRunner];
-  //   }
-  //
-  //   const tasks = [];
-  //
-  //   tasks.push(this._mystIdentityPgRepository.remove(mystIdentity.id));
-  //   tasks.push(this._mystIdentityFileRepository.remove(`${mystIdentity.path}${mystIdentity.filename}`));
-  //   tasks.push(this._dockerRunnerRepository.remove(dataRunnerList[0].id));
-  //
-  //   const results = await Promise.all(tasks);
-  //   for (const [taskError] of results) {
-  //     if (taskError) {
-  //       return [taskError];
-  //     }
-  //   }
-  //
-  //   return [null];
-  // }
-  //
-  // private async _removeWhenUncompletedDelete(mystIdentity): Promise<AsyncReturn<Error, null>> {
-  //   const [errorFile, dataFileList, totalFileCount] = await this._mystIdentityFileRepository.getAll();
-  //   if (errorFile) {
-  //     return [errorFile];
-  //   }
-  //   if (totalFileCount === 0) {
-  //     return [null];
-  //   }
-  //
-  //   const mystIdentityFileAgg = MystIdentityAggregateRepository._mergeFileData(mystIdentity, dataFileList);
-  //   if (!mystIdentityFileAgg) {
-  //     return [null];
-  //   }
-  //
-  //   const runnerFilter = new FilterModel<RunnerModel>();
-  //   runnerFilter.addCondition({
-  //     $opr: 'eq',
-  //     service: RunnerServiceEnum.MYST,
-  //   });
-  //   runnerFilter.addCondition({
-  //     $opr: 'eq',
-  //     volumes: [{source: mystIdentityFileAgg.path, dest: '-'}],
-  //   });
-  //   const [errorRemoveRunner] = await this._removeRunnerList(runnerFilter);
-  //   if (errorRemoveRunner) {
-  //     return [errorRemoveRunner];
-  //   }
-  //
-  //   return this._mystIdentityFileRepository.remove(`${mystIdentityFileAgg.path}${mystIdentityFileAgg.filename}`);
-  // }
-  //
-  // private async _removeRunnerList(runnerFilter: FilterModel<RunnerModel>): Promise<AsyncReturn<Error, null>> {
-  //   const [errorRunner, dataRunnerList, totalRunnerCount] = await this._dockerRunnerRepository.getAll(runnerFilter);
-  //   if (errorRunner) {
-  //     return [errorRunner];
-  //   }
-  //   if (totalRunnerCount > 0) {
-  //     const tasks = [];
-  //     for (let i = 0; i < dataRunnerList.length; i++) {
-  //       tasks.push(this._dockerRunnerRepository.remove(dataRunnerList[i].id));
-  //     }
-  //
-  //     const taskResultList = await Promise.all(tasks);
-  //     for (const [errorRemoveRunner] of taskResultList) {
-  //       if (errorRemoveRunner) {
-  //         return [errorRemoveRunner];
-  //       }
-  //     }
-  //   }
-  //
-  //   return [null];
-  // }
+  private async _addIdentity(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
+    const filterIdentity = new FilterModel<MystIdentityModel>();
+    filterIdentity.addCondition({$opr: 'eq', identity: model.identity});
+
+    const [errorIdentityList, dataIdentityList] = await this._mystIdentityPgRepository.getAll(filterIdentity);
+    if (errorIdentityList) {
+      return [errorIdentityList];
+    }
+    if (dataIdentityList.length > 0) {
+      return [null, dataIdentityList[0]];
+    }
+
+    const [errorAdd, dataAdd] = await this._mystIdentityPgRepository.add(model);
+    if (errorAdd) {
+      if (!(errorAdd instanceof ExistException)) {
+        return [errorAdd];
+      }
+
+      const [errorIdentityList, dataIdentityList] = await this._mystIdentityPgRepository.getAll(filterIdentity);
+      if (errorIdentityList) {
+        return [errorIdentityList];
+      }
+      if (dataIdentityList.length === 0) {
+        return [new RepositoryException(new NotFoundException())];
+      }
+
+      return [null, dataIdentityList[0]];
+    }
+
+    return [null, dataAdd];
+  }
+
+  private async _createRunner(model: MystIdentityModel) {
+    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      service: RunnerServiceEnum.MYST,
+    });
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: MystIdentityModel.name,
+        userIdentity: model.identity,
+      },
+    });
+    const [errorRemoveRunner] = await this._removeRunnerList(runnerFilter);
+    if (errorRemoveRunner) {
+      return [errorRemoveRunner];
+    }
+
+    const mystRunner = new RunnerModel<MystIdentityModel>({
+      id: model.id,
+      serial: MystIdentityAggregateRepository.RUNNER_FAKE_SERIAL,
+      name: `${RunnerServiceEnum.MYST}-${model.identity}`,
+      service: RunnerServiceEnum.MYST,
+      exec: RunnerExecEnum.DOCKER,
+      socketType: RunnerSocketTypeEnum.HTTP,
+      status: RunnerStatusEnum.CREATING,
+      insertDate: new Date(),
+    });
+    mystRunner.label = {
+      $namespace: MystIdentityModel.name,
+      id: model.id,
+      identity: model.identity,
+      passphrase: model.passphrase,
+    };
+
+    return this._dockerRunnerRepository.create(mystRunner);
+  }
+
+  private async _removeWhenIdentityExist(mystIdentity): Promise<AsyncReturn<Error, null>> {
+    const mystRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    mystRunnerFilter.addCondition({
+      $opr: 'eq',
+      service: RunnerServiceEnum.MYST,
+    });
+    mystRunnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: VpnProviderModel.name,
+        userIdentity: mystIdentity.identity,
+      },
+    });
+    const [errorRunner, dataRunnerList] = await this._dockerRunnerRepository.getAll(mystRunnerFilter);
+    if (errorRunner) {
+      return [errorRunner];
+    }
+
+    const tasks = [];
+
+    tasks.push(this._mystIdentityPgRepository.remove(mystIdentity.id));
+    tasks.push(this._mystIdentityFileRepository.remove(`${mystIdentity.path}${mystIdentity.filename}`));
+    tasks.push(this._dockerRunnerRepository.remove(dataRunnerList[0].id));
+
+    const results = await Promise.all(tasks);
+    for (const [taskError] of results) {
+      if (taskError) {
+        return [taskError];
+      }
+    }
+
+    return [null];
+  }
+
+  private async _removeWhenUncompletedDelete(mystIdentity): Promise<AsyncReturn<Error, null>> {
+    const [errorFile, dataFileList, totalFileCount] = await this._mystIdentityFileRepository.getAll();
+    if (errorFile) {
+      return [errorFile];
+    }
+    if (totalFileCount === 0) {
+      return [null];
+    }
+
+    const mystIdentityFileAgg = MystIdentityAggregateRepository._mergeFileData(mystIdentity, dataFileList);
+    if (!mystIdentityFileAgg) {
+      return [null];
+    }
+
+    const runnerFilter = new FilterModel<RunnerModel>();
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      service: RunnerServiceEnum.MYST,
+    });
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      volumes: [{source: mystIdentityFileAgg.path, dest: '-'}],
+    });
+    const [errorRemoveRunner] = await this._removeRunnerList(runnerFilter);
+    if (errorRemoveRunner) {
+      return [errorRemoveRunner];
+    }
+
+    return this._mystIdentityFileRepository.remove(`${mystIdentityFileAgg.path}${mystIdentityFileAgg.filename}`);
+  }
+
+  private async _removeRunnerList(runnerFilter: FilterModel<RunnerModel>): Promise<AsyncReturn<Error, null>> {
+    const [errorRunner, dataRunnerList, totalRunnerCount] = await this._dockerRunnerRepository.getAll(runnerFilter);
+    if (errorRunner) {
+      return [errorRunner];
+    }
+    if (totalRunnerCount > 0) {
+      const tasks = [];
+      for (let i = 0; i < dataRunnerList.length; i++) {
+        tasks.push(this._dockerRunnerRepository.remove(dataRunnerList[i].id));
+      }
+
+      const taskResultList = await Promise.all(tasks);
+      for (const [errorRemoveRunner] of taskResultList) {
+        if (errorRemoveRunner) {
+          return [errorRemoveRunner];
+        }
+      }
+    }
+
+    return [null];
+  }
 }

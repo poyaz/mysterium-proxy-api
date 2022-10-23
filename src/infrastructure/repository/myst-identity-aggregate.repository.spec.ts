@@ -22,6 +22,7 @@ import {ExistException} from '@src-core/exception/exist.exception';
 import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {UpdateModel} from '@src-core/model/update.model';
+import {RepositoryException} from '@src-core/exception/repository.exception';
 
 describe('MystIdentityAggregateRepository', () => {
   let repository: MystIdentityAggregateRepository;
@@ -832,353 +833,614 @@ describe('MystIdentityAggregateRepository', () => {
     });
   });
 
-  // describe(`Add new identity`, () => {
-  //   let identityBasePath: string;
-  //   let repositoryGetAllStub: jest.SpyInstance;
-  //   let inputModel: MystIdentityModel;
-  //   let outputMystExistData: MystIdentityModel;
-  //   let outputMystRunnerData: RunnerModel<VpnProviderModel & MystIdentityModel>;
-  //   let outputMystAddData: MystIdentityModel;
-  //
-  //   beforeEach(() => {
-  //     repositoryGetAllStub = jest.spyOn(repository, 'getAll');
-  //
-  //     identityBasePath = '/new/path/';
-  //
-  //     inputModel = new MystIdentityModel({
-  //       id: fakeIdentifierMock.generateId(),
-  //       identity: 'identity 1',
-  //       passphrase: 'pass 1',
-  //       path: '/old/path/',
-  //       filename: 'old-identity-file-1',
-  //       isUse: false,
-  //       insertDate: new Date(),
-  //     });
-  //
-  //     outputMystExistData = new MystIdentityModel({
-  //       id: fakeIdentifierMock.generateId(),
-  //       identity: 'identity 1',
-  //       passphrase: 'pass 1',
-  //       path: '/old/path',
-  //       filename: 'old-identity-file-1',
-  //       isUse: false,
-  //       insertDate: new Date(),
-  //     });
-  //
-  //     outputMystRunnerData = new RunnerModel<VpnProviderModel & MystIdentityModel>(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
-  //       id: identifierMock.generateId(),
-  //       serial: '0000000000000000000000000000000000000000000000000000000000000000',
-  //       name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
-  //       service: RunnerServiceEnum.MYST,
-  //       exec: RunnerExecEnum.DOCKER,
-  //       socketType: RunnerSocketTypeEnum.HTTP,
-  //       socketUri: 'http://10.10.10.1',
-  //       socketPort: 4449,
-  //       label: {
-  //         $namespace: [VpnProviderModel.name, MystIdentityModel.name],
-  //         userIdentity: inputModel.identity,
-  //       },
-  //       status: RunnerStatusEnum.RUNNING,
-  //       insertDate: new Date(),
-  //     });
-  //
-  //     outputMystAddData = new MystIdentityModel({
-  //       id: inputModel.id,
-  //       identity: inputModel.identity,
-  //       passphrase: inputModel.passphrase,
-  //       path: `${identityBasePath}${inputModel.identity}/`,
-  //       filename: `${inputModel.identity}.json`,
-  //       isUse: false,
-  //       insertDate: new Date(),
-  //     });
-  //   });
-  //
-  //   afterEach(() => {
-  //     repositoryGetAllStub.mockClear();
-  //   });
-  //
-  //   it(`Should error add new identity when error on check identity is exist or not`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([new UnknownException()]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(error).toBeInstanceOf(UnknownException);
-  //   });
-  //
-  //   it(`Should error add new identity when identity is exist`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [outputMystExistData], 1]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(error).toBeInstanceOf(ExistException);
-  //   });
-  //
-  //   it(`Should error add new identity when move file`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [], 0]);
-  //     mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([new UnknownException()]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
-  //       `${inputModel.path}${inputModel.filename}`,
-  //       `${inputModel.identity}.json`,
-  //     );
-  //     expect(error).toBeInstanceOf(UnknownException);
-  //   });
-  //
-  //   it(`Should error add new identity when fail on check runner exist (check for sure no unsuspected runner exist)`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [], 0]);
-  //     mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
-  //       null,
-  //       `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
-  //     ]);
-  //     dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
-  //       `${inputModel.path}${inputModel.filename}`,
-  //       `${inputModel.identity}.json`,
-  //     );
-  //     expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-  //     expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
-  //       $opr: 'eq',
-  //       service: RunnerServiceEnum.MYST,
-  //     });
-  //     expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
-  //       $opr: 'eq',
-  //       label: {userIdentity: inputModel.identity},
-  //     });
-  //     expect(error).toBeInstanceOf(UnknownException);
-  //   });
-  //
-  //   it(`Should error add new identity when fail on remove exist runner (check for sure no unsuspected runner exist)`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [], 0]);
-  //     mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
-  //       null,
-  //       `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
-  //     ]);
-  //     dockerRunnerRepository.getAll.mockResolvedValue([null, [outputMystRunnerData], 1]);
-  //     dockerRunnerRepository.remove.mockResolvedValue([new UnknownException()]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
-  //       `${inputModel.path}${inputModel.filename}`,
-  //       `${inputModel.identity}.json`,
-  //     );
-  //     expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-  //     expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
-  //       $opr: 'eq',
-  //       service: RunnerServiceEnum.MYST,
-  //     });
-  //     expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
-  //       $opr: 'eq',
-  //       label: {userIdentity: inputModel.identity},
-  //     });
-  //     expect(dockerRunnerRepository.remove).toHaveBeenCalled();
-  //     expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputMystRunnerData.id);
-  //     expect(error).toBeInstanceOf(UnknownException);
-  //   });
-  //
-  //   it(`Should error add new identity when create identity runner`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [], 0]);
-  //     mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
-  //       null,
-  //       `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
-  //     ]);
-  //     dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-  //     dockerRunnerRepository.create.mockResolvedValue([new UnknownException()]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
-  //       `${inputModel.path}${inputModel.filename}`,
-  //       `${inputModel.identity}.json`,
-  //     );
-  //     expect(dockerRunnerRepository.create).toHaveBeenCalled();
-  //     expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
-  //       id: fakeIdentifierMock.generateId(),
-  //       serial: '0000000000000000000000000000000000000000000000000000000000000000',
-  //       name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
-  //       service: RunnerServiceEnum.MYST,
-  //       exec: RunnerExecEnum.DOCKER,
-  //       socketType: RunnerSocketTypeEnum.HTTP,
-  //       label: {
-  //         $namespace: [VpnProviderModel.name, MystIdentityModel.name],
-  //         userIdentity: inputModel.identity,
-  //         passphrase: inputModel.passphrase,
-  //         path: `${identityBasePath}${inputModel.identity}/`,
-  //       },
-  //       status: RunnerStatusEnum.CREATING,
-  //       insertDate: new Date(),
-  //     });
-  //     expect(error).toBeInstanceOf(UnknownException);
-  //   });
-  //
-  //   it(`Should error add new identity when add identity on database`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [], 0]);
-  //     mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
-  //       null,
-  //       `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
-  //     ]);
-  //     dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-  //     dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
-  //     mystIdentityPgRepository.add.mockResolvedValue([new UnknownException()]);
-  //
-  //     const [error] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
-  //       `${inputModel.path}${inputModel.filename}`,
-  //       `${inputModel.identity}.json`,
-  //     );
-  //     expect(dockerRunnerRepository.create).toHaveBeenCalled();
-  //     expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
-  //       id: fakeIdentifierMock.generateId(),
-  //       serial: '0000000000000000000000000000000000000000000000000000000000000000',
-  //       name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
-  //       service: RunnerServiceEnum.MYST,
-  //       exec: RunnerExecEnum.DOCKER,
-  //       socketType: RunnerSocketTypeEnum.HTTP,
-  //       label: {
-  //         $namespace: [VpnProviderModel.name, MystIdentityModel.name],
-  //         userIdentity: inputModel.identity,
-  //         passphrase: inputModel.passphrase,
-  //         path: `${identityBasePath}${inputModel.identity}/`,
-  //       },
-  //       status: RunnerStatusEnum.CREATING,
-  //       insertDate: new Date(),
-  //     });
-  //     expect(mystIdentityPgRepository.add).toHaveBeenCalled();
-  //     expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
-  //       id: fakeIdentifierMock.generateId(),
-  //       identity: inputModel.identity,
-  //       passphrase: inputModel.passphrase,
-  //       path: `${identityBasePath}${inputModel.identity}/`,
-  //       filename: `${inputModel.identity}.json`,
-  //       isUse: false,
-  //       insertDate: new Date(),
-  //     });
-  //     expect(error).toBeInstanceOf(UnknownException);
-  //   });
-  //
-  //   it(`Should successfully add new identity`, async () => {
-  //     repositoryGetAllStub.mockResolvedValue([null, [], 0]);
-  //     mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
-  //       null,
-  //       `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
-  //     ]);
-  //     dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-  //     dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
-  //     mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
-  //
-  //     const [error, result] = await repository.add(inputModel);
-  //
-  //     expect(repositoryGetAllStub).toHaveBeenCalled();
-  //     expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
-  //       $opr: 'eq',
-  //       identity: inputModel.identity,
-  //     });
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
-  //     expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
-  //       `${inputModel.path}${inputModel.filename}`,
-  //       `${inputModel.identity}.json`,
-  //     );
-  //     expect(dockerRunnerRepository.create).toHaveBeenCalled();
-  //     expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<VpnProviderModel & MystIdentityModel>>{
-  //       id: fakeIdentifierMock.generateId(),
-  //       serial: '0000000000000000000000000000000000000000000000000000000000000000',
-  //       name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
-  //       service: RunnerServiceEnum.MYST,
-  //       exec: RunnerExecEnum.DOCKER,
-  //       socketType: RunnerSocketTypeEnum.HTTP,
-  //       label: {
-  //         $namespace: [VpnProviderModel.name, MystIdentityModel.name],
-  //         userIdentity: inputModel.identity,
-  //         passphrase: inputModel.passphrase,
-  //         path: `${identityBasePath}${inputModel.identity}/`,
-  //       },
-  //       status: RunnerStatusEnum.CREATING,
-  //       insertDate: new Date(),
-  //     });
-  //     expect(mystIdentityPgRepository.add).toHaveBeenCalled();
-  //     expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
-  //       id: fakeIdentifierMock.generateId(),
-  //       identity: inputModel.identity,
-  //       passphrase: inputModel.passphrase,
-  //       path: `${identityBasePath}${inputModel.identity}/`,
-  //       filename: `${inputModel.identity}.json`,
-  //       isUse: false,
-  //       insertDate: new Date(),
-  //     });
-  //     expect(error).toBeNull();
-  //     expect(result).toMatchObject(<MystIdentityModel>{
-  //       id: fakeIdentifierMock.generateId(),
-  //       identity: inputModel.identity,
-  //       passphrase: inputModel.passphrase,
-  //       path: `${identityBasePath}${inputModel.identity}/`,
-  //       filename: `${inputModel.identity}.json`,
-  //       isUse: false,
-  //       insertDate: new Date(),
-  //     });
-  //   });
-  // });
-  //
-  // describe(`Update identity`, () => {
-  //   let inputModel: UpdateModel<MystIdentityModel>;
-  //
-  //   beforeEach(() => {
-  //     inputModel = new UpdateModel<MystIdentityModel>(identifierMock.generateId(), {passphrase: 'new password'});
-  //   });
-  //
-  //   it(`Should successfully update identity`, async () => {
-  //     const [error, result] = await repository.update<UpdateModel<MystIdentityModel>>(inputModel);
-  //
-  //     expect(error).toBeNull();
-  //     expect(result).toBeNull();
-  //   });
-  // });
-  //
+  describe(`Add new identity`, () => {
+    let identityBasePath: string;
+    let repositoryGetAllStub: jest.SpyInstance;
+    let inputModel: MystIdentityModel;
+    let outputMystExistData: MystIdentityModel;
+    let outputMystRunnerData: RunnerModel<MystIdentityModel>;
+    let outputMystAddData: MystIdentityModel;
+
+    beforeEach(() => {
+      repositoryGetAllStub = jest.spyOn(repository, 'getAll');
+
+      identityBasePath = '/new/path/';
+
+      inputModel = new MystIdentityModel({
+        id: fakeIdentifierMock.generateId(),
+        identity: 'identity 1',
+        passphrase: 'pass 1',
+        path: '/old/path/',
+        filename: 'old-identity-file-1',
+        isUse: false,
+        insertDate: new Date(),
+      });
+
+      outputMystExistData = new MystIdentityModel({
+        id: fakeIdentifierMock.generateId(),
+        identity: 'identity 1',
+        passphrase: 'pass 1',
+        path: '/old/path',
+        filename: 'old-identity-file-1',
+        isUse: false,
+        insertDate: new Date(),
+      });
+
+      outputMystRunnerData = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputMystRunnerData.label = {
+        $namespace: MystIdentityModel.name,
+        identity: inputModel.identity,
+      };
+
+      outputMystAddData = new MystIdentityModel({
+        id: inputModel.id,
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+    });
+
+    afterEach(() => {
+      repositoryGetAllStub.mockClear();
+    });
+
+    it(`Should error add new identity when error on check identity is exist or not`, async () => {
+      repositoryGetAllStub.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when identity is exist`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [outputMystExistData], 1]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(error).toBeInstanceOf(ExistException);
+    });
+
+    it(`Should error add new identity when move file`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when check identity exist in database`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when create identity in database (If identity not exist)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityPgRepository.add.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when get identity after exist error on add (If identity not exist)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll
+        .mockResolvedValueOnce([null, [], 0])
+        .mockResolvedValueOnce([new UnknownException()]);
+      mystIdentityPgRepository.add.mockResolvedValue([new ExistException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when not found identity after exist error on add (If identity not exist)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityPgRepository.add.mockResolvedValue([new ExistException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error add new identity when fail on check runner exist`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when fail on check runner exist (Skipped add identity on database if myst exist already)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [outputMystExistData], 1]);
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalledTimes(0);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when fail on check runner exist (Skipped add identity on database when exit error on add)`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll
+        .mockResolvedValueOnce([null, [], 0])
+        .mockResolvedValueOnce([null, [outputMystExistData], 1]);
+      mystIdentityPgRepository.add.mockResolvedValue([new ExistException()]);
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when fail on remove exist runner`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputMystRunnerData], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputMystRunnerData.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new identity when create identity runner`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      dockerRunnerRepository.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<MystIdentityModel>>{
+        id: fakeIdentifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: {
+          $namespace: MystIdentityModel.name,
+          id: outputMystAddData.id,
+          identity: inputModel.identity,
+          passphrase: inputModel.passphrase,
+        },
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully add new identity`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
+        null,
+        `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
+      ]);
+      mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      dockerRunnerRepository.create.mockResolvedValue([null]);
+
+      const [error, result] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
+        `${inputModel.path}${inputModel.filename}`,
+        `${inputModel.identity}.json`,
+      );
+      expect(mystIdentityPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityPgRepository.getAll.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityPgRepository.add).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.add).toBeCalledWith(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: {userIdentity: inputModel.identity},
+      });
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<MystIdentityModel>>{
+        id: fakeIdentifierMock.generateId(),
+        serial: '0000000000000000000000000000000000000000000000000000000000000000',
+        name: `${RunnerServiceEnum.MYST}-${inputModel.identity}`,
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        label: {
+          $namespace: MystIdentityModel.name,
+          id: outputMystAddData.id,
+          identity: inputModel.identity,
+          passphrase: inputModel.passphrase,
+        },
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      });
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<MystIdentityModel>{
+        id: fakeIdentifierMock.generateId(),
+        identity: inputModel.identity,
+        passphrase: inputModel.passphrase,
+        path: `${identityBasePath}${inputModel.identity}/`,
+        filename: `${inputModel.identity}.json`,
+        isUse: false,
+        insertDate: new Date(),
+      });
+    });
+  });
+
+  describe(`Update identity`, () => {
+    let inputModel: UpdateModel<MystIdentityModel>;
+
+    beforeEach(() => {
+      inputModel = new UpdateModel<MystIdentityModel>(identifierMock.generateId(), {passphrase: 'new password'});
+    });
+
+    it(`Should successfully update identity`, async () => {
+      const [error, result] = await repository.update<UpdateModel<MystIdentityModel>>(inputModel);
+
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
+
   // describe(`Remove identity by id`, () => {
   //   let repositoryGetByIdStub: jest.SpyInstance;
   //   let inputId: string;
