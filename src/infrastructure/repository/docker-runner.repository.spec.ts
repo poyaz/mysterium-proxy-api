@@ -815,4 +815,174 @@ describe('DockerRunnerRepository', () => {
       expect(result).toBeInstanceOf(RunnerModel);
     });
   });
+
+  describe(`Restart container`, () => {
+    let inputId: string;
+    let outputDocker1: Dockerode.ContainerInfo;
+    let outputContainer: { restart: any };
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputDocker1 = {
+        Id: 'container-id1',
+        Names: [`/${RunnerServiceEnum.MYST}1`],
+        Image: 'image-name:image-tag',
+        ImageID: 'sha256:image-id',
+        Command: '/bin/sh',
+        Created: new Date().getTime() / 1000,
+        Ports: [],
+        Labels: {},
+        State: 'running',
+        Status: 'Running',
+        HostConfig: {NetworkMode: 'bridge'},
+        NetworkSettings: {
+          Networks: {
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '10.101.0.2',
+              },
+              NetworkID: 'network-id',
+              EndpointID: 'endpoint-id',
+              Gateway: '10.101.0.1',
+              IPAddress: '10.101.0.2',
+              IPPrefixLen: 29,
+              IPv6Gateway: '',
+              GlobalIPv6Address: '',
+              GlobalIPv6PrefixLen: 0,
+              MacAddress: '02:42:0a:65:00:02',
+            },
+          },
+        },
+        Mounts: [
+          {
+            Type: 'bind',
+            Source: '/etc/localtime',
+            Destination: '/etc/localtime',
+            Mode: 'ro',
+            RW: false,
+            Propagation: 'rprivate',
+          },
+          {
+            Type: 'volume',
+            Name: 'test-a',
+            Source: '/home/docker/volumes/test-a/_data',
+            Destination: `${mystDataVolume}/identity-1/`,
+            Driver: 'local',
+            Mode: 'z',
+            RW: true,
+            Propagation: '',
+          },
+        ],
+      };
+
+      outputContainer = {restart: jest.fn()};
+    });
+
+    it(`Should error restart container when get list of container`, async () => {
+      const executeError = new Error('Error in get list of container');
+      docker.listContainers.mockRejectedValue(executeError);
+
+      const [error] = await repository.restart(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully restart container and return null if not found container`, async () => {
+      docker.listContainers.mockResolvedValue([]);
+
+      const [error, result] = await repository.restart(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should error restart container when get container`, async () => {
+      docker.listContainers.mockResolvedValue([outputDocker1]);
+      const executeError = new Error('Error in get list of container');
+      docker.getContainer.mockRejectedValue(<never>executeError);
+
+      const [error] = await repository.restart(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(docker.getContainer).toHaveBeenCalled();
+      expect(docker.getContainer).toHaveBeenCalledWith(outputDocker1.Id);
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should error restart container when restart container`, async () => {
+      docker.listContainers.mockResolvedValue([outputDocker1]);
+      docker.getContainer.mockResolvedValue(<never>outputContainer);
+      const executeError = new Error('Error in get list of container');
+      outputContainer.restart.mockRejectedValue(executeError);
+
+      const [error] = await repository.restart(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(docker.getContainer).toHaveBeenCalled();
+      expect(docker.getContainer).toHaveBeenCalledWith(outputDocker1.Id);
+      expect(outputContainer.restart).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully restart container`, async () => {
+      docker.listContainers.mockResolvedValue([outputDocker1]);
+      docker.getContainer.mockResolvedValue(<never>outputContainer);
+      outputContainer.restart.mockResolvedValue();
+
+      const [error, result] = await repository.restart(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(docker.getContainer).toHaveBeenCalled();
+      expect(docker.getContainer).toHaveBeenCalledWith(outputDocker1.Id);
+      expect(outputContainer.restart).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });

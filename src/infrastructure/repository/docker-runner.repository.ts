@@ -118,8 +118,19 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     return this._createDockerRepository.create<T>(model);
   }
 
-  restart(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async restart(id: string): Promise<AsyncReturn<Error, null>> {
+    try {
+      const container = await this._getContainer(id);
+      if (!container) {
+        return [null, null];
+      }
+
+      await container.restart();
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   reload(id: string): Promise<AsyncReturn<Error, null>> {
@@ -243,5 +254,21 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
       status,
       insertDate: new Date(row.Created * 1000),
     });
+  }
+
+  private async _getContainer(id: string): Promise<Dockerode.Container | null> {
+    const filtersObj = {
+      label: [`${this._namespace}.id=${id}`],
+    };
+
+    const containerFetchList = await this._docker.listContainers({
+      all: true,
+      filters: JSON.stringify(filtersObj),
+    });
+    if (containerFetchList.length === 0) {
+      return null;
+    }
+
+    return this._docker.getContainer(containerFetchList[0].Id);
   }
 }
