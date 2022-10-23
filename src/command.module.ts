@@ -46,6 +46,10 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
       provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
       useFactory: () => () => ({}),
     },
+    {
+      provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE_DEFAULT,
+      useFactory: () => () => ({}),
+    }
   ],
   exports: [],
 })

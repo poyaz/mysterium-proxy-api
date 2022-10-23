@@ -32,6 +32,10 @@ import {RedisModule} from '@liaoliaots/nestjs-redis';
 import {RedisConfigInterface} from '@src-loader/configure/interface/redis-config.interface';
 import {MulterModule} from '@nestjs/platform-express';
 import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
+import {MystIdentityService} from '@src-core/service/myst-identity.service';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
+import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
+import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.interface';
 
 @Module({
   imports: [
@@ -128,6 +132,34 @@ import {ServerConfigInterface} from '@src-loader/configure/interface/server-conf
 
         return new UsersSquidFileRepository(SQUID_CONFIG.pwdFile);
       },
+    },
+    {
+      provide: ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_API_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE,
+      inject: [
+        ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.MYST_API_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
+      ],
+      useFactory: (
+        mystIdentityRepository: IGenericRepositoryInterface<MystIdentityModel>,
+        mystApiRepository: IMystApiRepositoryInterface,
+        runnerService: IRunnerServiceInterface,
+      ) => new MystIdentityService(mystIdentityRepository, mystApiRepository, runnerService),
     },
   ],
 })
