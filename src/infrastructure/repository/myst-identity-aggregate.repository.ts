@@ -17,6 +17,7 @@ import {ExistException} from '@src-core/exception/exist.exception';
 import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
+import {MystIdentityInUseException} from '@src-core/exception/myst-identity-in-use.exception';
 
 export class MystIdentityAggregateRepository implements IGenericRepositoryInterface<MystIdentityModel> {
   private static RUNNER_FAKE_SERIAL = '0000000000000000000000000000000000000000000000000000000000000000';
@@ -147,25 +148,21 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return [null];
-    // const [errorFetch, dataFetch] = await this.getById(id);
-    // if (errorFetch) {
-    //   return [errorFetch];
-    // }
-    //
-    // if (dataFetch) {
-    //   return this._removeWhenIdentityExist(dataFetch);
-    // }
-    //
-    // const [errorDbIdentity, dataDbIdentity] = await this._mystIdentityPgRepository.getById(id);
-    // if (errorDbIdentity) {
-    //   return [errorDbIdentity];
-    // }
-    // if (!dataDbIdentity) {
-    //   return [null];
-    // }
-    //
-    // return this._removeWhenUncompletedDelete(dataDbIdentity);
+    const [errorFetch, dataFetch] = await this.getById(id);
+    if (errorFetch) {
+      return [errorFetch];
+    }
+
+    if (dataFetch) {
+      if (dataFetch.isUse) {
+        return [new MystIdentityInUseException()];
+      }
+
+      return this._removeWhenIdentityExist(dataFetch);
+    }
+
+    // @todo Should remove uncompleted data
+    return this._removeWhenUncompletedDelete(id);
   }
 
   private async _getAllData<F>(filter?: F) {
@@ -344,7 +341,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   private async _removeWhenIdentityExist(mystIdentity): Promise<AsyncReturn<Error, null>> {
-    const mystRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    const mystRunnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>();
     mystRunnerFilter.addCondition({
       $opr: 'eq',
       service: RunnerServiceEnum.MYST,
@@ -352,8 +349,8 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     mystRunnerFilter.addCondition({
       $opr: 'eq',
       label: {
-        $namespace: VpnProviderModel.name,
-        userIdentity: mystIdentity.identity,
+        $namespace: MystIdentityModel.name,
+        identity: mystIdentity.identity,
       },
     });
     const [errorRunner, dataRunnerList] = await this._dockerRunnerRepository.getAll(mystRunnerFilter);
@@ -377,35 +374,11 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [null];
   }
 
-  private async _removeWhenUncompletedDelete(mystIdentity): Promise<AsyncReturn<Error, null>> {
-    const [errorFile, dataFileList, totalFileCount] = await this._mystIdentityFileRepository.getAll();
-    if (errorFile) {
-      return [errorFile];
+  private async _removeWhenUncompletedDelete(id: string): Promise<AsyncReturn<Error, null>> {
+    const [errorMystIdentity, dataMystIdentity] = await this._mystIdentityPgRepository.getById(id);
+    if (errorMystIdentity) {
+      return [errorMystIdentity];
     }
-    if (totalFileCount === 0) {
-      return [null];
-    }
-
-    const mystIdentityFileAgg = MystIdentityAggregateRepository._mergeFileData(mystIdentity, dataFileList);
-    if (!mystIdentityFileAgg) {
-      return [null];
-    }
-
-    const runnerFilter = new FilterModel<RunnerModel>();
-    runnerFilter.addCondition({
-      $opr: 'eq',
-      service: RunnerServiceEnum.MYST,
-    });
-    runnerFilter.addCondition({
-      $opr: 'eq',
-      volumes: [{source: mystIdentityFileAgg.path, dest: '-'}],
-    });
-    const [errorRemoveRunner] = await this._removeRunnerList(runnerFilter);
-    if (errorRemoveRunner) {
-      return [errorRemoveRunner];
-    }
-
-    return this._mystIdentityFileRepository.remove(`${mystIdentityFileAgg.path}${mystIdentityFileAgg.filename}`);
   }
 
   private async _removeRunnerList(runnerFilter: FilterModel<RunnerModel>): Promise<AsyncReturn<Error, null>> {
