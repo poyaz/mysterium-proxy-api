@@ -10,10 +10,10 @@ import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-iden
 import {FilterModel} from '@src-core/model/filter.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {
-  RunnerExecEnum, RunnerLabelNamespace,
+  RunnerExecEnum,
   RunnerModel,
-  RunnerObjectLabel,
   RunnerServiceEnum,
+  RunnerServiceVolumeEnum,
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
@@ -1136,7 +1136,7 @@ describe('MystIdentityAggregateRepository', () => {
       });
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        label: {userIdentity: inputModel.identity},
+        label: {identity: inputModel.identity},
       });
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -1175,7 +1175,7 @@ describe('MystIdentityAggregateRepository', () => {
       });
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        label: {userIdentity: inputModel.identity},
+        label: {identity: inputModel.identity},
       });
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -1226,7 +1226,7 @@ describe('MystIdentityAggregateRepository', () => {
       });
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        label: {userIdentity: inputModel.identity},
+        label: {identity: inputModel.identity},
       });
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -1276,7 +1276,7 @@ describe('MystIdentityAggregateRepository', () => {
       });
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        label: {userIdentity: inputModel.identity},
+        label: {identity: inputModel.identity},
       });
       expect(dockerRunnerRepository.remove).toHaveBeenCalled();
       expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputMystRunnerData.id);
@@ -1328,7 +1328,7 @@ describe('MystIdentityAggregateRepository', () => {
       });
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        label: {userIdentity: inputModel.identity},
+        label: {identity: inputModel.identity},
       });
       expect(dockerRunnerRepository.create).toHaveBeenCalled();
       expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<MystIdentityModel>>{
@@ -1395,7 +1395,7 @@ describe('MystIdentityAggregateRepository', () => {
       });
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
         $opr: 'eq',
-        label: {userIdentity: inputModel.identity},
+        label: {identity: inputModel.identity},
       });
       expect(dockerRunnerRepository.create).toHaveBeenCalled();
       expect(dockerRunnerRepository.create).toBeCalledWith(<RunnerModel<MystIdentityModel>>{
@@ -1488,6 +1488,13 @@ describe('MystIdentityAggregateRepository', () => {
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.HTTP,
         status: RunnerStatusEnum.RUNNING,
+        volumes: [
+          {
+            source: `${outputIdentityData.path}${outputIdentityData.filename}`,
+            dest: '-',
+            name: RunnerServiceVolumeEnum.MYST_KEYSTORE,
+          },
+        ],
         insertDate: new Date(),
       });
       outputRunnerMystData1.label = {
@@ -1628,10 +1635,9 @@ describe('MystIdentityAggregateRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should error remove id when fetch remove identity from database if exist (When data not removed completely)`, async () => {
+    it(`Should error remove id when fetch identity from database if exist (When data not removed completely)`, async () => {
       repositoryGetByIdStub.mockResolvedValue([null, null]);
       mystIdentityPgRepository.getById.mockResolvedValue([new UnknownException()]);
-      mystIdentityPgRepository.remove.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.remove(inputId);
 
@@ -1640,6 +1646,149 @@ describe('MystIdentityAggregateRepository', () => {
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
       expect(mystIdentityPgRepository.getById).toHaveBeenCalledWith(inputId);
       expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove id when remove identity file with exist identity (When data not removed completely)`, async () => {
+      repositoryGetByIdStub.mockResolvedValue([null, null]);
+      mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(repositoryGetByIdStub).toHaveBeenCalled();
+      expect(repositoryGetByIdStub).toHaveBeenCalledWith(inputId);
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: <MystIdentityModel>{
+          id: outputIdentityData.id,
+        },
+      });
+      expect(mystIdentityFileRepository.remove).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.remove).toHaveBeenCalledWith(`${outputIdentityData.path}${outputIdentityData.filename}`);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove id when fetch runner identity (When data not removed completely)`, async () => {
+      repositoryGetByIdStub.mockResolvedValue([null, null]);
+      mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(repositoryGetByIdStub).toHaveBeenCalled();
+      expect(repositoryGetByIdStub).toHaveBeenCalledWith(inputId);
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: <MystIdentityModel>{
+          id: outputIdentityData.id,
+        },
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove id when remove runner if identity not exist (When data not removed completely)`, async () => {
+      repositoryGetByIdStub.mockResolvedValue([null, null]);
+      mystIdentityPgRepository.getById.mockResolvedValue([null, null]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(repositoryGetByIdStub).toHaveBeenCalled();
+      expect(repositoryGetByIdStub).toHaveBeenCalledWith(inputId);
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: <MystIdentityModel>{
+          id: outputIdentityData.id,
+        },
+      });
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputRunnerMystData1.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove id when remove identity file if identity not exist (When data not removed completely)`, async () => {
+      repositoryGetByIdStub.mockResolvedValue([null, null]);
+      mystIdentityPgRepository.getById.mockResolvedValue([null, null]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([null]);
+      mystIdentityFileRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(repositoryGetByIdStub).toHaveBeenCalled();
+      expect(repositoryGetByIdStub).toHaveBeenCalledWith(inputId);
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: <MystIdentityModel>{
+          id: outputIdentityData.id,
+        },
+      });
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputRunnerMystData1.id);
+      expect(mystIdentityFileRepository.remove).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.remove).toHaveBeenCalledWith(`${outputIdentityData.path}${outputIdentityData.filename}`);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove id when remove identity file if identity not exist (When data not removed completely)`, async () => {
+      repositoryGetByIdStub.mockResolvedValue([null, null]);
+      mystIdentityPgRepository.getById.mockResolvedValue([null, null]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([null]);
+      mystIdentityFileRepository.remove.mockResolvedValue([null]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(repositoryGetByIdStub).toHaveBeenCalled();
+      expect(repositoryGetByIdStub).toHaveBeenCalledWith(inputId);
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
+      expect(mystIdentityPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toMatchObject({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
+        $opr: 'eq',
+        label: <MystIdentityModel>{
+          id: outputIdentityData.id,
+        },
+      });
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputRunnerMystData1.id);
+      expect(mystIdentityFileRepository.remove).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.remove).toHaveBeenCalledWith(`${outputIdentityData.path}${outputIdentityData.filename}`);
+      expect(error).toBeNull();
     });
   });
 });

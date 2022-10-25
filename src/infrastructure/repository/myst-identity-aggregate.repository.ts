@@ -8,7 +8,7 @@ import {
   RunnerExecEnum,
   RunnerModel,
   RunnerObjectLabel,
-  RunnerServiceEnum,
+  RunnerServiceEnum, RunnerServiceVolumeEnum,
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
@@ -303,7 +303,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   }
 
   private async _createRunner(model: MystIdentityModel) {
-    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    const runnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>();
     runnerFilter.addCondition({
       $opr: 'eq',
       service: RunnerServiceEnum.MYST,
@@ -312,7 +312,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       $opr: 'eq',
       label: {
         $namespace: MystIdentityModel.name,
-        userIdentity: model.identity,
+        identity: model.identity,
       },
     });
     const [errorRemoveRunner] = await this._removeRunnerList(runnerFilter);
@@ -379,6 +379,49 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     if (errorMystIdentity) {
       return [errorMystIdentity];
     }
+
+    let mystIdentityFilePath: string;
+    if (dataMystIdentity) {
+      mystIdentityFilePath = `${dataMystIdentity.path}${dataMystIdentity.filename}`;
+    }
+
+    const runnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      service: RunnerServiceEnum.MYST,
+    });
+    runnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: MystIdentityModel.name,
+        id,
+      },
+    });
+    const [errorRunner, dataRunnerList, totalRunnerCount] = await this._dockerRunnerRepository.getAll(runnerFilter);
+    if (errorRunner) {
+      return [errorRunner];
+    }
+    if (totalRunnerCount > 0) {
+      const runnerIdentity = dataRunnerList[0];
+      const [errorRemoveMystRunner] = await this._dockerRunnerRepository.remove(runnerIdentity.id);
+      if (errorRemoveMystRunner) {
+        return [errorRemoveMystRunner];
+      }
+
+      const findVolume = runnerIdentity.volumes.find((v) => v.name && v.name === RunnerServiceVolumeEnum.MYST_KEYSTORE);
+      if (findVolume) {
+        mystIdentityFilePath = findVolume.source;
+      }
+    }
+
+    if (mystIdentityFilePath) {
+      const [errorRemoveMystFile] = await this._mystIdentityFileRepository.remove(mystIdentityFilePath);
+      if (errorRemoveMystFile) {
+        return [errorRemoveMystFile];
+      }
+    }
+
+    return [null];
   }
 
   private async _removeRunnerList(runnerFilter: FilterModel<RunnerModel>): Promise<AsyncReturn<Error, null>> {
