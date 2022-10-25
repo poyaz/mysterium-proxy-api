@@ -47,6 +47,29 @@ services:
         ipv4_address: 10.110.0.5
     restart: "always"
 
+  auth-nginx:
+    image: nginx:1.20.0-alpine
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - nginx-conf-storage:/etc/nginx/conf.d/
+      - nginx-entrypoint-storage:/docker-entrypoint.d/
+    networks:
+      main:
+        ipv4_address: 10.110.0.6
+    restart: "always"
+
+  auth-grpc:
+    build:
+      context: ./docker/images/grpc
+      dockerfile: Dockerfile
+    image: myst-auth-grpc:latest
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      main:
+        ipv4_address: 10.110.0.7
+    restart: "always"
+
   build-myst-image:
     build:
       context: ./docker/images/myst
@@ -70,6 +93,18 @@ services:
 volumes:
   postgres-storage: { }
   redis-storage: { }
+  nginx-conf-storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: $PWD/storage/docker/volume/nginx-conf
+  nginx-entrypoint-storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: $PWD/storage/docker/volume/nginx-entrypoint
 
 networks:
   main:

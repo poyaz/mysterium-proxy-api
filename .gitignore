@@ -20,6 +20,8 @@ docker/custom/*
 storage/docker/volume/myst-keysore/*
 !storage/docker/volume/myst-keysore/.gitkeep
 
+storage/docker/volume/nginx-conf/001-proxy-acl.conf
+
 ### compiled output
 /dist
 /node_modules
