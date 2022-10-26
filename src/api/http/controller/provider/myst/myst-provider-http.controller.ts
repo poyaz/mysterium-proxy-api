@@ -1,11 +1,21 @@
-import {Controller, Get, Inject, Query, UseGuards, UseInterceptors} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth, ApiExtraModels, ApiForbiddenResponse,
+  ApiBearerAuth,
+  ApiExtraModels,
+  ApiForbiddenResponse,
   ApiOkResponse,
-  ApiOperation, ApiQuery,
+  ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
   getSchemaPath,
@@ -26,6 +36,7 @@ import {FindProviderQueryDto} from '@src-api/http/controller/provider/dto/find-p
   version: '1',
 })
 @UseGuards(RoleGuard)
+@Roles(UserRoleEnum.ADMIN)
 @UseInterceptors(RemoveSpecialFieldOfProviderInterceptor)
 @ApiTags('provider')
 @ApiBearerAuth()
@@ -41,8 +52,7 @@ export class MystProviderHttpController {
   }
 
   @Get()
-  @Roles(UserRoleEnum.ADMIN)
-  @ApiOperation({description: 'Get list of all myst vpn provider', operationId: 'Get all myst vpn provider'})
+  @ApiOperation({description: 'Get list of all myst vpn provider', operationId: 'Get all myst provider'})
   @ApiQuery({
     name: 'filters',
     required: false,
@@ -98,7 +108,7 @@ export class MystProviderHttpController {
       ],
     },
   })
-  findAll(@Query() queryFilterDto: FindProviderQueryDto) {
+  async findAll(@Query() queryFilterDto: FindProviderQueryDto) {
     return this._providerService.getAll(FindProviderQueryDto.toModel(queryFilterDto));
   }
 }
