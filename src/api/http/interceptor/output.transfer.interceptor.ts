@@ -59,8 +59,16 @@ export class OutputTransferInterceptor implements NestInterceptor {
           }, statusCode);
         }
 
+        const request = context.switchToHttp().getRequest();
+        if (request.method === 'DELETE') {
+          return '';
+        }
+
         let isDataArray = false;
+        let isResultFind = false;
         if (typeof result !== undefined && result !== undefined && result !== null && ['boolean', 'string', 'number'].indexOf(typeof result) === -1) {
+          isResultFind = true;
+
           if (Array.isArray(result)) {
             isDataArray = true;
             result.map((v) => {
@@ -75,7 +83,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
 
         return {
           ...(isDataArray && count !== undefined && count !== null && !isNaN(Number(count)) && {count: Number(count)}),
-          data: result,
+          ...(isResultFind && {data: result}),
           status: 'success',
         };
       }),
