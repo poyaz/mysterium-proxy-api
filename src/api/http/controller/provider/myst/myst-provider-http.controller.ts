@@ -140,7 +140,12 @@ export class MystProviderHttpController {
     },
   })
   async connect(@Param('providerId') providerId: string) {
-    return this._providerService.up(providerId);
+    const [error] = await this._providerService.up(providerId);
+    if (error) {
+      return [error];
+    }
+
+    return [null, null];
   }
 
   @Delete(':providerId')
@@ -166,6 +171,6 @@ export class MystProviderHttpController {
     },
   })
   async disconnect(@Param('providerId') providerId: string) {
-
+    return this._providerService.down(providerId);
   }
 }

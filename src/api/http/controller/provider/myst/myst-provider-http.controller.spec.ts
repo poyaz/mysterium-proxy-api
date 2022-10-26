@@ -149,4 +149,74 @@ describe('MystProviderHttpController', () => {
       expect(total).toEqual(1);
     });
   });
+
+  describe(`Connect myst vpn provider`, () => {
+    let inputProviderId: string;
+    let outputMystProviderModel: VpnProviderModel;
+
+    beforeEach(() => {
+      inputProviderId = identifierMock.generateId();
+
+      outputMystProviderModel = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error connect myst vpn provider`, async () => {
+      mystProviderService.up.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.connect(inputProviderId);
+
+      expect(mystProviderService.up).toHaveBeenCalled();
+      expect(mystProviderService.up).toHaveBeenCalledWith(inputProviderId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully connect myst vpn provider`, async () => {
+      mystProviderService.up.mockResolvedValue([null, outputMystProviderModel]);
+
+      const [error, result] = await controller.connect(inputProviderId);
+
+      expect(mystProviderService.up).toHaveBeenCalled();
+      expect(mystProviderService.up).toHaveBeenCalledWith(inputProviderId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe(`Disconnect myst vpn provider`, () => {
+    let inputProviderId: string;
+
+    beforeEach(() => {
+      inputProviderId = identifierMock.generateId();
+    });
+
+    it(`Should error disconnect myst vpn provider`, async () => {
+      mystProviderService.down.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.disconnect(inputProviderId);
+
+      expect(mystProviderService.down).toHaveBeenCalled();
+      expect(mystProviderService.down).toHaveBeenCalledWith(inputProviderId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully disconnect myst vpn provider`, async () => {
+      mystProviderService.down.mockResolvedValue([null, null]);
+
+      const [error, result] = await controller.disconnect(inputProviderId);
+
+      expect(mystProviderService.down).toHaveBeenCalled();
+      expect(mystProviderService.down).toHaveBeenCalledWith(inputProviderId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
