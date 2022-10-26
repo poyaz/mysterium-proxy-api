@@ -36,6 +36,7 @@ import {MystIdentityService} from '@src-core/service/myst-identity.service';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.interface';
+import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repository';
 
 @Module({
   imports: [
@@ -94,54 +95,12 @@ import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.inte
         return new JwtAuthGuard(reflector);
       },
     },
+
     {
-      provide: ProviderTokenEnum.IDENTIFIER_UUID,
-      useFactory: () => new UuidIdentifier(),
-    },
-    {
-      provide: ProviderTokenEnum.IDENTIFIER_UUID_NULL,
-      useClass: NullUuidIdentifier,
-    },
-    {
-      provide: ProviderTokenEnum.DATE_TIME_DEFAULT,
-      useClass: DateTime,
-    },
-    {
-      provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
-      inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
-      useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
-        new UsersService(usersRepository),
-    },
-    {
-      provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
-      inject: [ProviderTokenEnum.USER_SERVICE_DEFAULT, JwtService],
+      provide: ProviderTokenEnum.AUTH_SERVICE,
+      inject: [ProviderTokenEnum.USER_SERVICE, JwtService],
       useFactory: (usersService: IUsersServiceInterface, jwtService: JwtService) =>
         new AuthService(usersService, jwtService),
-    },
-    {
-      provide: ProviderTokenEnum.USER_PG_REPOSITORY,
-      inject: [getRepositoryToken(UsersEntity), ProviderTokenEnum.IDENTIFIER_UUID, ProviderTokenEnum.DATE_TIME_DEFAULT],
-      useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
-        new UsersPgRepository(db, identifier, dateTime),
-    },
-    {
-      provide: ProviderTokenEnum.USERS_SQUID_FILE_REPOSITORY,
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const SQUID_CONFIG = configService.get<SquidConfigInterface>('squid');
-
-        return new UsersSquidFileRepository(SQUID_CONFIG.pwdFile);
-      },
-    },
-    {
-      provide: ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
-    },
-    {
-      provide: ProviderTokenEnum.MYST_API_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
@@ -160,6 +119,101 @@ import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.inte
         mystApiRepository: IMystApiRepositoryInterface,
         runnerService: IRunnerServiceInterface,
       ) => new MystIdentityService(mystIdentityRepository, mystApiRepository, runnerService),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.USER_SERVICE,
+      inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
+      useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
+        new UsersService(usersRepository),
+    },
+
+    {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_AGGREGATE_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_API_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_CACHE_ID_API_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_IDENTITY_FILE_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_IDENTITY_PG_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.USER_ADAPTER_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.USER_PG_REPOSITORY,
+      inject: [getRepositoryToken(UsersEntity), ProviderTokenEnum.IDENTIFIER_UUID, ProviderTokenEnum.DATE_TIME_DEFAULT],
+      useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
+        new UsersPgRepository(db, identifier, dateTime),
+    },
+    {
+      provide: ProviderTokenEnum.USERS_SQUID_FILE_REPOSITORY,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const SQUID_CONFIG = configService.get<SquidConfigInterface>('squid');
+
+        return new UsersSquidFileRepository(SQUID_CONFIG.pwdFile);
+      },
+    },
+
+    {
+      provide: ProviderTokenEnum.DATE_TIME,
+      useClass: DateTime,
+    },
+    {
+      provide: ProviderTokenEnum.IDENTIFIER_UUID,
+      useFactory: () => new UuidIdentifier(),
+    },
+    {
+      provide: ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
+      inject: [],
+      useFactory: () => new SystemInfoRepository(),
+    },
+    {
+      provide: ProviderTokenEnum.IDENTIFIER_UUID_NULL,
+      useClass: NullUuidIdentifier,
     },
   ],
 })
