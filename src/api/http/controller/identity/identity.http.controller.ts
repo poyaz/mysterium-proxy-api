@@ -65,6 +65,7 @@ const mystIdentityModelList = [
 })
 @UseGuards(RoleGuard)
 @UseInterceptors(RemoveSpecialFieldOfIdentityInterceptor)
+@Roles(UserRoleEnum.ADMIN)
 @ApiTags('identity')
 @ApiBearerAuth()
 @ApiExtraModels(DefaultSuccessDto, DefaultArraySuccessDto, NotFoundExceptionDto, FindIdentityQueryDto, FindIdentityOutputDto, CreateIdentityInputDto)
@@ -79,7 +80,6 @@ export class IdentityHttpController {
   }
 
   @Get()
-  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({description: 'Get all identity', operationId: 'Get all identity'})
   @ApiQuery({
     name: 'sorts',
@@ -148,7 +148,6 @@ export class IdentityHttpController {
   }
 
   @Get(':identityId')
-  @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
   @ApiOperation({description: 'Get info of one identity with ID', operationId: 'Get identity'})
   @ApiParam({name: 'identityId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiOkResponse({
@@ -230,7 +229,6 @@ export class IdentityHttpController {
   }
 
   @Delete(':identityId')
-  @Roles(UserRoleEnum.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({description: 'Delete identity with ID', operationId: 'Remove identity'})
   @ApiParam({name: 'identity', type: String, example: '00000000-0000-0000-0000-000000000000'})
