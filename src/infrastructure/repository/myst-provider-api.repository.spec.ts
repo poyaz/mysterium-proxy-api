@@ -1,7 +1,7 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import axios from 'axios';
 import {RepositoryException} from '@src-core/exception/repository.exception';
-import {MystApiRepository} from './myst-api.repository';
+import {MystProviderApiRepository} from './myst-provider-api.repository';
 import {
   VpnProviderIpTypeEnum,
   VpnProviderModel,
@@ -13,11 +13,19 @@ import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {FilterModel} from '@src-core/model/filter.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
+import {
+  RunnerExecEnum,
+  RunnerModel,
+  RunnerServiceEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
+} from '@src-core/model/runner.model';
+import {defaultModelFactory} from '@src-core/model/defaultModel';
 
 jest.mock('axios');
 
-describe('MystApiRepository', () => {
-  let repository: MystApiRepository;
+describe('MystProviderApiRepository', () => {
+  let repository: MystProviderApiRepository;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
@@ -31,15 +39,15 @@ describe('MystApiRepository', () => {
           useValue: identifierMock,
         },
         {
-          provide: MystApiRepository,
+          provide: MystProviderApiRepository,
           inject: [ProviderTokenEnum.IDENTIFIER_UUID],
           useFactory: (identifier: IIdentifier) =>
-            new MystApiRepository(identifier, 'https://myst.com'),
+            new MystProviderApiRepository(identifier, 'https://myst.com'),
         },
       ],
     }).compile();
 
-    repository = module.get<MystApiRepository>(MystApiRepository);
+    repository = module.get<MystProviderApiRepository>(MystProviderApiRepository);
 
     jest.useFakeTimers().setSystemTime(new Date('2020-01-01'));
   });
@@ -59,6 +67,7 @@ describe('MystApiRepository', () => {
     let outputAxiosData1;
     let outputAxiosData2;
     let outputAxiosData3;
+    let inputRunnerModel: RunnerModel;
     let inputPaginationFilter: FilterModel<VpnProviderModel>;
     let inputCountryFilter: FilterModel<VpnProviderModel>;
     let inputIsRegisterFilter: FilterModel<VpnProviderModel>;
@@ -204,6 +213,21 @@ describe('MystApiRepository', () => {
         },
       };
 
+      inputRunnerModel = defaultModelFactory<RunnerModel>(
+        RunnerModel,
+        {
+          id: 'default-id',
+          serial: 'default-serial',
+          name: 'default-name',
+          service: RunnerServiceEnum.MYST,
+          exec: RunnerExecEnum.DOCKER,
+          socketType: RunnerSocketTypeEnum.HTTP,
+          status: RunnerStatusEnum.RUNNING,
+          insertDate: new Date(),
+        },
+        ['id', 'serial', 'name', 'service', 'exec', 'socketType', 'status', 'insertDate'],
+      );
+
       inputPaginationFilter = new FilterModel<VpnProviderModel>({page: 2, limit: 1});
 
       inputCountryFilter = new FilterModel<VpnProviderModel>();
@@ -223,7 +247,7 @@ describe('MystApiRepository', () => {
       const apiError = new Error('API call error');
       (<jest.Mock>axios.get).mockRejectedValue(apiError);
 
-      const [error] = await repository.getAll();
+      const [error] = await repository.getAll(inputRunnerModel);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -246,7 +270,7 @@ describe('MystApiRepository', () => {
         data: [outputFailAxiosData],
       });
 
-      const [error] = await repository.getAll();
+      const [error] = await repository.getAll(inputRunnerModel);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -271,7 +295,7 @@ describe('MystApiRepository', () => {
         data: [],
       });
 
-      const [error, result] = await repository.getAll();
+      const [error, result] = await repository.getAll(inputRunnerModel);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -294,7 +318,7 @@ describe('MystApiRepository', () => {
         data: outputNullAxiosData,
       });
 
-      const [error, result] = await repository.getAll();
+      const [error, result] = await repository.getAll(inputRunnerModel);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -317,7 +341,7 @@ describe('MystApiRepository', () => {
         data: [outputAxiosData1],
       });
 
-      const [error, result] = await repository.getAll();
+      const [error, result] = await repository.getAll(inputRunnerModel);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -353,7 +377,7 @@ describe('MystApiRepository', () => {
         data: [outputAxiosData1, outputAxiosData2],
       });
 
-      const [error, result, totalCount] = await repository.getAll(inputPaginationFilter);
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel, inputPaginationFilter);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -390,7 +414,7 @@ describe('MystApiRepository', () => {
         data: [outputAxiosData1, outputAxiosData2],
       });
 
-      const [error, result, totalCount] = await repository.getAll(inputCountryFilter);
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel, inputCountryFilter);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -441,7 +465,7 @@ describe('MystApiRepository', () => {
         data: [outputAxiosData1, outputAxiosData2, outputAxiosData3],
       });
 
-      const [error, result, totalCount] = await repository.getAll(inputIsRegisterFilter);
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel, inputIsRegisterFilter);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -504,7 +528,7 @@ describe('MystApiRepository', () => {
         data: [outputAxiosData1],
       });
 
-      const [error, result, totalCount] = await repository.getAll(inputProviderIdFilter);
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel, inputProviderIdFilter);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -542,7 +566,7 @@ describe('MystApiRepository', () => {
         data: [outputAxiosData1],
       });
 
-      const [error, result, totalCount] = await repository.getAll(inputProviderIpTypeFilter);
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel, inputProviderIpTypeFilter);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -577,11 +601,26 @@ describe('MystApiRepository', () => {
   });
 
   describe(`Get vpn info by id`, () => {
+    let inputRunnerModel: RunnerModel;
     let inputId: string;
     let outputNullAxiosData = null;
     let outputAxiosData;
 
     beforeEach(() => {
+      inputRunnerModel = defaultModelFactory<RunnerModel>(
+        RunnerModel,
+        {
+          id: 'default-id',
+          serial: 'default-serial',
+          name: 'default-name',
+          service: RunnerServiceEnum.MYST,
+          exec: RunnerExecEnum.DOCKER,
+          socketType: RunnerSocketTypeEnum.HTTP,
+          status: RunnerStatusEnum.RUNNING,
+          insertDate: new Date(),
+        },
+        ['id', 'serial', 'name', 'service', 'exec', 'socketType', 'status', 'insertDate'],
+      );
       inputId = identifierMock.generateId();
       outputAxiosData = {
         'id': 0,
@@ -623,7 +662,7 @@ describe('MystApiRepository', () => {
       const apiError = new Error('API call error');
       (<jest.Mock>axios.get).mockRejectedValue(apiError);
 
-      const [error] = await repository.getById(inputId);
+      const [error] = await repository.getById(inputRunnerModel, inputId);
 
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
@@ -645,7 +684,7 @@ describe('MystApiRepository', () => {
         data: [],
       });
 
-      const [error, result] = await repository.getById(inputId);
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
 
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
@@ -667,7 +706,7 @@ describe('MystApiRepository', () => {
         data: outputNullAxiosData,
       });
 
-      const [error, result] = await repository.getById(inputId);
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
 
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
@@ -690,7 +729,7 @@ describe('MystApiRepository', () => {
       });
       identifierMock.generateId.mockReturnValueOnce('00000000-0000-0000-0000-000000000000');
 
-      const [error, result] = await repository.getById(inputId);
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
 
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),
@@ -715,7 +754,7 @@ describe('MystApiRepository', () => {
       });
       identifierMock.generateId.mockReturnValueOnce('11111111-1111-1111-1111-111111111111');
 
-      const [error, result] = await repository.getById(inputId);
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
 
       expect(axios.get).toBeCalledWith(
         expect.stringMatching(/\/proposals$/),

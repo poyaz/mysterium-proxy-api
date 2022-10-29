@@ -51,7 +51,7 @@ describe('MystIdentityService', () => {
           useValue: mystIdentityAggRepository,
         },
         {
-          provide: ProviderTokenEnum.MYST_API_REPOSITORY,
+          provide: ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
           useValue: mystApiRepository,
         },
         {
@@ -62,7 +62,7 @@ describe('MystIdentityService', () => {
           provide: MystIdentityService,
           inject: [
             ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
-            ProviderTokenEnum.MYST_API_REPOSITORY,
+            ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
             ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
           ],
           useFactory: (

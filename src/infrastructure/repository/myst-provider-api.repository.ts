@@ -1,5 +1,4 @@
 import {Injectable} from '@nestjs/common';
-import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {AsyncReturn} from '@src-core/utility';
 import {
   VpnProviderIpTypeEnum,
@@ -12,17 +11,19 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
+import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {RunnerModel} from '@src-core/model/runner.model';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 
 @Injectable()
-export class MystApiRepository implements IProxyApiRepositoryInterface {
+export class MystProviderApiRepository implements IMystApiRepositoryInterface {
   private readonly _myst_api_prefix;
 
   constructor(private readonly _identifier: IIdentifier, myst_api_address) {
     this._myst_api_prefix = `${myst_api_address.replace(/^(.+)\/+$/g, '$1')}/api/v3/`;
   }
 
-  async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
+  async getAll<F>(runner: RunnerModel, filter?: F): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
     const params = {
       service_type: VpnServiceTypeEnum.WIREGUARD,
     };
@@ -92,7 +93,7 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
     }
   }
 
-  async getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
+  async getById(runner: RunnerModel, id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
     try {
       const response = await axios.get(`${this._myst_api_prefix}/proposals`, {
         headers: {
@@ -120,13 +121,29 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
     }
   }
 
+  connect(runner: RunnerModel, VpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
+    return Promise.resolve(undefined);
+  }
+
+  disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
+  }
+
+  registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
+  }
+
+  unlockIdentity(runner: RunnerModel, identity: MystIdentityModel): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
+  }
+
   private _fillModel(row) {
     return new VpnProviderModel({
       id: this._identifier.generateId(row['provider_id']),
       serviceType: VpnServiceTypeEnum.WIREGUARD,
       providerName: VpnProviderName.MYSTERIUM,
       providerIdentity: row['provider_id'],
-      providerIpType: MystApiRepository._convertServiceType(row['location']['ip_type']),
+      providerIpType: MystProviderApiRepository._convertServiceType(row['location']['ip_type']),
       country: row['location']['country'],
       isRegister: false,
       quality: row['quality']['quality'],
@@ -149,9 +166,5 @@ export class MystApiRepository implements IProxyApiRepositoryInterface {
       default:
         throw new FillDataRepositoryException<VpnProviderModel>(['serviceType']);
     }
-  }
-
-  registerIdentity(runner: RunnerModel): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
   }
 }

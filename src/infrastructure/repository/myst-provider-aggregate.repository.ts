@@ -1,18 +1,19 @@
-import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {AsyncReturn} from '@src-core/utility';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {RunnerModel, RunnerServiceEnum, RunnerStatusEnum} from '@src-core/model/runner.model';
+import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 
-export class MystAggregateRepository implements IProxyApiRepositoryInterface {
+export class MystProviderAggregateRepository implements IMystApiRepositoryInterface {
   constructor(
     private readonly _dockerRunnerRepository: IRunnerRepositoryInterface,
-    private readonly _mystApiRepository: IProxyApiRepositoryInterface,
+    private readonly _mystApiRepository: IMystApiRepositoryInterface,
   ) {
   }
 
-  async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
+  async getAll<F>(runnerModel: RunnerModel, filter?: F): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
     const runnerFilter = new FilterModel<RunnerModel>();
     runnerFilter.addCondition({$opr: 'eq', status: RunnerStatusEnum.RUNNING});
     runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
@@ -21,7 +22,7 @@ export class MystAggregateRepository implements IProxyApiRepositoryInterface {
       [apiError, apiDataList, apiTotalCount],
       [runnerError, runnerDataList, runnerTotalCount],
     ] = await Promise.all([
-      this._mystApiRepository.getAll(filter),
+      this._mystApiRepository.getAll(runnerModel, filter),
       this._dockerRunnerRepository.getAll<VpnProviderModel>(runnerFilter),
     ]);
     if (apiError) {
@@ -38,14 +39,14 @@ export class MystAggregateRepository implements IProxyApiRepositoryInterface {
       return [null, apiDataList, apiTotalCount];
     }
 
-    const dataList = apiDataList.map((v: VpnProviderModel) => MystAggregateRepository._mergeData(v, runnerDataList));
-    const [result, totalCount] = MystAggregateRepository._paginationData(dataList, apiTotalCount, filter);
+    const dataList = apiDataList.map((v: VpnProviderModel) => MystProviderAggregateRepository._mergeData(v, runnerDataList));
+    const [result, totalCount] = MystProviderAggregateRepository._paginationData(dataList, apiTotalCount, filter);
 
     return [null, result, totalCount];
   }
 
-  async getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
-    const [apiError, apiData] = await this._mystApiRepository.getById(id);
+  async getById(runnerModel: RunnerModel, id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
+    const [apiError, apiData] = await this._mystApiRepository.getById(runnerModel, id);
     if (apiError) {
       return [apiError];
     }
@@ -78,8 +79,20 @@ export class MystAggregateRepository implements IProxyApiRepositoryInterface {
     return [null, apiData];
   }
 
-  async registerIdentity(runner: RunnerModel): Promise<AsyncReturn<Error, null>> {
-    return [null];
+  connect(runner: RunnerModel, VpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
+    return Promise.resolve(undefined);
+  }
+
+  disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
+  }
+
+  registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
+  }
+
+  unlockIdentity(runner: RunnerModel, identity: MystIdentityModel): Promise<AsyncReturn<Error, null>> {
+    return Promise.resolve(undefined);
   }
 
   private static _mergeData(vpnData: VpnProviderModel, runnerDataList: Array<RunnerModel<VpnProviderModel>>): VpnProviderModel {
