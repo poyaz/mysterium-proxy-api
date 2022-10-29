@@ -5,7 +5,7 @@ import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {FilterModel} from '@src-core/model/filter.model';
 import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.interface';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
-import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {
   RunnerExecEnum,
   RunnerModel,
@@ -13,17 +13,23 @@ import {
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
+import {NotFoundException} from '@src-core/exception/not-found.exception';
+import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
+import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
+import {NotFoundMystIdentityException} from '@src-core/exception/not-found-myst-identity.exception';
+import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
 
 @Injectable()
 export class MystProviderService implements IProviderServiceInterface {
+  private readonly _fakeRunner: defaultModelType<RunnerModel>;
+
   constructor(
     private readonly _mystApiRepository: IMystApiRepositoryInterface,
     private readonly _runnerService: IRunnerServiceInterface,
+    private readonly _mystIdentityService: IMystIdentityServiceInterface,
   ) {
-  }
-
-  async getAll(filter?: FilterModel<VpnProviderModel>): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
-    const fakeRunner = defaultModelFactory<RunnerModel>(
+    this._fakeRunner = defaultModelFactory<RunnerModel>(
       RunnerModel,
       {
         id: 'id',
@@ -37,12 +43,53 @@ export class MystProviderService implements IProviderServiceInterface {
       },
       ['id', 'serial', 'name', 'service', 'exec', 'socketType', 'status', 'insertDate'],
     );
-
-    return this._mystApiRepository.getAll(fakeRunner, filter);
   }
 
-  up(id: string): Promise<AsyncReturn<Error, VpnProviderModel>> {
-    return Promise.resolve(undefined);
+  async getAll(filter?: FilterModel<VpnProviderModel>): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
+    return this._mystApiRepository.getAll(this._fakeRunner, filter);
+  }
+
+  async up(id: string): Promise<AsyncReturn<Error, VpnProviderModel>> {
+    const [providerError, providerData] = await this._mystApiRepository.getById(this._fakeRunner, id);
+    if (providerError) {
+      return [providerError];
+    }
+    if (!providerData) {
+      return [new NotFoundException()];
+    }
+    if (providerData.isRegister) {
+      return [new ProviderIdentityInUseException()];
+    }
+
+    const mystIdentityFilter = new FilterModel<MystIdentityModel>();
+    mystIdentityFilter.addCondition({$opr: 'eq', isUse: false});
+    const [freeMystIdentityError, freeMystIdentityList, freeMystIdentityCount] = await this._mystIdentityService.getAll(mystIdentityFilter);
+    if (freeMystIdentityError) {
+      return [freeMystIdentityError];
+    }
+    if (freeMystIdentityCount === 0) {
+      return [new NotFoundMystIdentityException()];
+    }
+
+    const mystRunnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>();
+    mystRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    mystRunnerFilter.addCondition({
+      $opr: 'eq',
+      label: {$namespace: MystIdentityModel.name, id: freeMystIdentityList[0].id},
+    });
+    const [mystRunnerError, mystRunnerList, mystRunnerCount] = await this._runnerService.findAll(mystRunnerFilter);
+    if (mystRunnerError) {
+      return [mystRunnerError];
+    }
+    if (mystRunnerCount === 0) {
+      return [new NotRunningServiceException()];
+    }
+    if (mystRunnerList[0].status !== RunnerStatusEnum.RUNNING) {
+      return [new NotRunningServiceException()];
+    }
+
+    providerData.userIdentity = freeMystIdentityList[0].identity;
+    return this._mystApiRepository.connect(mystRunnerList[0], providerData);
   }
 
   down(id: string): Promise<AsyncReturn<Error, null>> {
