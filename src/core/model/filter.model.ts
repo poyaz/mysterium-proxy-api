@@ -34,17 +34,24 @@ export class FilterModel<T> {
   }
 
   addSortBy(item: PartialSort<T>) {
-    this._sort.push(item);
-    this._sort = [...new Set(this._sort)];
+    Object.keys(item).map((key) => {
+      const find = this._sort.find((v) => Object.hasOwnProperty.call(v, key));
+      if (find) {
+        find[key] = item[key];
+        return;
+      }
+
+      this._sort.push(<PartialSort<T>>{[key]: item[key]});
+    });
   }
 
   getSortBy(key: KnownKeys<T>): SortEnum | null {
-    const find = this._sort.filter((v) => Object.hasOwnProperty.call(v, key));
-    if (!find || (find && find.length !== 1)) {
+    const find = this._sort.find((v) => Object.hasOwnProperty.call(v, key));
+    if (!find) {
       return null;
     }
 
-    return find[0][key];
+    return find[key];
   }
 
   getSortByList(): Array<PartialSort<T>> {
