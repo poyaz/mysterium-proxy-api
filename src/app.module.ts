@@ -111,7 +111,7 @@ import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repos
       provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE,
       inject: [
         ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
-        ProviderTokenEnum.MYST_API_REPOSITORY,
+        ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
         ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
       ],
       useFactory: (
@@ -119,6 +119,11 @@ import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repos
         mystApiRepository: IMystApiRepositoryInterface,
         runnerService: IRunnerServiceInterface,
       ) => new MystIdentityService(mystIdentityRepository, mystApiRepository, runnerService),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE,
+      inject: [],
+      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE,
@@ -148,17 +153,17 @@ import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repos
       useFactory: () => ({}),
     },
     {
-      provide: ProviderTokenEnum.MYST_AGGREGATE_REPOSITORY,
+      provide: ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
       inject: [],
       useFactory: () => ({}),
     },
     {
-      provide: ProviderTokenEnum.MYST_API_REPOSITORY,
+      provide: ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
       inject: [],
       useFactory: () => ({}),
     },
     {
-      provide: ProviderTokenEnum.MYST_CACHE_ID_API_REPOSITORY,
+      provide: ProviderTokenEnum.MYST_PROVIDER_CACHE_ID_API_REPOSITORY,
       inject: [],
       useFactory: () => ({}),
     },
