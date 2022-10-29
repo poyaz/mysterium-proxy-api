@@ -28,6 +28,7 @@ import {
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
+import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
 
 describe('MystProviderService', () => {
   let service: MystProviderService;
@@ -521,6 +522,164 @@ describe('MystProviderService', () => {
         isRegister: outputProviderRegisterModel.isRegister,
         insertDate: outputProviderRegisterModel.insertDate,
       });
+    });
+  });
+
+  describe(`Disconnect from vpn`, () => {
+    let inputId: string;
+    let outputProviderNotRegisterModel: VpnProviderModel;
+    let outputProviderRegisterNotRunningModel: VpnProviderModel;
+    let outputProviderRegisterRunningModel: VpnProviderModel;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputProviderNotRegisterModel = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+
+      outputProviderRegisterNotRunningModel = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'userIdentity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: true,
+        runner: new RunnerModel<VpnProviderModel>({
+          id: identifierMock.generateId(),
+          serial: 'serial',
+          name: 'name',
+          service: RunnerServiceEnum.MYST,
+          exec: RunnerExecEnum.DOCKER,
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: '10.10.10.1',
+          socketPort: 4449,
+          status: RunnerStatusEnum.CREATING,
+          insertDate: new Date(),
+        }),
+        insertDate: new Date(),
+      });
+
+      outputProviderRegisterRunningModel = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'userIdentity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: true,
+        runner: new RunnerModel<VpnProviderModel>({
+          id: identifierMock.generateId(),
+          serial: 'serial',
+          name: 'name',
+          service: RunnerServiceEnum.MYST,
+          exec: RunnerExecEnum.DOCKER,
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: '10.10.10.1',
+          socketPort: 4449,
+          status: RunnerStatusEnum.RUNNING,
+          insertDate: new Date(),
+        }),
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error disconnect from vpn when fetch provider info`, async () => {
+      mystApiRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error disconnect from vpn when fetch provider not found`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, null]);
+
+      const [error] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(error).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error disconnect from vpn when fetch provider not register`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputProviderNotRegisterModel]);
+
+      const [error] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(error).toBeInstanceOf(ProviderIdentityNotConnectingException);
+    });
+
+    it(`Should error disconnect from vpn when myst runner is not running`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputProviderRegisterNotRunningModel]);
+
+      const [error] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(error).toBeInstanceOf(NotRunningServiceException);
+    });
+
+    it(`Should error disconnect from vpn when trying disconnect vpn`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputProviderRegisterRunningModel]);
+      mystApiRepository.disconnect.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(mystApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystApiRepository.disconnect).toHaveBeenCalledWith(
+        expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: outputProviderRegisterRunningModel.runner.socketUri,
+          socketPort: outputProviderRegisterRunningModel.runner.socketPort,
+        }),
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully disconnect from vpn`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputProviderRegisterRunningModel]);
+      mystApiRepository.disconnect.mockResolvedValue([null, null]);
+
+      const [error, result] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(mystApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystApiRepository.disconnect).toHaveBeenCalledWith(
+        expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: outputProviderRegisterRunningModel.runner.socketUri,
+          socketPort: outputProviderRegisterRunningModel.runner.socketPort,
+        }),
+      );
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });
