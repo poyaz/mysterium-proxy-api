@@ -14,7 +14,6 @@ import {
 } from '@src-core/model/runner.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {ExistException} from '@src-core/exception/exist.exception';
-import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {MystIdentityInUseException} from '@src-core/exception/myst-identity-in-use.exception';
@@ -26,7 +25,6 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     private readonly _mystIdentityFileRepository: IAccountIdentityFileRepository,
     private readonly _mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
     private readonly _dockerRunnerRepository: IRunnerRepositoryInterface,
-    private readonly _proxyApiRepository: IProxyApiRepositoryInterface,
   ) {
   }
 

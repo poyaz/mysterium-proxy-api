@@ -19,7 +19,6 @@ import {
 } from '@src-core/model/runner.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {ExistException} from '@src-core/exception/exist.exception';
-import {IProxyApiRepositoryInterface} from '@src-core/interface/i-proxy-api-repository.interface';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {UpdateModel} from '@src-core/model/update.model';
 import {RepositoryException} from '@src-core/exception/repository.exception';
@@ -30,7 +29,6 @@ describe('MystIdentityAggregateRepository', () => {
   let mystIdentityFileRepository: MockProxy<IAccountIdentityFileRepository>;
   let mystIdentityPgRepository: MockProxy<IGenericRepositoryInterface<MystIdentityModel>>;
   let dockerRunnerRepository: MockProxy<IRunnerRepositoryInterface>;
-  let proxyApiRepository: MockProxy<IProxyApiRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
   let fakeIdentifierMock: MockProxy<IIdentifier>;
 
@@ -38,7 +36,6 @@ describe('MystIdentityAggregateRepository', () => {
     mystIdentityFileRepository = mock<IAccountIdentityFileRepository>();
     mystIdentityPgRepository = mock<IGenericRepositoryInterface<MystIdentityModel>>();
     dockerRunnerRepository = mock<IRunnerRepositoryInterface>();
-    proxyApiRepository = mock<IProxyApiRepositoryInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
@@ -61,28 +58,21 @@ describe('MystIdentityAggregateRepository', () => {
           useValue: dockerRunnerRepository,
         },
         {
-          provide: ProviderTokenEnum.MYST_API_REPOSITORY,
-          useValue: proxyApiRepository,
-        },
-        {
           provide: MystIdentityAggregateRepository,
           inject: [
             ProviderTokenEnum.MYST_IDENTITY_FILE_REPOSITORY,
             ProviderTokenEnum.MYST_IDENTITY_PG_REPOSITORY,
             ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
-            ProviderTokenEnum.MYST_API_REPOSITORY,
           ],
           useFactory: (
             mystIdentityFileRepository: IAccountIdentityFileRepository,
             mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
             dockerRunnerRepository: IRunnerRepositoryInterface,
-            proxyApiRepository: IProxyApiRepositoryInterface,
           ) =>
             new MystIdentityAggregateRepository(
               mystIdentityFileRepository,
               mystIdentityPgRepository,
               dockerRunnerRepository,
-              proxyApiRepository,
             ),
         },
       ],
