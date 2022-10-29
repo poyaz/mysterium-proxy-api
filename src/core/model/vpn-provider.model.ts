@@ -39,7 +39,6 @@ export class VpnProviderModel {
   bandwidth?: number;
   latency?: number;
   isRegister: boolean;
-  isEnable?: boolean;
   insertDate: Date;
 
   constructor(props: ModelRequireProp<typeof VpnProviderModel.prototype>) {
