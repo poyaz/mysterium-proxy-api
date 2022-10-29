@@ -25,6 +25,12 @@ export enum ProviderTokenEnum {
    * @implements IUsersServiceInterface
    */
   USER_SERVICE_DEFAULT = 'USER_SERVICE',
+  /**
+   *
+   * {@link }
+   * @implements IProviderServiceInterface
+   */
+  MYST_PROVIDER_SERVICE_DEFAULT = 'MYST_PROVIDER_SERVICE',
 
   /**
    *
@@ -52,6 +58,12 @@ export enum ProviderTokenEnum {
   MYST_IDENTITY_SERVICE = 'MYST_IDENTITY_SERVICE',
   /**
    *
+   * {@link MystProviderService}
+   * @implements IProviderServiceInterface
+   */
+  MYST_PROVIDER_SERVICE = 'MYST_PROVIDER_SERVICE',
+  /**
+   *
    * {@link UsersService}
    * @implements IUsersServiceInterface
    */
@@ -77,22 +89,22 @@ export enum ProviderTokenEnum {
   DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY = 'DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY',
   /**
    *
-   * {@link MystAggregateRepository}
-   * @implements IProxyApiRepositoryInterface
+   * {@link MystProviderAggregateRepository}
+   * @implements IMystApiRepositoryInterface
    */
-  MYST_AGGREGATE_REPOSITORY = 'MYST_AGGREGATE_REPOSITORY',
+  MYST_PROVIDER_AGGREGATE_REPOSITORY = 'MYST_PROVIDER_AGGREGATE_REPOSITORY',
   /**
    *
-   * {@link MystApiRepository}
-   * @implements IProxyApiRepositoryInterface
+   * {@link MystProviderApiRepository}
+   * @implements IMystApiRepositoryInterface
    */
-  MYST_API_REPOSITORY = 'MYST_API_REPOSITORY',
+  MYST_PROVIDER_API_REPOSITORY = 'MYST_PROVIDER_API_REPOSITORY',
   /**
    *
-   * {@link MystCacheIdApiRepository}
-   * @implements IProxyApiRepositoryInterface
+   * {@link MystProviderCacheIdApiRepository}
+   * @implements IMystApiRepositoryInterface
    */
-  MYST_CACHE_ID_API_REPOSITORY = 'MYST_CACHE_ID_API_REPOSITORY',
+  MYST_PROVIDER_CACHE_ID_API_REPOSITORY = 'MYST_PROVIDER_CACHE_ID_API_REPOSITORY',
   /**
    *
    * {@link MystIdentityAggregateRepository}
