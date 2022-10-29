@@ -3,6 +3,8 @@ import {ClassConstructor, ModelRequireProp} from '@src-core/utility';
 export type defaultModelType<T> = Omit<T, 'clone'> & DefaultModel<T>;
 
 export interface DefaultModel<T> {
+  readonly IS_DEFAULT_MODEL: boolean;
+
   isDefaultProperty(property: keyof T): boolean;
 
   getDefaultProperties(): Array<keyof T>;
@@ -12,6 +14,8 @@ export interface DefaultModel<T> {
 
 export function defaultModelFactory<T>(cls: ClassConstructor<T>, properties: Omit<T, 'clone'>, defaultProperties: Array<keyof T>): defaultModelType<T> {
   const GenericExtendClass = class extends (<any>cls) implements DefaultModel<T> {
+    readonly IS_DEFAULT_MODEL: boolean = true;
+
     constructor(props: ModelRequireProp<typeof cls.prototype>, private readonly _defaultProperties: Array<keyof T>) {
       super(props);
     }
