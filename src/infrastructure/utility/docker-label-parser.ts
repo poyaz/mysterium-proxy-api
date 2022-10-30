@@ -159,11 +159,18 @@ export class DockerLabelParser<T> {
   }
 
   private _fillVpnProvider(namespace: string, data: VpnProviderModel): void {
-    const defaultProperties: Array<keyof VpnProviderModel> = ['id', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'];
-    const fillObject: Pick<VpnProviderModel, 'userIdentity' | 'providerIdentity'> = {
+    const defaultProperties: Array<keyof VpnProviderModel> = ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'];
+    const fillObject: Pick<VpnProviderModel, 'id' | 'userIdentity' | 'providerIdentity'> = {
+      id: 'default-id',
       userIdentity: 'default-userIdentity',
       providerIdentity: 'default-providerIdentity',
     };
+
+    if (<keyof VpnProviderModel>'id' in data) {
+      fillObject.id = data.id;
+    } else {
+      defaultProperties.push('id');
+    }
 
     if (<keyof VpnProviderModel>'userIdentity' in data) {
       fillObject.userIdentity = data.userIdentity;
@@ -182,7 +189,6 @@ export class DockerLabelParser<T> {
       data: defaultModelFactory<VpnProviderModel>(
         VpnProviderModel,
         {
-          id: 'default-id',
           ...fillObject,
           serviceType: VpnServiceTypeEnum.WIREGUARD,
           providerName: VpnProviderName.MYSTERIUM,
