@@ -1,10 +1,18 @@
 import {AsyncReturn} from '@src-core/utility';
-import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
+import {VpnProviderModel, VpnProviderStatusEnum} from '@src-core/model/vpn-provider.model';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {FilterModel} from '@src-core/model/filter.model';
-import {RunnerModel, RunnerServiceEnum, RunnerStatusEnum} from '@src-core/model/runner.model';
+import {RunnerLabelNamespace, RunnerModel, RunnerServiceEnum, RunnerStatusEnum} from '@src-core/model/runner.model';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
+import {filterAndSortVpnProvider} from '@src-infrastructure/utility/filterAndSortVpnProvider';
+
+type mergeRunnerObjType = {
+  [key: string]: {
+    myst: RunnerModel<MystIdentityModel>,
+    mystConnect: RunnerModel<[MystIdentityModel, VpnProviderModel]>
+  }
+};
 
 export class MystProviderAggregateRepository implements IMystApiRepositoryInterface {
   constructor(
@@ -14,9 +22,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
   }
 
   async getAll<F>(runnerModel: RunnerModel, filter?: F): Promise<AsyncReturn<Error, Array<VpnProviderModel>>> {
-    const runnerFilter = new FilterModel<RunnerModel>();
-    runnerFilter.addCondition({$opr: 'eq', status: RunnerStatusEnum.RUNNING});
-    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    const runnerFilter = new FilterModel<RunnerModel>({skipPagination: true});
 
     const [
       [apiError, apiDataList, apiTotalCount],
@@ -39,8 +45,11 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       return [null, apiDataList, apiTotalCount];
     }
 
-    const dataList = apiDataList.map((v: VpnProviderModel) => MystProviderAggregateRepository._mergeData(v, runnerDataList));
-    const [result, totalCount] = MystProviderAggregateRepository._paginationData(dataList, apiTotalCount, filter);
+    const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData(runnerDataList);
+    const dataList = apiDataList.map((v) => MystProviderAggregateRepository._mergeData(v, runnerObj));
+
+    const dataFilter: FilterModel<VpnProviderModel> = !filter ? new FilterModel<VpnProviderModel>() : <any>filter;
+    const [result, totalCount] = filterAndSortVpnProvider(dataList, dataFilter);
 
     return [null, result, totalCount];
   }
@@ -95,34 +104,77 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     return Promise.resolve(undefined);
   }
 
-  private static _mergeData(vpnData: VpnProviderModel, runnerDataList: Array<RunnerModel<VpnProviderModel>>): VpnProviderModel {
-    const findRunner = runnerDataList.find((v) => v.label.id === vpnData.id && v.label.providerIdentity === vpnData.providerIdentity);
-    if (findRunner) {
+  private static _mergeRunnerObjData(runnerDataList: Array<RunnerModel>): mergeRunnerObjType {
+    const runnerObj = {};
+    const runnerMystObj = {};
+
+    const mystRunnerList = runnerDataList.filter((v) => v.service === RunnerServiceEnum.MYST);
+    for (const runner of mystRunnerList) {
+      const label: RunnerLabelNamespace<MystIdentityModel> = runner.label;
+
+      if (label.$namespace !== MystIdentityModel.name) {
+        continue;
+      }
+
+      runnerMystObj[label.identity] = runner;
+    }
+
+    const mystConnectRunnerList = runnerDataList.filter((v) => v.service === RunnerServiceEnum.MYST_CONNECT);
+    for (const runner of mystConnectRunnerList) {
+      const labelList: RunnerLabelNamespace<[MystIdentityModel, VpnProviderModel]> = <any>(!Array.isArray(runner.label) ? [runner.label] : runner.label);
+      let identityRunner: RunnerModel<MystIdentityModel> | null | undefined;
+      let providerId: string;
+
+      for (const label of labelList) {
+        switch (label.$namespace) {
+          case MystIdentityModel.name: {
+            const mystLabel = <RunnerLabelNamespace<MystIdentityModel>>label;
+            if (!identityRunner) {
+              identityRunner = runnerMystObj[mystLabel.identity];
+            }
+            break;
+          }
+          case VpnProviderModel.name: {
+            const vpnProviderLabel = <RunnerLabelNamespace<VpnProviderModel>>label;
+            if (!identityRunner) {
+              identityRunner = runnerMystObj[vpnProviderLabel.userIdentity];
+            }
+            providerId = vpnProviderLabel.id;
+            break;
+          }
+        }
+      }
+
+      if (!(providerId && identityRunner)) {
+        continue;
+      }
+
+      runnerObj[providerId] = {
+        myst: identityRunner,
+        mystConnect: runner,
+      };
+    }
+
+    return runnerObj;
+  }
+
+  private static _mergeData(vpnData: VpnProviderModel, runnerDataObj: mergeRunnerObjType): VpnProviderModel {
+    const runnerInfo = runnerDataObj[vpnData.id];
+    if (runnerInfo) {
       vpnData.isRegister = true;
-      vpnData.runner = findRunner;
+      vpnData.runner = runnerInfo.myst;
+      switch (runnerInfo.mystConnect.status) {
+        case RunnerStatusEnum.CREATING:
+          vpnData.providerStatus = VpnProviderStatusEnum.PENDING;
+          break;
+        case RunnerStatusEnum.RUNNING:
+          vpnData.providerStatus = VpnProviderStatusEnum.ONLINE;
+          break;
+        default:
+          vpnData.providerStatus = VpnProviderStatusEnum.OFFLINE;
+      }
     }
 
     return vpnData;
-  }
-
-  private static _paginationData<F>(dataList: Array<VpnProviderModel>, totalCount: number, filter?: F): [Array<VpnProviderModel>, number] {
-    if (!filter) {
-      return [dataList, totalCount];
-    }
-
-    const filterModel = <FilterModel<VpnProviderModel>><any>filter;
-
-    const getIsRegister = filterModel.getCondition('isRegister');
-    if (!getIsRegister) {
-      return [dataList, totalCount];
-    }
-
-    const resultFilter = dataList.filter((v) => v.isRegister === getIsRegister.isRegister);
-
-    const pageNumber = filterModel.page;
-    const pageSize = filterModel.limit;
-    const resultPagination = resultFilter.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
-
-    return [resultPagination, resultFilter.length];
   }
 }
