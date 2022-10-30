@@ -237,7 +237,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     }
 
     const findMystConnectRunner = identityRunnerList.find((v) => v.service === RunnerServiceEnum.MYST_CONNECT);
-    if (findMystConnectRunner && (<RunnerModel>findMystConnectRunner).status !== RunnerStatusEnum.CREATING) {
+    if (findMystConnectRunner) {
       identityData.isUse = true;
     }
 
