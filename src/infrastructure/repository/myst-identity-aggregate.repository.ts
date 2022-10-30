@@ -159,7 +159,6 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       return this._removeWhenIdentityExist(dataFetch);
     }
 
-    // @todo Should remove uncompleted data
     return this._removeWhenUncompletedDelete(id);
   }
 
