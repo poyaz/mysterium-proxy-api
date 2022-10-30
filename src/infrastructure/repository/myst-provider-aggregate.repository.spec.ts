@@ -1159,4 +1159,60 @@ describe('MystProviderAggregateRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe(`Unlock identity`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputMystIdentity: MystIdentityModel;
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputMystIdentity = new MystIdentityModel({
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+        passphrase: 'passphrase identity1',
+        path: '/path/of/identity1',
+        filename: 'identity1.json',
+        isUse: true,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error unlock identity`, async () => {
+      mystProviderApiRepository.unlockIdentity.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.unlockIdentity(inputRunner, inputMystIdentity);
+
+      expect(mystProviderApiRepository.unlockIdentity).toHaveBeenCalled();
+      expect(mystProviderApiRepository.unlockIdentity).toHaveBeenCalledWith(inputRunner, inputMystIdentity);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully unlock identity`, async () => {
+      mystProviderApiRepository.unlockIdentity.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.unlockIdentity(inputRunner, inputMystIdentity);
+
+      expect(mystProviderApiRepository.unlockIdentity).toHaveBeenCalled();
+      expect(mystProviderApiRepository.unlockIdentity).toHaveBeenCalledWith(inputRunner, inputMystIdentity);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
