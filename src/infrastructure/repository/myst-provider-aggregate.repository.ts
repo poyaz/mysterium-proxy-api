@@ -198,8 +198,8 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     return this._mystApiRepository.disconnect(runner);
   }
 
-  registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
+    return this._mystApiRepository.registerIdentity(runner, userIdentity);
   }
 
   unlockIdentity(runner: RunnerModel, identity: MystIdentityModel): Promise<AsyncReturn<Error, null>> {

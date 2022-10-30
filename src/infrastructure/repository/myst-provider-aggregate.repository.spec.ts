@@ -1081,4 +1081,52 @@ describe('MystProviderAggregateRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe(`Register identity`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputUserIdentity: string;
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputUserIdentity = 'identity1';
+    });
+
+    it(`Should error register identity`, async () => {
+      mystProviderApiRepository.registerIdentity.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.registerIdentity(inputRunner, inputUserIdentity);
+
+      expect(mystProviderApiRepository.registerIdentity).toHaveBeenCalled();
+      expect(mystProviderApiRepository.registerIdentity).toHaveBeenCalledWith(inputRunner, inputUserIdentity);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully register identity`, async () => {
+      mystProviderApiRepository.registerIdentity.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.registerIdentity(inputRunner, inputUserIdentity);
+
+      expect(mystProviderApiRepository.registerIdentity).toHaveBeenCalled();
+      expect(mystProviderApiRepository.registerIdentity).toHaveBeenCalledWith(inputRunner, inputUserIdentity);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
