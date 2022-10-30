@@ -170,8 +170,32 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     return [null, vpnProviderResultModel];
   }
 
-  disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
+    const mystConnectRunnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>();
+    mystConnectRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST_CONNECT});
+    mystConnectRunnerFilter.addCondition({
+      $opr: 'eq',
+      label: {
+        $namespace: MystIdentityModel.name,
+        id: (<MystIdentityModel><any>runner.label).id,
+      },
+    });
+    const [
+      mystConnectRunnerError,
+      mystConnectRunnerList,
+      mystConnectRunnerTotalCount,
+    ] = await this._dockerRunnerRepository.getAll(mystConnectRunnerFilter);
+    if (mystConnectRunnerError) {
+      return [mystConnectRunnerError];
+    }
+    if (mystConnectRunnerTotalCount !== 0) {
+      const [removeRunnerError] = await this._dockerRunnerRepository.remove(mystConnectRunnerList[0].id);
+      if (removeRunnerError) {
+        return [removeRunnerError];
+      }
+    }
+
+    return this._mystApiRepository.disconnect(runner);
   }
 
   registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
