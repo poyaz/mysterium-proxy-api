@@ -926,6 +926,7 @@ describe('MystProviderAggregateRepository', () => {
 
   describe(`Disconnect from vpn`, () => {
     let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputForce: boolean;
     let outputRunnerMystConnectData1: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
     let outputVpnProviderData: VpnProviderModel;
 
@@ -947,6 +948,7 @@ describe('MystProviderAggregateRepository', () => {
         id: identifierMock.generateId(),
         identity: 'identity1',
       };
+      inputForce = true;
 
       outputVpnProviderData = new VpnProviderModel({
         id: '11111111-1111-1111-1111-111111111111',
@@ -1025,7 +1027,7 @@ describe('MystProviderAggregateRepository', () => {
         },
       });
       expect(mystProviderApiRepository.disconnect).toHaveBeenCalled();
-      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner);
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner, undefined);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
@@ -1076,7 +1078,35 @@ describe('MystProviderAggregateRepository', () => {
       expect(dockerRunnerRepository.remove).toHaveBeenCalled();
       expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputRunnerMystConnectData1.id);
       expect(mystProviderApiRepository.disconnect).toHaveBeenCalled();
-      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner);
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner, undefined);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully disconnect from vpn (with force flag)`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystConnectData1], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([null, null]);
+      mystProviderApiRepository.disconnect.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.disconnect(inputRunner, inputForce);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST_CONNECT,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
+        $opr: 'eq',
+        label: {
+          $namespace: MystIdentityModel.name,
+          id: inputRunner.label.id,
+        },
+      });
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputRunnerMystConnectData1.id);
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner, inputForce);
       expect(error).toBeNull();
       expect(result).toBeNull();
     });
