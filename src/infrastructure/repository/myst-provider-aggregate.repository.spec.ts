@@ -22,7 +22,7 @@ import {
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
-import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {filterAndSortVpnProvider} from '@src-infrastructure/utility/filterAndSortVpnProvider';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 
@@ -731,6 +731,195 @@ describe('MystProviderAggregateRepository', () => {
         providerStatus: VpnProviderStatusEnum.ONLINE,
         runner: outputRunnerMystData1,
         isRegister: true,
+      });
+    });
+  });
+
+  describe(`Connect to vpn`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputVpnProvider: VpnProviderModel;
+    let outputVpnProviderConnectData: VpnProviderModel;
+    let outputMystConnectData: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputVpnProvider = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'identity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+
+      outputVpnProviderConnectData = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'identity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        ip: '45.84.121.22',
+        country: 'GB',
+        isRegister: true,
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        quality: 2.55,
+        bandwidth:1016.051438,
+        latency: 49.053841,
+        insertDate: new Date(),
+      });
+
+      outputMystConnectData = new RunnerModel<[MystIdentityModel, VpnProviderModel]>({
+        id: identifierMock.generateId(),
+        serial: 'myst-connect-serial',
+        name: 'myst-connect-name',
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.NONE,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputMystConnectData.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: identifierMock.generateId(),
+          identity: 'identity1',
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: inputVpnProvider.id,
+          userIdentity: inputVpnProvider.userIdentity,
+          providerIdentity: inputVpnProvider.providerIdentity,
+        },
+      ];
+    });
+
+    it(`Should error connect to vpn when execute connect api`, async () => {
+      mystProviderApiRepository.connect.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(mystProviderApiRepository.connect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.connect).toHaveBeenCalledWith(inputRunner, inputVpnProvider);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error connect to vpn when create myst-connect runner`, async () => {
+      mystProviderApiRepository.connect.mockResolvedValue([null, outputVpnProviderConnectData]);
+      dockerRunnerRepository.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(mystProviderApiRepository.connect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.connect).toHaveBeenCalledWith(inputRunner, inputVpnProvider);
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).IS_DEFAULT_MODEL).toEqual(true);
+      expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
+        expect.arrayContaining<keyof RunnerModel>(['id', 'serial', 'name', 'status', 'insertDate']),
+      );
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> | { _defaultProperties: Array<any> }>({
+        id: 'default-id',
+        serial: 'default-serial',
+        name: 'default-name',
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.NONE,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: inputRunner.label.id,
+            identity: inputVpnProvider.userIdentity,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: inputVpnProvider.id,
+            userIdentity: inputVpnProvider.userIdentity,
+            providerIdentity: inputVpnProvider.providerIdentity,
+          },
+        ],
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+        IS_DEFAULT_MODEL: true,
+        _defaultProperties: expect.anything(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully connect to vpn`, async () => {
+      mystProviderApiRepository.connect.mockResolvedValue([null, outputVpnProviderConnectData]);
+      dockerRunnerRepository.create.mockResolvedValue([null, outputMystConnectData]);
+
+      const [error, result] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(mystProviderApiRepository.connect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.connect).toHaveBeenCalledWith(inputRunner, inputVpnProvider);
+      expect(dockerRunnerRepository.create).toHaveBeenCalled();
+      expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).IS_DEFAULT_MODEL).toEqual(true);
+      expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
+        expect.arrayContaining<keyof RunnerModel>(['id', 'serial', 'name', 'status', 'insertDate']),
+      );
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> | { _defaultProperties: Array<any> }>({
+        id: 'default-id',
+        serial: 'default-serial',
+        name: 'default-name',
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.NONE,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: inputRunner.label.id,
+            identity: inputVpnProvider.userIdentity,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: inputVpnProvider.id,
+            userIdentity: inputVpnProvider.userIdentity,
+            providerIdentity: inputVpnProvider.providerIdentity,
+          },
+        ],
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+        IS_DEFAULT_MODEL: true,
+        _defaultProperties: expect.anything(),
+      });
+      expect(error).toBeNull();
+      expect(result).toEqual<Omit<VpnProviderModel, 'clone'>>({
+        id: inputVpnProvider.id,
+        userIdentity: inputVpnProvider.userIdentity,
+        serviceType: inputVpnProvider.serviceType,
+        providerName: inputVpnProvider.providerName,
+        providerIdentity: inputVpnProvider.providerIdentity,
+        providerIpType: inputVpnProvider.providerIpType,
+        ip: outputVpnProviderConnectData.ip,
+        country: inputVpnProvider.country,
+        runner: inputRunner,
+        isRegister: true,
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        quality: outputVpnProviderConnectData.quality,
+        bandwidth: outputVpnProviderConnectData.bandwidth,
+        latency: outputVpnProviderConnectData.latency,
+        insertDate: inputVpnProvider.insertDate,
       });
     });
   });

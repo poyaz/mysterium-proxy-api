@@ -12,7 +12,7 @@ export interface IMystApiRepositoryInterface {
 
   registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>>;
 
-  connect(runner: RunnerModel, VpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>>;
+  connect(runner: RunnerModel, vpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>>;
 
   disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>>;
 }

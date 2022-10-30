@@ -2,10 +2,18 @@ import {AsyncReturn} from '@src-core/utility';
 import {VpnProviderModel, VpnProviderStatusEnum} from '@src-core/model/vpn-provider.model';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {FilterModel} from '@src-core/model/filter.model';
-import {RunnerLabelNamespace, RunnerModel, RunnerServiceEnum, RunnerStatusEnum} from '@src-core/model/runner.model';
+import {
+  RunnerExecEnum,
+  RunnerLabelNamespace,
+  RunnerModel,
+  RunnerServiceEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
+} from '@src-core/model/runner.model';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {filterAndSortVpnProvider} from '@src-infrastructure/utility/filterAndSortVpnProvider';
+import {defaultModelFactory} from '@src-core/model/defaultModel';
 
 type mergeRunnerObjType = {
   [key: string]: {
@@ -112,8 +120,54 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     return [null, result];
   }
 
-  connect(runner: RunnerModel, VpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
-    return Promise.resolve(undefined);
+  async connect(runner: RunnerModel, vpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
+    const [connectError, connectData] = await this._mystApiRepository.connect(runner, vpnProviderModel);
+    if (connectError) {
+      return [connectError];
+    }
+
+    const mystConnectRunnerCreateModel = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
+      RunnerModel,
+      {
+        id: 'default-id',
+        serial: 'default-serial',
+        name: 'default-name',
+        service: RunnerServiceEnum.MYST_CONNECT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.NONE,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: (<MystIdentityModel><any>runner.label).id,
+            identity: vpnProviderModel.userIdentity,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: vpnProviderModel.id,
+            userIdentity: vpnProviderModel.userIdentity,
+            providerIdentity: vpnProviderModel.providerIdentity,
+          },
+        ],
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      },
+      ['id', 'serial', 'name', 'status', 'insertDate'],
+    );
+    const [mystConnectError] = await this._dockerRunnerRepository.create<[MystIdentityModel, VpnProviderModel]>(mystConnectRunnerCreateModel);
+    if (mystConnectError) {
+      return [mystConnectError];
+    }
+
+    const vpnProviderResultModel = vpnProviderModel.clone();
+    vpnProviderResultModel.providerStatus = VpnProviderStatusEnum.ONLINE;
+    vpnProviderResultModel.ip = connectData.ip;
+    vpnProviderResultModel.runner = runner;
+    vpnProviderResultModel.quality = connectData.quality;
+    vpnProviderResultModel.bandwidth = connectData.bandwidth;
+    vpnProviderResultModel.latency = connectData.latency;
+    vpnProviderResultModel.isRegister = true;
+
+    return [null, vpnProviderResultModel];
   }
 
   disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
