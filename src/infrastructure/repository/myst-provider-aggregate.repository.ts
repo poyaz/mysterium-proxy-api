@@ -253,25 +253,31 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
 
   private static _mergeData(vpnData: VpnProviderModel, runnerDataObj: mergeRunnerObjType): VpnProviderModel {
     const runnerInfo = runnerDataObj[vpnData.id];
-    if (runnerInfo) {
-      vpnData.isRegister = true;
-      vpnData.userIdentity = runnerInfo.myst.label.identity;
-      vpnData.runner = runnerInfo.myst;
+    if (!runnerInfo) {
+      delete vpnData.ip;
+      delete vpnData.mask;
+      delete vpnData.providerStatus;
 
-      switch (runnerInfo.mystConnect.status) {
-        case RunnerStatusEnum.CREATING:
-          vpnData.providerStatus = VpnProviderStatusEnum.PENDING;
-          break;
-        case RunnerStatusEnum.RUNNING:
-          vpnData.providerStatus = VpnProviderStatusEnum.ONLINE;
-          break;
-        default:
-          vpnData.providerStatus = VpnProviderStatusEnum.OFFLINE;
-      }
+      return vpnData;
+    }
 
-      if (runnerInfo.myst.status !== RunnerStatusEnum.RUNNING) {
+    vpnData.isRegister = true;
+    vpnData.userIdentity = runnerInfo.myst.label.identity;
+    vpnData.runner = runnerInfo.myst;
+
+    switch (runnerInfo.mystConnect.status) {
+      case RunnerStatusEnum.CREATING:
+        vpnData.providerStatus = VpnProviderStatusEnum.PENDING;
+        break;
+      case RunnerStatusEnum.RUNNING:
+        vpnData.providerStatus = VpnProviderStatusEnum.ONLINE;
+        break;
+      default:
         vpnData.providerStatus = VpnProviderStatusEnum.OFFLINE;
-      }
+    }
+
+    if (runnerInfo.myst.status !== RunnerStatusEnum.RUNNING) {
+      vpnData.providerStatus = VpnProviderStatusEnum.OFFLINE;
     }
 
     return vpnData;
