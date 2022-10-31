@@ -122,8 +122,8 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     return this._mystProviderApiRepository.registerIdentity(runner, userIdentity);
   }
 
-  unlockIdentity(runner: RunnerModel, identity: MystIdentityModel): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async unlockIdentity(runner: RunnerModel, identity: MystIdentityModel): Promise<AsyncReturn<Error, null>> {
+    return this._mystProviderApiRepository.unlockIdentity(runner, identity);
   }
 
   private async _getProviderConnectionInfo(providerIdentity?: string): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
