@@ -9,7 +9,7 @@ import {UnknownException} from '@src-core/exception/unknown.exception';
 import {
   VpnProviderIpTypeEnum,
   VpnProviderModel,
-  VpnProviderName,
+  VpnProviderName, VpnProviderStatusEnum,
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
 import {RepositoryException} from '@src-core/exception/repository.exception';
@@ -23,8 +23,9 @@ import {
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
-import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 
 describe('MystProviderCacheApiRepository', () => {
   let repository: MystProviderCacheApiRepository;
@@ -717,6 +718,91 @@ describe('MystProviderCacheApiRepository', () => {
         ip: '127.0.0.1',
         isRegister: outputVpnProviderData.isRegister,
         insertDate: outputVpnProviderData.insertDate,
+      });
+    });
+  });
+
+  describe(`Connect to vpn`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputVpnProvider: VpnProviderModel;
+    let outputVpnProviderConnectData: VpnProviderModel;
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputVpnProvider = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'identity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+
+      outputVpnProviderConnectData = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'identity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        ip: '45.84.121.22',
+        country: 'GB',
+        isRegister: true,
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error connect to vpn`, async () => {
+      mystProviderApiRepository.connect.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(mystProviderApiRepository.connect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.connect).toHaveBeenCalledWith(inputRunner, inputVpnProvider);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully connect to vpn`, async () => {
+      mystProviderApiRepository.connect.mockResolvedValue([null, outputVpnProviderConnectData]);
+
+      const [error, result] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(mystProviderApiRepository.connect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.connect).toHaveBeenCalledWith(inputRunner, inputVpnProvider);
+      expect(error).toBeNull();
+      expect(result).toEqual<Omit<VpnProviderModel, 'clone'>>({
+        id: inputVpnProvider.id,
+        userIdentity: inputVpnProvider.userIdentity,
+        serviceType: inputVpnProvider.serviceType,
+        providerName: inputVpnProvider.providerName,
+        providerIdentity: inputVpnProvider.providerIdentity,
+        providerIpType: inputVpnProvider.providerIpType,
+        ip: outputVpnProviderConnectData.ip,
+        country: inputVpnProvider.country,
+        isRegister: true,
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        insertDate: inputVpnProvider.insertDate,
       });
     });
   });
