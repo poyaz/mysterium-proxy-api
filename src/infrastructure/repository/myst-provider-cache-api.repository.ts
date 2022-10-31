@@ -11,6 +11,7 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {IsDefined, IsIP, IsString, validate} from 'class-validator';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {plainToInstance} from 'class-transformer';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 class ProviderConnectionInfoDto {
   @IsDefined()
@@ -40,7 +41,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
       [connectionInfoError, connectionInfoObj],
     ] = await Promise.all([
       this._mystProviderApiRepository.getAll(runnerModel, filter),
-      this._getProviderConnectionInfoAll(),
+      this._getProviderConnectionInfo(),
     ]);
     if (vpnDataError) {
       return [vpnDataError];
@@ -98,7 +99,15 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
       return [null, null];
     }
 
-    return [null, dataList[0]];
+    const vpnData = dataList[0];
+    const [connectionInfoError, connectionInfoObj] = await this._getProviderConnectionInfo(vpnData.providerIdentity);
+    if (connectionInfoError) {
+      return [connectionInfoError];
+    }
+
+    vpnData.ip = connectionInfoObj[vpnData.providerIdentity]?.ip;
+
+    return [null, vpnData];
   }
 
   connect(runner: RunnerModel, vpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
@@ -117,9 +126,13 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     return Promise.resolve(undefined);
   }
 
-  private async _getProviderConnectionInfoAll(): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
+  private async _getProviderConnectionInfo(providerIdentity?: string): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
+    const [error, data] = await this._getProviderConnectionInfoFromRedis(providerIdentity);
+    if (error) {
+      return [error];
+    }
+
     try {
-      const data = await this._redis.hgetall(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`);
       const result = await MystProviderCacheApiRepository._fillProviderConnectionInfo(data);
 
       return [null, result];
@@ -131,13 +144,31 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
         return [error];
       }
 
-      this._logger.error(
-        `Fail to get provider info for prefix "${MystProviderCacheApiRepository.PREFIX_KEY_INFO}"`,
-        error.stack,
-        this.constructor.name,
-      );
+      return [new UnknownException(error)];
+    }
+  }
 
-      return [null, {}];
+  private async _getProviderConnectionInfoFromRedis(providerIdentity?: string): Promise<AsyncReturn<Error, Record<string, string>>> {
+    try {
+      if (!providerIdentity) {
+        const dataObj = await this._redis.hgetall(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`);
+
+        return [null, dataObj];
+      }
+
+      const dataList = await this._redis.hmget(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`, providerIdentity);
+      if (dataList.length === 0) {
+        return [null, {}];
+      }
+      if (!dataList[0]) {
+        return [null, {}];
+      }
+
+      const dataObj = {[providerIdentity]: dataList[0]};
+
+      return [null, dataObj];
+    } catch (error) {
+      return [new RepositoryException(error)];
     }
   }
 

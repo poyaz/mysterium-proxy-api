@@ -15,7 +15,6 @@ import {
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {Logger} from '@nestjs/common';
 import {FilterModel} from '@src-core/model/filter.model';
-import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {
   RunnerExecEnum,
@@ -159,6 +158,20 @@ describe('MystProviderCacheApiRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
+    it(`Should error get all vpn provider when fail to get connection info from redis`, async () => {
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [], 0]);
+      const executeError = new Error('Error in execute set on database');
+      redis.hgetall.mockRejectedValue(executeError);
+
+      const [error] = await repository.getAll(inputRunnerModel);
+
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
     it(`Should error get all vpn provider when fail to parse invalid json`, async () => {
       mystProviderApiRepository.getAll.mockResolvedValue([null, [], 0]);
       redis.hgetall.mockResolvedValue(outputRedisGetAllInvalidJson);
@@ -171,7 +184,7 @@ describe('MystProviderCacheApiRepository', () => {
       expect(error).toBeInstanceOf(FillDataRepositoryException);
     });
 
-    it(`Should error get all vpn provider when validate keys`, async () => {
+    it(`Should error get all vpn provider when fail to validate keys`, async () => {
       mystProviderApiRepository.getAll.mockResolvedValue([null, [], 0]);
       redis.hgetall.mockResolvedValue(outputRedisGetAllInvalidData);
 
@@ -334,58 +347,6 @@ describe('MystProviderCacheApiRepository', () => {
       expect(totalCount).toEqual(2);
     });
 
-    it(`Should successfully get all vpn provider (Async get connection info has executed failure)`, async () => {
-      mystProviderApiRepository.getAll.mockResolvedValue([
-        null,
-        [outputVpnProviderData1, outputVpnProviderData2],
-        2,
-      ]);
-      const executeError = new Error('Error in execute set on database');
-      redis.hgetall.mockRejectedValue(executeError);
-      redis.mset.mockResolvedValue(null);
-      redis.expire.mockResolvedValue(null);
-
-      const [error, result, totalCount] = await repository.getAll(inputRunnerModel);
-
-      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
-      expect(redis.hgetall).toHaveBeenCalled();
-      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
-      expect(redis.mset).toHaveBeenCalled();
-      expect(redis.mset).toBeCalledWith(expect.arrayContaining([
-        `myst_provider:id:${outputVpnProviderData1.id}`,
-        outputVpnProviderData1.providerIdentity,
-        `myst_provider:id:${outputVpnProviderData2.id}`,
-        outputVpnProviderData2.providerIdentity,
-      ]));
-      expect(redis.expire).toHaveBeenCalledTimes(2);
-      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData1.id}`, 5 * 60]));
-      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData2.id}`, 5 * 60]));
-      expect(logger.error).toHaveBeenCalled();
-      expect(error).toBeNull();
-      expect(result.length).toEqual(2);
-      expect(result[0]).toEqual(<VpnProviderModel>{
-        id: outputVpnProviderData1.id,
-        serviceType: outputVpnProviderData1.serviceType,
-        providerName: outputVpnProviderData1.providerName,
-        providerIdentity: outputVpnProviderData1.providerIdentity,
-        providerIpType: outputVpnProviderData1.providerIpType,
-        country: outputVpnProviderData1.country,
-        isRegister: outputVpnProviderData1.isRegister,
-        insertDate: outputVpnProviderData1.insertDate,
-      });
-      expect(result[1]).toEqual(<VpnProviderModel>{
-        id: outputVpnProviderData2.id,
-        serviceType: outputVpnProviderData2.serviceType,
-        providerName: outputVpnProviderData2.providerName,
-        providerIdentity: outputVpnProviderData2.providerIdentity,
-        providerIpType: outputVpnProviderData2.providerIpType,
-        country: outputVpnProviderData2.country,
-        isRegister: outputVpnProviderData2.isRegister,
-        insertDate: outputVpnProviderData2.insertDate,
-      });
-      expect(totalCount).toEqual(2);
-    });
-
     it(`Should successfully get all vpn provider (With empty connection info data)`, async () => {
       mystProviderApiRepository.getAll.mockResolvedValue([
         null,
@@ -443,6 +404,11 @@ describe('MystProviderCacheApiRepository', () => {
     let inputId;
     let outputVpnProviderData: VpnProviderModel;
     let matchFilterProviderIdentity: FilterModel<VpnProviderModel>;
+    let outputRedisGetOne: Array<string>;
+    let outputRedisGetOneEmpty: Array<string>;
+    let outputRedisGetOneNull: Array<string>;
+    let outputRedisGetOneInvalidJson: Array<string>;
+    let outputRedisGetOneInvalidData: Array<string>;
 
     beforeEach(() => {
       inputRunnerModel = defaultModelFactory<RunnerModel>(
@@ -474,6 +440,24 @@ describe('MystProviderCacheApiRepository', () => {
 
       matchFilterProviderIdentity = new FilterModel<VpnProviderModel>();
       matchFilterProviderIdentity.addCondition({$opr: 'eq', providerIdentity: outputVpnProviderData.providerIdentity});
+
+      outputRedisGetOne = [
+        JSON.stringify(
+          {
+            ip: '127.0.0.1',
+          },
+        ),
+      ];
+      outputRedisGetOneEmpty = [];
+      outputRedisGetOneNull = [null];
+      outputRedisGetOneInvalidJson = ['invalid-json'];
+      outputRedisGetOneInvalidData = [
+        JSON.stringify(
+          {
+            ip: 'invalid-ip',
+          },
+        ),
+      ];
     });
 
     it(`Should error get vpn info by id when fetch data from getById (Fail read data from redis)`, async () => {
@@ -562,6 +546,7 @@ describe('MystProviderCacheApiRepository', () => {
     it(`Should successfully get vpn info by id when fetch data from getAll with filter (Return data from redis)`, async () => {
       redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
       mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      redis.hmget.mockResolvedValue(outputRedisGetOneEmpty);
 
       const [error, result] = await repository.getById(inputRunnerModel, inputId);
 
@@ -572,6 +557,8 @@ describe('MystProviderCacheApiRepository', () => {
         $opr: 'eq',
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
       expect(error).toBeNull();
       expect(result).toEqual(<VpnProviderModel>{
         id: outputVpnProviderData.id,
@@ -580,6 +567,154 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
         providerIpType: outputVpnProviderData.providerIpType,
         country: outputVpnProviderData.country,
+        isRegister: outputVpnProviderData.isRegister,
+        insertDate: outputVpnProviderData.insertDate,
+      });
+    });
+
+    it(`Should error get vpn info by id when fail to get connection info from redis`, async () => {
+      redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      const executeError = new Error('Error in execute set on database');
+      redis.hmget.mockRejectedValue(executeError);
+
+      const [error] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(redis.get).toHaveBeenCalled();
+      expect(logger.error).toBeCalledTimes(0);
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: outputVpnProviderData.providerIdentity,
+      });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should error get vpn info by id when fail to parse invalid json`, async () => {
+      redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      redis.hmget.mockResolvedValue(outputRedisGetOneInvalidJson);
+
+      const [error] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(redis.get).toHaveBeenCalled();
+      expect(logger.error).toBeCalledTimes(0);
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: outputVpnProviderData.providerIdentity,
+      });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(error).toBeInstanceOf(FillDataRepositoryException);
+    });
+
+    it(`Should error get vpn info by id when fail to validate key`, async () => {
+      redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      redis.hmget.mockResolvedValue(outputRedisGetOneInvalidData);
+
+      const [error] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(redis.get).toHaveBeenCalled();
+      expect(logger.error).toBeCalledTimes(0);
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: outputVpnProviderData.providerIdentity,
+      });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(error).toBeInstanceOf(FillDataRepositoryException);
+      expect((<FillDataRepositoryException<VpnProviderModel>>error).fillProperties).toEqual(expect.arrayContaining<keyof VpnProviderModel>(['ip']));
+    });
+
+    it(`Should successfully get vpn info by id and return no ip when get connection info is empty`, async () => {
+      redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      redis.hmget.mockResolvedValue(outputRedisGetOneEmpty);
+
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(redis.get).toHaveBeenCalled();
+      expect(logger.error).toBeCalledTimes(0);
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: outputVpnProviderData.providerIdentity,
+      });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(error).toBeNull();
+      expect(result).toEqual(<VpnProviderModel>{
+        id: outputVpnProviderData.id,
+        serviceType: outputVpnProviderData.serviceType,
+        providerName: outputVpnProviderData.providerName,
+        providerIdentity: outputVpnProviderData.providerIdentity,
+        providerIpType: outputVpnProviderData.providerIpType,
+        country: outputVpnProviderData.country,
+        isRegister: outputVpnProviderData.isRegister,
+        insertDate: outputVpnProviderData.insertDate,
+      });
+    });
+
+    it(`Should successfully get vpn info by id and return no ip when get connection info is records with null`, async () => {
+      redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      redis.hmget.mockResolvedValue(outputRedisGetOneNull);
+
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(redis.get).toHaveBeenCalled();
+      expect(logger.error).toBeCalledTimes(0);
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: outputVpnProviderData.providerIdentity,
+      });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(error).toBeNull();
+      expect(result).toEqual(<VpnProviderModel>{
+        id: outputVpnProviderData.id,
+        serviceType: outputVpnProviderData.serviceType,
+        providerName: outputVpnProviderData.providerName,
+        providerIdentity: outputVpnProviderData.providerIdentity,
+        providerIpType: outputVpnProviderData.providerIpType,
+        country: outputVpnProviderData.country,
+        isRegister: outputVpnProviderData.isRegister,
+        insertDate: outputVpnProviderData.insertDate,
+      });
+    });
+
+    it(`Should successfully get vpn info by id and return with ip`, async () => {
+      redis.get.mockResolvedValue(outputVpnProviderData.providerIdentity);
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData], 1]);
+      redis.hmget.mockResolvedValue(outputRedisGetOne);
+
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(redis.get).toHaveBeenCalled();
+      expect(logger.error).toBeCalledTimes(0);
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('providerIdentity')).toMatchObject({
+        $opr: 'eq',
+        providerIdentity: outputVpnProviderData.providerIdentity,
+      });
+      expect(redis.hmget).toHaveBeenCalled();
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(error).toBeNull();
+      expect(result).toEqual(<VpnProviderModel>{
+        id: outputVpnProviderData.id,
+        serviceType: outputVpnProviderData.serviceType,
+        providerName: outputVpnProviderData.providerName,
+        providerIdentity: outputVpnProviderData.providerIdentity,
+        providerIpType: outputVpnProviderData.providerIpType,
+        country: outputVpnProviderData.country,
+        ip: '127.0.0.1',
         isRegister: outputVpnProviderData.isRegister,
         insertDate: outputVpnProviderData.insertDate,
       });
