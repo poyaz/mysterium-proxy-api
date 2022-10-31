@@ -155,6 +155,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(error).toBeInstanceOf(UnknownException);
     });
 
@@ -166,6 +167,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(error).toBeInstanceOf(FillDataRepositoryException);
     });
 
@@ -177,6 +179,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(error).toBeInstanceOf(FillDataRepositoryException);
       expect((<FillDataRepositoryException<VpnProviderModel>>error).fillProperties).toEqual(expect.arrayContaining<keyof VpnProviderModel>(['ip']));
     });
@@ -189,6 +192,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(error).toBeNull();
       expect(result).toHaveLength(0);
       expect(total).toEqual(0);
@@ -208,6 +212,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
         `myst_provider:id:${outputVpnProviderData1.id}`,
@@ -233,6 +238,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
         `myst_provider:id:${outputVpnProviderData1.id}`,
@@ -290,6 +296,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
         `myst_provider:id:${outputVpnProviderData1.id}`,
@@ -327,6 +334,58 @@ describe('MystProviderCacheApiRepository', () => {
       expect(totalCount).toEqual(2);
     });
 
+    it(`Should successfully get all vpn provider (Async get connection info has executed failure)`, async () => {
+      mystProviderApiRepository.getAll.mockResolvedValue([
+        null,
+        [outputVpnProviderData1, outputVpnProviderData2],
+        2,
+      ]);
+      const executeError = new Error('Error in execute set on database');
+      redis.hgetall.mockRejectedValue(executeError);
+      redis.mset.mockResolvedValue(null);
+      redis.expire.mockResolvedValue(null);
+
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel);
+
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
+      expect(redis.mset).toHaveBeenCalled();
+      expect(redis.mset).toBeCalledWith(expect.arrayContaining([
+        `myst_provider:id:${outputVpnProviderData1.id}`,
+        outputVpnProviderData1.providerIdentity,
+        `myst_provider:id:${outputVpnProviderData2.id}`,
+        outputVpnProviderData2.providerIdentity,
+      ]));
+      expect(redis.expire).toHaveBeenCalledTimes(2);
+      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData1.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData2.id}`, 5 * 60]));
+      expect(logger.error).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result.length).toEqual(2);
+      expect(result[0]).toEqual(<VpnProviderModel>{
+        id: outputVpnProviderData1.id,
+        serviceType: outputVpnProviderData1.serviceType,
+        providerName: outputVpnProviderData1.providerName,
+        providerIdentity: outputVpnProviderData1.providerIdentity,
+        providerIpType: outputVpnProviderData1.providerIpType,
+        country: outputVpnProviderData1.country,
+        isRegister: outputVpnProviderData1.isRegister,
+        insertDate: outputVpnProviderData1.insertDate,
+      });
+      expect(result[1]).toEqual(<VpnProviderModel>{
+        id: outputVpnProviderData2.id,
+        serviceType: outputVpnProviderData2.serviceType,
+        providerName: outputVpnProviderData2.providerName,
+        providerIdentity: outputVpnProviderData2.providerIdentity,
+        providerIpType: outputVpnProviderData2.providerIpType,
+        country: outputVpnProviderData2.country,
+        isRegister: outputVpnProviderData2.isRegister,
+        insertDate: outputVpnProviderData2.insertDate,
+      });
+      expect(totalCount).toEqual(2);
+    });
+
     it(`Should successfully get all vpn provider (With empty connection info data)`, async () => {
       mystProviderApiRepository.getAll.mockResolvedValue([
         null,
@@ -341,6 +400,7 @@ describe('MystProviderCacheApiRepository', () => {
 
       expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
       expect(redis.hgetall).toHaveBeenCalled();
+      expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
         `myst_provider:id:${outputVpnProviderData1.id}`,

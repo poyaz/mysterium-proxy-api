@@ -40,7 +40,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
       [connectionInfoError, connectionInfoObj],
     ] = await Promise.all([
       this._mystProviderApiRepository.getAll(runnerModel, filter),
-      this._getProviderConnectionInfo(),
+      this._getProviderConnectionInfoAll(),
     ]);
     if (vpnDataError) {
       return [vpnDataError];
@@ -117,7 +117,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     return Promise.resolve(undefined);
   }
 
-  private async _getProviderConnectionInfo(): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
+  private async _getProviderConnectionInfoAll(): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
     try {
       const data = await this._redis.hgetall(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`);
       const result = await MystProviderCacheApiRepository._fillProviderConnectionInfo(data);
@@ -141,7 +141,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     }
   }
 
-  private static async _fillProviderConnectionInfo(data): Promise<Record<string, ProviderConnectionInfoDto>> {
+  private static async _fillProviderConnectionInfo(data: Record<string, string>): Promise<Record<string, ProviderConnectionInfoDto>> {
     const result = {};
 
     for await (const [key, value] of Object.entries(data)) {
