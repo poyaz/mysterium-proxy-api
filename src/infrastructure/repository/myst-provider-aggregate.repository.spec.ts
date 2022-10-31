@@ -783,9 +783,6 @@ describe('MystProviderAggregateRepository', () => {
         country: 'GB',
         isRegister: true,
         providerStatus: VpnProviderStatusEnum.ONLINE,
-        quality: 2.55,
-        bandwidth: 1016.051438,
-        latency: 49.053841,
         insertDate: new Date(),
       });
 
@@ -916,9 +913,6 @@ describe('MystProviderAggregateRepository', () => {
         runner: inputRunner,
         isRegister: true,
         providerStatus: VpnProviderStatusEnum.ONLINE,
-        quality: outputVpnProviderConnectData.quality,
-        bandwidth: outputVpnProviderConnectData.bandwidth,
-        latency: outputVpnProviderConnectData.latency,
         insertDate: inputVpnProvider.insertDate,
       });
     });

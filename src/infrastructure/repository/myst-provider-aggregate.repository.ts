@@ -162,9 +162,6 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     vpnProviderResultModel.providerStatus = VpnProviderStatusEnum.ONLINE;
     vpnProviderResultModel.ip = connectData.ip;
     vpnProviderResultModel.runner = runner;
-    vpnProviderResultModel.quality = connectData.quality;
-    vpnProviderResultModel.bandwidth = connectData.bandwidth;
-    vpnProviderResultModel.latency = connectData.latency;
     vpnProviderResultModel.isRegister = true;
 
     return [null, vpnProviderResultModel];
