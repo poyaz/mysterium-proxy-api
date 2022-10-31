@@ -114,8 +114,8 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     return this._mystProviderApiRepository.connect(runner, vpnProviderModel);
   }
 
-  disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
+    return this._mystProviderApiRepository.disconnect(runner, force);
   }
 
   registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {

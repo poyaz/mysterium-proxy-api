@@ -806,4 +806,62 @@ describe('MystProviderCacheApiRepository', () => {
       });
     });
   });
+
+  describe(`Disconnect from vpn`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputForce: boolean;
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+      inputForce = true;
+    });
+
+    it(`Should error disconnect from vpn`, async () => {
+      mystProviderApiRepository.disconnect.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.disconnect(inputRunner);
+
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner, undefined);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully disconnect from vpn`, async () => {
+      mystProviderApiRepository.disconnect.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.disconnect(inputRunner);
+
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner, undefined);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully disconnect from vpn (with force flag)`, async () => {
+      mystProviderApiRepository.disconnect.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.disconnect(inputRunner, inputForce);
+
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystProviderApiRepository.disconnect).toHaveBeenCalledWith(inputRunner, inputForce);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
