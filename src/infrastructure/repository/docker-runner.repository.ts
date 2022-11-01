@@ -226,7 +226,7 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
         throw new FillDataRepositoryException<RunnerModel>(['service']);
     }
 
-    switch (row.State) {
+    switch (row.State.toLowerCase()) {
       case RunnerStatusEnum.CREATING:
         status = RunnerStatusEnum.CREATING;
         break;
