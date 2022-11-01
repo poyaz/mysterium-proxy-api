@@ -20,6 +20,7 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {NotFoundMystIdentityException} from '@src-core/exception/not-found-myst-identity.exception';
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
+import {setTimeout} from 'timers/promises';
 
 @Injectable()
 export class MystProviderService implements IProviderServiceInterface {
@@ -88,6 +89,13 @@ export class MystProviderService implements IProviderServiceInterface {
     if (mystRunnerList[0].status !== RunnerStatusEnum.RUNNING) {
       return [new NotRunningServiceException()];
     }
+
+    const [forceDisconnectError] = await this._mystApiRepository.disconnect(mystRunnerList[0], true);
+    if (forceDisconnectError) {
+      return [forceDisconnectError];
+    }
+
+    await setTimeout(1000, 'resolved');
 
     providerData.userIdentity = freeMystIdentityList[0].identity;
     return this._mystApiRepository.connect(mystRunnerList[0], providerData);

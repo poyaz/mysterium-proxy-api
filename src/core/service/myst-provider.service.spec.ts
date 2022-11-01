@@ -422,10 +422,53 @@ describe('MystProviderService', () => {
       expect(error).toBeInstanceOf(NotRunningServiceException);
     });
 
+    it(`Should error connect to vpn when forcing to disconnect before connecting`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputProviderModel]);
+      mystIdentityService.getAll.mockResolvedValue([null, [outputMystIdentityNotUseModel1], 1]);
+      dockerRunnerService.findAll.mockResolvedValue([null, [outputRunnerRunningModel], 1]);
+      mystApiRepository.disconnect.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.up(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(mystIdentityService.getAll).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>mystIdentityService.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
+      expect((<FilterModel<MystIdentityModel>>mystIdentityService.getAll.mock.calls[0][0]).getCondition('isUse')).toEqual<FilterInstanceType<MystIdentityModel> & { $opr: FilterOperationType }>({
+        $opr: 'eq',
+        isUse: false,
+      });
+      expect(dockerRunnerService.findAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerService.findAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(2);
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerService.findAll.mock.calls[0][0]).getCondition('service')).toEqual<FilterInstanceType<RunnerModel<MystIdentityModel>> & { $opr: FilterOperationType }>({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel<MystIdentityModel>>>dockerRunnerService.findAll.mock.calls[0][0]).getCondition('label')).toEqual<FilterInstanceType<RunnerModel<MystIdentityModel>> & { $opr: FilterOperationType }>({
+        $opr: 'eq',
+        label: {
+          $namespace: MystIdentityModel.name,
+          id: outputMystIdentityNotUseModel1.id,
+        },
+      });
+      expect(mystApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystApiRepository.disconnect).toHaveBeenCalledWith(
+        expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: outputRunnerRunningModel.socketUri,
+          socketPort: outputRunnerRunningModel.socketPort,
+        }),
+        true,
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
     it(`Should error connect to vpn when trying connect vpn`, async () => {
       mystApiRepository.getById.mockResolvedValue([null, outputProviderModel]);
       mystIdentityService.getAll.mockResolvedValue([null, [outputMystIdentityNotUseModel1], 1]);
       dockerRunnerService.findAll.mockResolvedValue([null, [outputRunnerRunningModel], 1]);
+      mystApiRepository.disconnect.mockResolvedValue([null, null]);
       mystApiRepository.connect.mockResolvedValue([new UnknownException()]);
 
       const [error] = await service.up(inputId);
@@ -452,6 +495,15 @@ describe('MystProviderService', () => {
           id: outputMystIdentityNotUseModel1.id,
         },
       });
+      expect(mystApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystApiRepository.disconnect).toHaveBeenCalledWith(
+        expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: outputRunnerRunningModel.socketUri,
+          socketPort: outputRunnerRunningModel.socketPort,
+        }),
+        true,
+      );
       expect(mystApiRepository.connect).toHaveBeenCalled();
       expect(mystApiRepository.connect).toHaveBeenCalledWith(
         expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
@@ -471,6 +523,7 @@ describe('MystProviderService', () => {
       mystApiRepository.getById.mockResolvedValue([null, outputProviderModel]);
       mystIdentityService.getAll.mockResolvedValue([null, [outputMystIdentityNotUseModel1], 1]);
       dockerRunnerService.findAll.mockResolvedValue([null, [outputRunnerRunningModel], 1]);
+      mystApiRepository.disconnect.mockResolvedValue([null, null]);
       mystApiRepository.connect.mockResolvedValue([null, outputProviderRegisterModel]);
 
       const [error, result] = await service.up(inputId);
@@ -497,6 +550,15 @@ describe('MystProviderService', () => {
           id: outputMystIdentityNotUseModel1.id,
         },
       });
+      expect(mystApiRepository.disconnect).toHaveBeenCalled();
+      expect(mystApiRepository.disconnect).toHaveBeenCalledWith(
+        expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: outputRunnerRunningModel.socketUri,
+          socketPort: outputRunnerRunningModel.socketPort,
+        }),
+        true,
+      );
       expect(mystApiRepository.connect).toHaveBeenCalled();
       expect(mystApiRepository.connect).toHaveBeenCalledWith(
         expect.objectContaining<Pick<RunnerModel, 'socketType' | 'socketUri' | 'socketPort'>>({
