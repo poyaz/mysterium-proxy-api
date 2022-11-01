@@ -801,72 +801,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect((<FillDataRepositoryException<EndpointSettings>>error).fillProperties).toEqual(expect.arrayContaining(<Array<keyof EndpointSettings>>['IPAddress']));
     });
 
-    it(`Should error create container when generate container name according to container list`, async () => {
-      const parseLabelMock = jest.fn().mockReturnValue([null]);
-      const getClassInstanceMock = jest.fn().mockReturnValue([null, outputMystIdentityValid]);
-      const convertLabelToObjectMock = jest.fn()
-        .mockReturnValueOnce({
-          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-          [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
-        })
-        .mockReturnValueOnce({
-          [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
-        });
-      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
-        return {
-          parseLabel: parseLabelMock,
-          getClassInstance: getClassInstanceMock,
-          convertLabelToObject: convertLabelToObjectMock,
-        };
-      });
-      docker.getVolume.mockResolvedValue(<never>outputVolume);
-      outputVolume.inspect.mockResolvedValue(outputVolumeInspect);
-      docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
-      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
-      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      const executeError = new Error('Error on create container');
-      docker.listContainers.mockRejectedValueOnce(executeError);
-
-      const [error] = await repository.create(inputRunner);
-
-      expect(DockerLabelParser).toHaveBeenCalled();
-      expect(parseLabelMock).toHaveBeenCalled();
-      expect(getClassInstanceMock).toHaveBeenCalled();
-      expect(getClassInstanceMock).toHaveBeenCalledWith(MystIdentityModel);
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(2);
-      expect(convertLabelToObjectMock.mock.calls[0][0]).toEqual(namespace);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['passphrase']));
-      expect(docker.getVolume).toHaveBeenCalled();
-      expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
-      expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
-      expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
-      expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[0][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          status: ['created'],
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-            `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
-          ],
-        }),
-      });
-      expect(docker.getNetwork).toHaveBeenCalled();
-      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
-      expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
-      expect(error).toBeInstanceOf(RepositoryException);
-      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
-    });
-
     it(`Should error create container (don't retry)`, async () => {
       const parseLabelMock = jest.fn().mockReturnValue([null]);
       const getClassInstanceMock = jest.fn().mockReturnValue([null, outputMystIdentityValid]);
@@ -890,7 +824,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       const executeError = new Error('Error on create container');
       docker.createContainer.mockRejectedValue(executeError);
 
@@ -906,7 +839,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -922,18 +855,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -994,7 +919,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       outputCreateContainer.start.mockRejectedValue(executeError);
@@ -1011,7 +935,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1027,18 +951,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1072,7 +988,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(outputCreateContainer.start).toHaveBeenCalled();
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[2][0]).toEqual({
+      expect(docker.listContainers.mock.calls[1][0]).toEqual({
         all: true,
         filters: JSON.stringify({
           status: ['created'],
@@ -1109,7 +1025,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       outputCreateContainer.start.mockResolvedValue();
       (<jest.Mock>DockerLabelParser.convertObjectToLabel).mockReturnValue(<RunnerLabelNamespace<MystIdentityModel>>{
@@ -1130,7 +1045,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1146,18 +1061,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1198,7 +1105,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(result).toMatchObject<RunnerModel<MystIdentityModel>>({
         id: identifierMock.generateId(),
         serial: outputCreateContainer.id,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         service: RunnerServiceEnum.MYST,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.HTTP,
@@ -1254,11 +1161,8 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       executeError['statusCode'] = 403;
@@ -1278,7 +1182,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(7);
+      expect(docker.listContainers).toHaveBeenCalledTimes(4);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1305,7 +1209,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       });
       expect(convertLabelToObjectMock.mock.calls[3][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[3][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[4][0]).toEqual({
+      expect(docker.listContainers.mock.calls[3][0]).toEqual({
         all: true,
         filters: JSON.stringify({
           status: ['created'],
@@ -1318,34 +1222,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalledTimes(3);
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalledTimes(3);
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
-      expect(docker.listContainers.mock.calls[3][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
-      expect(docker.listContainers.mock.calls[5][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalledTimes(3);
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1383,16 +1263,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect((<jest.Mock>setTimeout).mock.calls[2][0]).toEqual(expect.any(Number));
       expect(convertLabelToObjectMock.mock.calls[4][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[4][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[6][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          status: ['created'],
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-            `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
-          ],
-        }),
-      });
       expect(error).toBeInstanceOf(UnknownException);
     });
 
@@ -1422,7 +1292,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       outputCreateContainer.start.mockRejectedValue(executeError);
@@ -1441,7 +1310,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1457,18 +1326,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1502,7 +1363,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(outputCreateContainer.start).toHaveBeenCalled();
       expect(convertLabelToObjectMock.mock.calls[2][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[2][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[2][0]).toEqual({
+      expect(docker.listContainers.mock.calls[1][0]).toEqual({
         all: true,
         filters: JSON.stringify({
           status: ['created'],
@@ -1542,7 +1403,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       outputCreateContainer.start.mockRejectedValue(executeError);
@@ -1562,7 +1422,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1578,18 +1438,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1623,7 +1475,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(outputCreateContainer.start).toHaveBeenCalled();
       expect(convertLabelToObjectMock.mock.calls[2][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[2][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[2][0]).toEqual({
+      expect(docker.listContainers.mock.calls[1][0]).toEqual({
         all: true,
         filters: JSON.stringify({
           status: ['created'],
@@ -1665,7 +1517,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       outputCreateContainer.start.mockRejectedValue(executeError);
@@ -1686,7 +1537,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1702,18 +1553,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1747,7 +1590,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(outputCreateContainer.start).toHaveBeenCalled();
       expect(convertLabelToObjectMock.mock.calls[2][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[2][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[2][0]).toEqual({
+      expect(docker.listContainers.mock.calls[1][0]).toEqual({
         all: true,
         filters: JSON.stringify({
           status: ['created'],
@@ -1791,7 +1634,6 @@ describe('DockerRunnerCreateMystRepository', () => {
       docker.listContainers.mockResolvedValueOnce(outputEmptyCreatedContainerList);
       docker.getNetwork.mockResolvedValue(<never>outputNetwork);
       outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
-      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       outputCreateContainer.start.mockRejectedValue(executeError);
@@ -1811,7 +1653,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getVolume).toHaveBeenCalled();
       expect(docker.getVolume).toHaveBeenCalledWith(`myst-keystore-${outputMystIdentityValid.identity}`);
       expect(outputVolume.inspect).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
       expect(convertLabelToObjectMock.mock.calls[1][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[1][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
       expect(docker.listContainers.mock.calls[0][0]).toEqual({
@@ -1827,18 +1669,10 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.getNetwork).toHaveBeenCalled();
       expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
       expect(outputNetwork.inspect).toHaveBeenCalled();
-      expect(docker.listContainers.mock.calls[1][0]).toEqual({
-        all: true,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-          ],
-        }),
-      });
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
-        name: `${RunnerServiceEnum.MYST}2`,
+        name: RunnerServiceEnum.MYST,
         Labels: {
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
@@ -1872,7 +1706,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(outputCreateContainer.start).toHaveBeenCalled();
       expect(convertLabelToObjectMock.mock.calls[2][0]).toEqual(namespace);
       expect(convertLabelToObjectMock.mock.calls[2][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['id', 'passphrase']));
-      expect(docker.listContainers.mock.calls[2][0]).toEqual({
+      expect(docker.listContainers.mock.calls[1][0]).toEqual({
         all: true,
         filters: JSON.stringify({
           status: ['created'],

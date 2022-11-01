@@ -219,30 +219,12 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
       ],
     };
 
+
+    const id = this._identity.generateId();
+    const name = model.name;
+
     const containerInfo = {isCreated: false};
     try {
-      const containerList = await this._docker.listContainers({
-        all: true,
-        filters: JSON.stringify(filtersObj),
-      });
-
-      const containerNumberList = containerList
-        .map((v) => /[a-zA-Z]+([0-9]+)$/.exec(v.Names[0]))
-        .map((v) => Number(v[1]))
-        .sort();
-
-      let nextContainerCounter = 1;
-      for (let i = 0; i < containerNumberList.length; i++) {
-        if (containerNumberList[i] !== nextContainerCounter) {
-          break;
-        }
-
-        nextContainerCounter++;
-      }
-
-      const id = this._identity.generateId();
-      const name = `${model.name}${nextContainerCounter}`;
-
       const container = await this._docker.createContainer({
         Image: this._mystContainerOption.imageName,
         name,
