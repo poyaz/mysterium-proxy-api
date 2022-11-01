@@ -5,7 +5,7 @@ import {MystProviderApiRepository} from './myst-provider-api.repository';
 import {
   VpnProviderIpTypeEnum,
   VpnProviderModel,
-  VpnProviderName,
+  VpnProviderName, VpnProviderStatusEnum,
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
 import {mock, MockProxy} from 'jest-mock-extended';
@@ -21,16 +21,29 @@ import {
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
 import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
+import {Logger} from '@nestjs/common';
+import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 
 jest.mock('axios');
 
 describe('MystProviderApiRepository', () => {
   let repository: MystProviderApiRepository;
   let identifierMock: MockProxy<IIdentifier>;
+  let username: string;
+  let password: string;
+  let logger: MockProxy<Logger>;
 
   beforeEach(async () => {
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
+
+    username = 'user';
+    password = 'pass';
+
+    logger = mock<Logger>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -39,10 +52,14 @@ describe('MystProviderApiRepository', () => {
           useValue: identifierMock,
         },
         {
+          provide: Logger,
+          useValue: logger,
+        },
+        {
           provide: MystProviderApiRepository,
-          inject: [ProviderTokenEnum.IDENTIFIER_UUID],
-          useFactory: (identifier: IIdentifier) =>
-            new MystProviderApiRepository(identifier, 'https://myst.com'),
+          inject: [ProviderTokenEnum.IDENTIFIER_UUID, Logger],
+          useFactory: (identifier: IIdentifier, logger: Logger) =>
+            new MystProviderApiRepository(identifier, 'https://myst.com', username, password, logger),
         },
       ],
     }).compile();
@@ -783,6 +800,219 @@ describe('MystProviderApiRepository', () => {
         latency: outputAxiosData.quality.latency,
         insertDate: new Date(),
       });
+    });
+  });
+
+  describe(`Connect to vpn`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputVpnProvider: VpnProviderModel;
+    let outputApiTokenJson: { token: string };
+    let outputApiConnectionExist: { error: { code: string, message: string } };
+    let outputApiConnectionIp: { ip: string };
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputVpnProvider = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'identity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+
+      outputApiTokenJson = {token: 'token'};
+      outputApiConnectionExist = {error: {code: 'err_connection_already_exists', message: 'Connection already exists'}};
+
+      outputApiConnectionIp = {ip: '127.0.0.1'};
+    });
+
+    it(`Should error connect to vpn when get token`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post).mockRejectedValue(apiError);
+
+      const [error] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should error connect to vpn when trying to connect`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.put).mockRejectedValue(apiError);
+
+      const [error] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.put).toHaveBeenCalled();
+      expect(axios.put).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          consumer_id: inputVpnProvider.userIdentity,
+          provider_id: inputVpnProvider.providerIdentity,
+          service_type: inputVpnProvider.serviceType,
+        },
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should error connect to vpn when connection in use`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      const apiError = new Error('API call error');
+      apiError['response'] = {data: outputApiConnectionExist};
+      (<jest.Mock>axios.put).mockRejectedValue(apiError);
+
+      const [error] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.put).toHaveBeenCalled();
+      expect(axios.put).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          consumer_id: inputVpnProvider.userIdentity,
+          provider_id: inputVpnProvider.providerIdentity,
+          service_type: inputVpnProvider.serviceType,
+        },
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeInstanceOf(ProviderIdentityInUseException);
+    });
+
+    it(`Should successfully connect to vpn (Fail to fill ip)`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      (<jest.Mock>axios.put).mockReturnValue(null);
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.get).mockRejectedValue(apiError);
+      logger.error.mockReturnValue(null);
+
+      const [error, result] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.put).toHaveBeenCalled();
+      expect(axios.put).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          consumer_id: inputVpnProvider.userIdentity,
+          provider_id: inputVpnProvider.providerIdentity,
+          service_type: inputVpnProvider.serviceType,
+        },
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(axios.get).toHaveBeenCalled();
+      expect(axios.get).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection\/ip$/),
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(logger.error).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toEqual(inputVpnProvider);
+    });
+
+    it(`Should successfully connect to vpn (Successfully to fill ip)`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      (<jest.Mock>axios.put).mockReturnValue(null);
+      (<jest.Mock>axios.get).mockReturnValue({data: outputApiConnectionIp});
+
+      const [error, result] = await repository.connect(inputRunner, inputVpnProvider);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.put).toHaveBeenCalled();
+      expect(axios.put).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          consumer_id: inputVpnProvider.userIdentity,
+          provider_id: inputVpnProvider.providerIdentity,
+          service_type: inputVpnProvider.serviceType,
+        },
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(axios.get).toHaveBeenCalled();
+      expect(axios.get).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection\/ip$/),
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeNull();
+      expect(result).toEqual(inputVpnProvider);
+      expect(result.ip).toEqual(outputApiConnectionIp.ip);
     });
   });
 });

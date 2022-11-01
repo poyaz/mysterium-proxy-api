@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {AsyncReturn} from '@src-core/utility';
 import {
   VpnProviderIpTypeEnum,
@@ -14,12 +14,19 @@ import {FillDataRepositoryException} from '@src-core/exception/fill-data-reposit
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {RunnerModel} from '@src-core/model/runner.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
+import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
 
 @Injectable()
 export class MystProviderApiRepository implements IMystApiRepositoryInterface {
   private readonly _myst_api_prefix;
 
-  constructor(private readonly _identifier: IIdentifier, myst_api_address) {
+  constructor(
+    private readonly _identifier: IIdentifier,
+    myst_api_address,
+    private readonly _myst_api_username,
+    private readonly _myst_api_password,
+    private readonly _logger: Logger,
+  ) {
     this._myst_api_prefix = `${myst_api_address.replace(/^(.+)\/+$/g, '$1')}/api/v3/`;
   }
 
@@ -121,8 +128,51 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
     }
   }
 
-  connect(runner: RunnerModel, VpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
-    return Promise.resolve(undefined);
+  async connect(runner: RunnerModel, vpnProviderModel: VpnProviderModel): Promise<AsyncReturn<Error, VpnProviderModel>> {
+    const hostAddr = `http://${runner.socketUri}:${runner.socketPort}`;
+
+    const [loginError, loginToken] = await this._doLogin(hostAddr);
+    if (loginError) {
+      return [loginError];
+    }
+
+    try {
+      await axios.put(
+        `http://${hostAddr}/tequilapi/connection`,
+        {
+          consumer_id: vpnProviderModel.userIdentity,
+          provider_id: vpnProviderModel.providerIdentity,
+          service_type: vpnProviderModel.serviceType,
+        },
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: loginToken,
+          },
+        },
+      );
+
+      const [currentIpError, currentIpData] = await MystProviderApiRepository._getCurrentIp(hostAddr, loginToken);
+      if (currentIpError) {
+        this._logger.error(
+          `Error to get ip address of provider "${vpnProviderModel.providerIdentity}"`,
+          currentIpError.stack,
+          this.constructor.name,
+        );
+
+        return [null, vpnProviderModel];
+      }
+
+      vpnProviderModel.ip = currentIpData;
+
+      return [null, vpnProviderModel];
+    } catch (error) {
+      if (error?.response?.data?.error?.code === 'err_connection_already_exists') {
+        return [new ProviderIdentityInUseException()];
+      }
+
+      return [new RepositoryException(error)];
+    }
   }
 
   disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
@@ -165,6 +215,46 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
         return VpnProviderIpTypeEnum.MOBILE;
       default:
         throw new FillDataRepositoryException<VpnProviderModel>(['serviceType']);
+    }
+  }
+
+  private async _doLogin(hostAddr: string): Promise<AsyncReturn<Error, string>> {
+    try {
+      const response = await axios.post(
+        `http://${hostAddr}/tequilapi/auth/login`,
+        {
+          username: this._myst_api_username,
+          password: this._myst_api_password,
+        },
+        {
+          headers: {
+            'content-type': 'application.json',
+          },
+        },
+      );
+      const token = `Bearer ${response.data.token}`;
+
+      return [null, token];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
+  }
+
+  private static async _getCurrentIp(hostAddr: string, token: string): Promise<AsyncReturn<Error, string>> {
+    try {
+      const response = await axios.get(
+        `http://${hostAddr}/tequilapi/connection/ip`,
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: token,
+          },
+        },
+      );
+
+      return [null, response.data['ip'] || null];
+    } catch (error) {
+      return [new RepositoryException(error)];
     }
   }
 }
