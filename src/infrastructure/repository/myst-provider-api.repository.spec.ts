@@ -1218,7 +1218,7 @@ describe('MystProviderApiRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(apiError);
     });
 
-    it(`Should error register identity when register account`, async () => {
+    it(`Should error register identity when trying register account`, async () => {
       const apiError = new Error('API call error');
       (<jest.Mock>axios.post)
         .mockResolvedValueOnce({data: outputApiTokenJson})
@@ -1266,6 +1266,116 @@ describe('MystProviderApiRepository', () => {
         2,
         expect.stringMatching(/\/tequilapi\/identities\/.+\/register$/),
         {},
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe(`Unlock identity`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputMystIdentity: MystIdentityModel;
+    let outputApiTokenJson: { token: string };
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputMystIdentity = new MystIdentityModel({
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+        passphrase: 'passphrase identity1',
+        path: '/path/of/identity1',
+        filename: 'identity1.json',
+        isUse: true,
+        insertDate: new Date(),
+      });
+
+      outputApiTokenJson = {token: 'token'};
+    });
+
+    it(`Should error unlock identity when get token`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post).mockRejectedValue(apiError);
+
+      const [error] = await repository.unlockIdentity(inputRunner, inputMystIdentity);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should error unlock identity when trying unlock`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post).mockResolvedValue({data: outputApiTokenJson});
+      (<jest.Mock>axios.put).mockRejectedValue(apiError);
+
+      const [error] = await repository.unlockIdentity(inputRunner, inputMystIdentity);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.put).toHaveBeenCalled();
+      expect(axios.put).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/identities\/.+\/unlock$/),
+        {passphrase: inputMystIdentity.passphrase},
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should successfully unlock identity`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post).mockResolvedValue({data: outputApiTokenJson});
+      (<jest.Mock>axios.put).mockResolvedValue(null);
+
+      const [error, result] = await repository.unlockIdentity(inputRunner, inputMystIdentity);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.put).toHaveBeenCalled();
+      expect(axios.put).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/identities\/.+\/unlock$/),
+        {passphrase: inputMystIdentity.passphrase},
         {
           headers: {
             'content-type': 'application.json',
