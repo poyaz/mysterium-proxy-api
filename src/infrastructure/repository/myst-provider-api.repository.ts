@@ -15,6 +15,7 @@ import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-reposi
 import {RunnerModel} from '@src-core/model/runner.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
+import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
 
 @Injectable()
 export class MystProviderApiRepository implements IMystApiRepositoryInterface {
@@ -175,8 +176,37 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
     }
   }
 
-  disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async disconnect(runner: RunnerModel, force?: boolean): Promise<AsyncReturn<Error, null>> {
+    const hostAddr = `http://${runner.socketUri}:${runner.socketPort}`;
+
+    const [loginError, loginToken] = await this._doLogin(hostAddr);
+    if (loginError) {
+      return [loginError];
+    }
+
+    try {
+      await axios.delete(
+        `http://${hostAddr}/tequilapi/connection`,
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: loginToken,
+          },
+        },
+      );
+
+      return [null, null];
+    } catch (error) {
+      if (error?.response?.data?.error?.code === 'err_no_connection_exists') {
+        if (force) {
+          return [null, null];
+        }
+
+        return [new ProviderIdentityNotConnectingException()];
+      }
+
+      return [new RepositoryException(error)];
+    }
   }
 
   registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {

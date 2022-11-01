@@ -26,6 +26,7 @@ import {UnknownException} from '@src-core/exception/unknown.exception';
 import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
 import {Logger} from '@nestjs/common';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
+import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
 
 jest.mock('axios');
 
@@ -1013,6 +1014,162 @@ describe('MystProviderApiRepository', () => {
       expect(error).toBeNull();
       expect(result).toEqual(inputVpnProvider);
       expect(result.ip).toEqual(outputApiConnectionIp.ip);
+    });
+  });
+
+  describe(`Disconnect from vpn`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputForce: boolean;
+    let outputApiTokenJson: { token: string };
+    let outputApiConnectionNotExist: { error: { code: string, message: string } };
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+      inputForce = true;
+
+      outputApiTokenJson = {token: 'token'};
+
+      outputApiConnectionNotExist = {error: {code: 'err_no_connection_exists', message: 'No connection exists'}};
+    });
+
+    it(`Should error disconnect from vpn when get token`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post).mockRejectedValue(apiError);
+
+      const [error] = await repository.disconnect(inputRunner);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should error disconnect from vpn when trying to disconnect`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.delete).mockRejectedValue(apiError);
+
+      const [error] = await repository.disconnect(inputRunner);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.delete).toHaveBeenCalled();
+      expect(axios.delete).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should error disconnect from vpn when connection not exist (Without force)`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      const apiError = new Error('API call error');
+      apiError['response'] = {data: outputApiConnectionNotExist};
+      (<jest.Mock>axios.delete).mockRejectedValue(apiError);
+
+      const [error] = await repository.disconnect(inputRunner);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.delete).toHaveBeenCalled();
+      expect(axios.delete).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeInstanceOf(ProviderIdentityNotConnectingException);
+    });
+
+    it(`Should successfully disconnect from vpn (Without force)`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      (<jest.Mock>axios.delete).mockReturnValue(null);
+
+      const [error, result] = await repository.disconnect(inputRunner);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.delete).toHaveBeenCalled();
+      expect(axios.delete).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully disconnect from vpn when connection not exist (With force)`, async () => {
+      (<jest.Mock>axios.post).mockReturnValue({data: outputApiTokenJson});
+      const apiError = new Error('API call error');
+      apiError['response'] = {data: outputApiConnectionNotExist};
+      (<jest.Mock>axios.delete).mockRejectedValue(apiError);
+
+      const [error, result] = await repository.disconnect(inputRunner, inputForce);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.delete).toHaveBeenCalled();
+      expect(axios.delete).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/connection$/),
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });
