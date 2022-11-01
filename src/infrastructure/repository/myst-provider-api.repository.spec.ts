@@ -1172,4 +1172,109 @@ describe('MystProviderApiRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe(`Register identity`, () => {
+    let inputRunner: RunnerModel<MystIdentityModel>;
+    let inputUserIdentity: string;
+    let outputApiTokenJson: { token: string };
+
+    beforeEach(() => {
+      inputRunner = new RunnerModel<MystIdentityModel>({
+        id: identifierMock.generateId(),
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      inputRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: identifierMock.generateId(),
+        identity: 'identity1',
+      };
+
+      inputUserIdentity = 'identity1';
+
+      outputApiTokenJson = {token: 'token'};
+    });
+
+    it(`Should error register identity when get token`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post).mockRejectedValue(apiError);
+
+      const [error] = await repository.registerIdentity(inputRunner, inputUserIdentity);
+
+      expect(axios.post).toHaveBeenCalled();
+      expect(axios.post).toBeCalledWith(
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should error register identity when register account`, async () => {
+      const apiError = new Error('API call error');
+      (<jest.Mock>axios.post)
+        .mockResolvedValueOnce({data: outputApiTokenJson})
+        .mockRejectedValueOnce(apiError);
+
+      const [error] = await repository.registerIdentity(inputRunner, inputUserIdentity);
+
+      expect(axios.post).toHaveBeenCalledTimes(2);
+      expect(axios.post).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.post).toHaveBeenNthCalledWith(
+        2,
+        expect.stringMatching(/\/tequilapi\/identities\/.+\/register$/),
+        {},
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(apiError);
+    });
+
+    it(`Should successfully register identity`, async () => {
+      (<jest.Mock>axios.post)
+        .mockResolvedValueOnce({data: outputApiTokenJson})
+        .mockResolvedValueOnce(null);
+
+      const [error, result] = await repository.registerIdentity(inputRunner, inputUserIdentity);
+
+      expect(axios.post).toHaveBeenCalledTimes(2);
+      expect(axios.post).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(/\/tequilapi\/auth\/login$/),
+        {username, password},
+        {headers: {'content-type': 'application.json'}},
+      );
+      expect(axios.post).toHaveBeenNthCalledWith(
+        2,
+        expect.stringMatching(/\/tequilapi\/identities\/.+\/register$/),
+        {},
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: `Bearer ${outputApiTokenJson.token}`,
+          },
+        },
+      );
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });

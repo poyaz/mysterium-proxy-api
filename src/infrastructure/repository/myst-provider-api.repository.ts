@@ -209,8 +209,30 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
     }
   }
 
-  registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async registerIdentity(runner: RunnerModel, userIdentity: string): Promise<AsyncReturn<Error, null>> {
+    const hostAddr = `http://${runner.socketUri}:${runner.socketPort}`;
+
+    const [loginError, loginToken] = await this._doLogin(hostAddr);
+    if (loginError) {
+      return [loginError];
+    }
+
+    try {
+      await axios.post(
+        `http://${hostAddr}/tequilapi/identities/${userIdentity}/register`,
+        {},
+        {
+          headers: {
+            'content-type': 'application.json',
+            authorization: loginToken,
+          },
+        },
+      );
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   unlockIdentity(runner: RunnerModel, identity: MystIdentityModel): Promise<AsyncReturn<Error, null>> {
