@@ -22,7 +22,7 @@ import {EndpointSettings} from 'dockerode';
 import {setTimeout} from 'timers/promises';
 import Docker = require('dockerode');
 
-export type MystDockerContainerOption = {
+type MystDockerContainerOption = {
   imageName: string,
   httpPort: number,
   dataVolumePath: string,
