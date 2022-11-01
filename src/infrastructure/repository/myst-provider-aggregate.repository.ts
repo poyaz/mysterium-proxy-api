@@ -131,7 +131,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       {
         id: 'default-id',
         serial: 'default-serial',
-        name: 'default-name',
+        name: `${RunnerServiceEnum.MYST_CONNECT}-${vpnProviderModel.providerIdentity}`,
         service: RunnerServiceEnum.MYST_CONNECT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.NONE,
@@ -151,7 +151,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       },
-      ['id', 'serial', 'name', 'status', 'insertDate'],
+      ['id', 'serial', 'status', 'insertDate'],
     );
     const [mystConnectError] = await this._dockerRunnerRepository.create<[MystIdentityModel, VpnProviderModel]>(mystConnectRunnerCreateModel);
     if (mystConnectError) {

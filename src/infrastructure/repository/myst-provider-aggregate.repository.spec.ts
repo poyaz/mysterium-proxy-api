@@ -832,12 +832,12 @@ describe('MystProviderAggregateRepository', () => {
       expect(dockerRunnerRepository.create).toHaveBeenCalled();
       expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).IS_DEFAULT_MODEL).toEqual(true);
       expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
-        expect.arrayContaining<keyof RunnerModel>(['id', 'serial', 'name', 'status', 'insertDate']),
+        expect.arrayContaining<keyof RunnerModel>(['id', 'serial', 'status', 'insertDate']),
       );
       expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> | { _defaultProperties: Array<any> }>({
         id: 'default-id',
         serial: 'default-serial',
-        name: 'default-name',
+        name: `${RunnerServiceEnum.MYST_CONNECT}-${inputVpnProvider.providerIdentity}`,
         service: RunnerServiceEnum.MYST_CONNECT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.NONE,
@@ -873,12 +873,12 @@ describe('MystProviderAggregateRepository', () => {
       expect(dockerRunnerRepository.create).toHaveBeenCalled();
       expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).IS_DEFAULT_MODEL).toEqual(true);
       expect((<DefaultModel<RunnerModel>><any>dockerRunnerRepository.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
-        expect.arrayContaining<keyof RunnerModel>(['id', 'serial', 'name', 'status', 'insertDate']),
+        expect.arrayContaining<keyof RunnerModel>(['id', 'serial', 'status', 'insertDate']),
       );
       expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> | { _defaultProperties: Array<any> }>({
         id: 'default-id',
         serial: 'default-serial',
-        name: 'default-name',
+        name: `${RunnerServiceEnum.MYST_CONNECT}-${inputVpnProvider.providerIdentity}`,
         service: RunnerServiceEnum.MYST_CONNECT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.NONE,
