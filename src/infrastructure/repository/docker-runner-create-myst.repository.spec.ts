@@ -92,7 +92,6 @@ describe('DockerRunnerCreateMystRepository', () => {
     let outputVolumeInspect: Object;
     let outputEmptyCreatedContainerList: Array<Dockerode.ContainerInfo>;
     let outputCreatedContainerList: Array<Dockerode.ContainerInfo>;
-    let outputExistContainerList: Array<Dockerode.ContainerInfo>;
     let outputContainer: { remove: any };
     let outputNetwork: { inspect: any };
     let outputLimitedNetworkInspect: Object;
@@ -175,44 +174,6 @@ describe('DockerRunnerCreateMystRepository', () => {
           },
           State: 'created',
           Status: 'Created',
-          HostConfig: {NetworkMode: 'bridge'},
-          NetworkSettings: {Networks: {}},
-          Mounts: [],
-        },
-      ];
-      outputExistContainerList = [
-        {
-          Id: 'container-id1',
-          Names: [`/${RunnerServiceEnum.MYST}1`],
-          Image: 'image-name:image-tag',
-          ImageID: 'sha256:image-id',
-          Command: '/bin/sh',
-          Created: 1665472068,
-          Ports: [],
-          Labels: {
-            [`${namespace}.project`]: RunnerServiceEnum.MYST,
-            [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
-          },
-          State: 'running',
-          Status: 'Running',
-          HostConfig: {NetworkMode: 'bridge'},
-          NetworkSettings: {Networks: {}},
-          Mounts: [],
-        },
-        {
-          Id: 'container-id3',
-          Names: [`/${RunnerServiceEnum.MYST}3`],
-          Image: 'image-name:image-tag',
-          ImageID: 'sha256:image-id',
-          Command: '/bin/sh',
-          Created: 1665472068,
-          Ports: [],
-          Labels: {
-            [`${namespace}.project`]: RunnerServiceEnum.MYST,
-            [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
-          },
-          State: 'running',
-          Status: 'Running',
           HostConfig: {NetworkMode: 'bridge'},
           NetworkSettings: {Networks: {}},
           Mounts: [],
