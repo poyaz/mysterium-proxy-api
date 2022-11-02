@@ -83,6 +83,12 @@ export enum ProviderTokenEnum {
   DOCKER_RUNNER_CREATE_MYST_REPOSITORY = 'DOCKER_RUNNER_CREATE_MYST_REPOSITORY',
   /**
    *
+   * {@link DockerRunnerCreateMystConnectRepository}
+   * @implements ICreateRunnerRepository
+   */
+  DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY = 'DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY',
+  /**
+   *
    * {@link DockerRunnerCreateStrategyRepository}
    * @implements ICreateRunnerRepository
    */
@@ -101,7 +107,7 @@ export enum ProviderTokenEnum {
   MYST_PROVIDER_API_REPOSITORY = 'MYST_PROVIDER_API_REPOSITORY',
   /**
    *
-   * {@link MystProviderCacheIdApiRepository}
+   * {@link MystProviderCacheApiRepository}
    * @implements IMystApiRepositoryInterface
    */
   MYST_PROVIDER_CACHE_ID_API_REPOSITORY = 'MYST_PROVIDER_CACHE_ID_API_REPOSITORY',

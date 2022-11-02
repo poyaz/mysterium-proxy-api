@@ -148,6 +148,11 @@ import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repos
       useFactory: () => ({}),
     },
     {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
       provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY,
       inject: [],
       useFactory: () => ({}),
