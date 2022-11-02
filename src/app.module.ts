@@ -37,6 +37,9 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.interface';
 import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repository';
+import {DockerModule} from './module/docker/docker.module';
+import {DockerConfigInterface} from '@src-loader/configure/interface/docker-config.interface';
+import {DockerOptions} from 'dockerode';
 
 @Module({
   imports: [
@@ -69,6 +72,19 @@ import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repos
       useFactory: (configService: ConfigService) => ({
         dest: configService.get<ServerConfigInterface>('server').uploadPath,
       }),
+    }),
+    DockerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const dockerConfig = configService.get<DockerConfigInterface>('docker');
+
+        return {
+          protocol: <DockerOptions["protocol"]>dockerConfig.protocol,
+          host: dockerConfig.host,
+          port: dockerConfig.host,
+        }
+      },
     }),
   ],
   controllers: [...controllersExport],
