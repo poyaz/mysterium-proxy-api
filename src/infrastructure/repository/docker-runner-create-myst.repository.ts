@@ -213,13 +213,6 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
       return [networkError];
     }
 
-    const filtersObj = {
-      label: [
-        `${this._namespace}.project=${RunnerServiceEnum.MYST}`,
-      ],
-    };
-
-
     const id = this._identity.generateId();
     const name = model.name;
 
