@@ -6,6 +6,7 @@ import serverConfig from './config/server.config';
 import postgresConfig from './config/postgres.config';
 import redisConfig from './config/redis.config';
 import squidConfig from './config/squid.config';
+import dockerConfig from './config/docker.config';
 
 @Module({
   imports: [
@@ -13,7 +14,13 @@ import squidConfig from './config/squid.config';
       cache: true,
       envFilePath: resolve('env', 'app', '.env'),
       validate: envValidate,
-      load: [serverConfig, postgresConfig, redisConfig, squidConfig],
+      load: [
+        serverConfig,
+        postgresConfig,
+        redisConfig,
+        squidConfig,
+        dockerConfig,
+      ],
     }),
   ],
 })

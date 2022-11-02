@@ -1,4 +1,4 @@
-import {IsEnum, IsNumber, IsOptional, IsString} from 'class-validator';
+import {IsDefined, IsEnum, IsIn, IsNumber, IsOptional, IsString} from 'class-validator';
 import {EnvironmentEnv} from '@src-loader/configure/enum/environment.env';
 import {BooleanEnv} from '@src-loader/configure/enum/boolean.env';
 import {Transform} from 'class-transformer';
@@ -107,6 +107,19 @@ export class EnvConfigDto {
   @IsOptional()
   @IsString()
   SQUID_PWD_FILE?: string;
+
+  @IsDefined()
+  @IsString()
+  @IsIn(['http', 'https'])
+  DOCKER_PROTOCOL: string;
+
+  @IsDefined()
+  @IsString()
+  DOCKER_HOST: string;
+
+  @IsDefined()
+  @IsNumber()
+  DOCKER_PORT: number;
 }
 
 
