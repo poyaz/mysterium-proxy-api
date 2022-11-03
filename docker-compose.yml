@@ -47,6 +47,17 @@ services:
         ipv4_address: 10.110.0.5
     restart: "always"
 
+  docker-proxy:
+    image: rancher/socat-docker:v0.2.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    privileged: true
+    networks:
+      main:
+        ipv4_address: 10.110.0.6
+    restart: "always"
+
   auth-nginx:
     image: nginx:1.20.0-alpine
     volumes:
@@ -55,7 +66,7 @@ services:
       - nginx-entrypoint-storage:/docker-entrypoint.d/
     networks:
       main:
-        ipv4_address: 10.110.0.6
+        ipv4_address: 10.110.0.7
     restart: "always"
 
   auth-grpc:
@@ -67,7 +78,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       main:
-        ipv4_address: 10.110.0.7
+        ipv4_address: 10.110.0.8
     restart: "always"
 
   build-myst-image:
