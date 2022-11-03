@@ -82,7 +82,7 @@ import {DockerOptions} from 'dockerode';
         return {
           protocol: <DockerOptions["protocol"]>dockerConfig.protocol,
           host: dockerConfig.host,
-          port: dockerConfig.host,
+          port: dockerConfig.port,
         }
       },
     }),

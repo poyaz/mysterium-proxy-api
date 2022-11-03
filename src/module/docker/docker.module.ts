@@ -1,10 +1,11 @@
-import {DynamicModule, Module, Provider} from '@nestjs/common';
+import {DynamicModule, Global, Logger, Module, Provider} from '@nestjs/common';
 import {DockerOptions} from 'dockerode';
-import {DOCKER_MODULE_OPTIONS} from './docker.constant';
+import {DOCKER_LOGGER, DOCKER_MODULE_OPTIONS} from './docker.constant';
 import {DockerModuleAsyncOptions, DockerOptionsFactory} from './interface/async-model-factory.interface';
-import {createDockerProvider} from './docker.provider';
+import {checkDockerVersion, createDockerProvider, createDockerProviderOptions, dockerLogger} from './docker.provider';
 import {DockerService} from './docker.service';
 
+@Global()
 @Module({
   providers: [DockerService],
   exports: [DockerService],
@@ -13,16 +14,22 @@ export class DockerModule {
   static forRoot(options: DockerOptions): DynamicModule {
     return {
       module: DockerModule,
-      providers: createDockerProvider(options),
+      providers: [
+        ...createDockerProvider(),
+        ...createDockerProviderOptions(options),
+      ],
       exports: [DockerService],
     };
   }
 
-  static forRootAsync(options: DockerModuleAsyncOptions): DynamicModule {console.log('fffffffffffff')
+  static forRootAsync(options: DockerModuleAsyncOptions): DynamicModule {
     return {
       module: DockerModule,
       imports: options.imports || [],
-      providers: this.createAsyncProviders(options),
+      providers: [
+        ...createDockerProvider(),
+        ...this.createAsyncProviders(options),
+      ],
       exports: [DockerService],
     };
   }
@@ -31,6 +38,7 @@ export class DockerModule {
     if (options.useExisting || options.useFactory) {
       return [this.createAsyncOptionsProvider(options)];
     }
+
     return [
       this.createAsyncOptionsProvider(options),
       {
