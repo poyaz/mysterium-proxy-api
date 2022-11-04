@@ -11,6 +11,6 @@ export class DefaultExceptionDto {
   @ApiResponseProperty({type: String, example: ExceptionEnum.UNKNOWN_ERROR})
   action?: string;
 
-  @ApiResponseProperty({type: String})
+  @ApiResponseProperty({type: String, example: 'Bad Request'})
   error?: string;
 }
