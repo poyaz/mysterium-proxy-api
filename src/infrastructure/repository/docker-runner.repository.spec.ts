@@ -324,6 +324,7 @@ describe('DockerRunnerRepository', () => {
         filters: JSON.stringify({
           name: [`/${inputLabelMystFilter.getCondition('name').name}`],
           label: [
+            `${namespace}.create-by`,
             `${namespace}.project=${inputLabelMystFilter.getCondition('service').service}`,
             `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
           ],
@@ -359,6 +360,7 @@ describe('DockerRunnerRepository', () => {
         filters: JSON.stringify({
           name: [],
           label: [
+            `${namespace}.create-by`,
             `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
             `${namespace}.vpn-provider-model.user-identity=${outputVpnProviderValid.userIdentity}`,
             `${namespace}.vpn-provider-model.provider-identity=${outputVpnProviderValid.providerIdentity}`,
@@ -394,6 +396,7 @@ describe('DockerRunnerRepository', () => {
         filters: JSON.stringify({
           name: [`/${inputLabelMystFilter.getCondition('name').name}`],
           label: [
+            `${namespace}.create-by`,
             `${namespace}.project=${inputLabelMystFilter.getCondition('service').service}`,
             `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
             `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
@@ -452,6 +455,7 @@ describe('DockerRunnerRepository', () => {
         filters: JSON.stringify({
           name: [`/${inputLabelMystFilter.getCondition('name').name}`],
           label: [
+            `${namespace}.create-by`,
             `${namespace}.project=${inputLabelMystFilter.getCondition('service').service}`,
             `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
             `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
@@ -462,6 +466,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           id: [outputDocker1.Id],
+          label: [`${namespace}.create-by`],
         }),
       });
       expect(DockerLabelParser.convertObjectToLabel).toHaveBeenCalledTimes(2);
@@ -659,6 +664,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -677,6 +683,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -711,6 +718,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -719,6 +727,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           id: [outputDocker1.Id],
+          label: [`${namespace}.create-by`],
         }),
       });
       expect(error).toBeNull();
@@ -890,6 +899,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -908,6 +918,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -928,6 +939,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -951,6 +963,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -974,6 +987,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1060,6 +1074,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1078,6 +1093,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1098,6 +1114,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1121,6 +1138,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1145,6 +1163,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1232,6 +1251,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1250,6 +1270,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1270,6 +1291,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1293,6 +1315,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),
@@ -1317,6 +1340,7 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           label: [
+            `${namespace}.create-by`,
             `${namespace}.id=${inputId}`,
           ],
         }),

@@ -224,6 +224,7 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
         Labels: {
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.MYST,
+          [`${this._namespace}.create-by`]: 'api',
           ...containerLabel,
           autoheal: 'true',
         },

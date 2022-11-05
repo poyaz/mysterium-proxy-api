@@ -39,7 +39,7 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
   async getAll<T = string>(filter: FilterModel<RunnerModel<T>>): Promise<AsyncReturn<Error, Array<RunnerModel<T>>>> {
     const filtersObj = {
       name: [],
-      label: [],
+      label: [`${this._namespace}.create-by`],
     };
 
     if (filter.getLengthOfCondition() > 0) {
@@ -92,7 +92,10 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
 
   async getById<T = string>(id: string): Promise<AsyncReturn<Error, RunnerModel<T> | null>> {
     const filtersObj = {
-      label: [`${this._namespace}.id=${id}`],
+      label: [
+        `${this._namespace}.create-by`,
+        `${this._namespace}.id=${id}`,
+      ],
     };
 
     try {
@@ -179,7 +182,10 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
 
     const dependencyContainerFetchList = await this._docker.listContainers({
       all: true,
-      filters: JSON.stringify({id: networkDependencyContainerList}),
+      filters: JSON.stringify({
+        id: networkDependencyContainerList,
+        label: [`${this._namespace}.create-by`],
+      }),
     });
 
     for (const container of dependencyContainerFetchList) {
@@ -276,7 +282,10 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
 
   private async _getContainer(id: string): Promise<Dockerode.Container | null> {
     const filtersObj = {
-      label: [`${this._namespace}.id=${id}`],
+      label: [
+        `${this._namespace}.create-by`,
+        `${this._namespace}.id=${id}`,
+      ],
     };
 
     const containerFetchList = await this._docker.listContainers({

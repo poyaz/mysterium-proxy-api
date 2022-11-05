@@ -75,6 +75,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
         Labels: {
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.MYST_CONNECT,
+          [`${this._namespace}.create-by`]: 'api',
           ...containerLabel,
           autoheal: 'true',
         },
