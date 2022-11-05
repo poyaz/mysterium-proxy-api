@@ -2,8 +2,8 @@ version: "2.3"
 services:
   app:
     build:
-      context: ./docker/images/node
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./docker/images/node/Dockerfile
     expose:
       - 3000
     volumes:
@@ -91,7 +91,7 @@ services:
       - AUTOHEAL_CONTAINER_LABEL=autoheal
     networks:
       main:
-        ipv4_address: 10.110.0.10
+        ipv4_address: 10.110.0.9
     restart: "always"
 
   build-myst-image:

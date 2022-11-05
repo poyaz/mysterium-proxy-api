@@ -1,12 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
 
-.config/
-.npm/
-.tests/
-dist/
-.git/
-
-storage/docker/
-
-.ash_history
-.gitignore
+*
+!docker/images/node/
+!src/
+!nest-cli.json
+!package.json
+!tsconfig.build.json
+!tsconfig.json
