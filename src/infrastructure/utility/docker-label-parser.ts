@@ -65,7 +65,7 @@ export class DockerLabelParser<T> {
         .map((v) => {
           const key = v.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
 
-          obj[`${prefixNamespace}.${namespace}.${key}`] = dataModel.data[v];
+          obj[`${prefixNamespace}.${namespace}.${key}`] = `${dataModel.data[v]}`;
         });
     });
 
