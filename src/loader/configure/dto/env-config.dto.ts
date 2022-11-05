@@ -153,6 +153,10 @@ export class EnvConfigDto {
   @IsDefined()
   @IsString()
   MYST_NODE_AUTH_PASSWORD: string;
+
+  @IsOptional()
+  @IsString()
+  MYST_HOST_BASE_PATH_STORE: string;
 }
 
 

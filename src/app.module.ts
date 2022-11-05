@@ -39,7 +39,7 @@ import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.inte
 import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repository';
 import {DockerModule} from './module/docker/docker.module';
 import {DockerConfigInterface} from '@src-loader/configure/interface/docker-config.interface';
-import Dockerode, {DockerOptions} from 'dockerode';
+import {DockerOptions} from 'dockerode';
 import {UsersAdapterRepository} from '@src-infrastructure/repository/users-adapter.repository';
 import {IUsersHtpasswdFileInterface} from '@src-core/interface/i-users-htpasswd-file.interface';
 import {MystProviderCacheApiRepository} from '@src-infrastructure/repository/myst-provider-cache-api.repository';
@@ -53,6 +53,11 @@ import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repos
 import {DockerRunnerCreateStrategyRepository} from '@src-infrastructure/repository/docker-runner-create-strategy.repository';
 import {DockerRunnerCreateMystRepository} from '@src-infrastructure/repository/docker-runner-create-myst.repository';
 import {DockerRunnerCreateMystConnectRepository} from '@src-infrastructure/repository/docker-runner-create-myst-connect.repository';
+import {MystIdentityPgRepository} from '@src-infrastructure/repository/myst-identity-pg.repository';
+import {AccountIdentityEntity} from '@src-infrastructure/entity/account-identity.entity';
+import {MystIdentityFileRepository} from '@src-infrastructure/repository/myst-identity-file.repository';
+import {MystIdentityAggregateRepository} from '@src-infrastructure/repository/myst-identity-aggregate.repository';
+import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
 
 @Module({
   imports: [
@@ -263,18 +268,39 @@ import {DockerRunnerCreateMystConnectRepository} from '@src-infrastructure/repos
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ProviderTokenEnum.MYST_IDENTITY_FILE_REPOSITORY,
+        ProviderTokenEnum.MYST_IDENTITY_PG_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+      ],
+      useFactory: (
+        mystIdentityFileRepository: IAccountIdentityFileRepository,
+        mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
+        dockerRunnerRepository: IRunnerRepositoryInterface,
+      ) => new MystIdentityAggregateRepository(
+        mystIdentityFileRepository,
+        mystIdentityPgRepository,
+        dockerRunnerRepository,
+      ),
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_FILE_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const MYST_CONFIG = configService.get<MystConfigInterface>('myst');
+
+        return new MystIdentityFileRepository(MYST_CONFIG.basePathStore);
+      },
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_PG_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        getRepositoryToken(AccountIdentityEntity),
+        ProviderTokenEnum.IDENTIFIER_UUID,
+        ProviderTokenEnum.DATE_TIME,
+      ],
+      useFactory: (db: Repository<AccountIdentityEntity>, identifier: IIdentifier, date: IDateTime) =>
+        new MystIdentityPgRepository(db, identifier, date),
     },
     {
       provide: ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
@@ -350,7 +376,7 @@ import {DockerRunnerCreateMystConnectRepository} from '@src-infrastructure/repos
       inject: [
         getRepositoryToken(UsersEntity),
         ProviderTokenEnum.IDENTIFIER_UUID,
-        ProviderTokenEnum.DATE_TIME_DEFAULT,
+        ProviderTokenEnum.DATE_TIME,
       ],
       useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
         new UsersPgRepository(db, identifier, dateTime),

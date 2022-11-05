@@ -5,5 +5,6 @@ export interface MystConfigInterface {
       readonly username: string;
       readonly password: string;
     }
-  }
+  };
+  readonly basePathStore: string;
 }
