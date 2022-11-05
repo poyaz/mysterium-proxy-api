@@ -840,6 +840,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -937,6 +945,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1048,6 +1064,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1210,6 +1234,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1315,6 +1347,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1428,6 +1468,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1544,6 +1592,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1661,6 +1717,14 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          Devices: [
+            {
+              PathOnHost: '/dev/net/tun',
+              PathInContainer: '/dev/net/tun',
+              CgroupPermissions: 'rwm',
+            },
+          ],
+          CapAdd: ['NET_ADMIN'],
         },
         NetworkingConfig: {
           EndpointsConfig: {
