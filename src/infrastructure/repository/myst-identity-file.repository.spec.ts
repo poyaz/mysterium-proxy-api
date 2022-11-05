@@ -98,6 +98,18 @@ describe('MystIdentityFileRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(fileError);
     });
 
+    it(`Should successfully get all file identity when path not exist`, async () => {
+      const fileError = new Error('File error');
+      fileError['errno'] = -2;
+      (<jest.Mock>fsAsync.readdir).mockRejectedValue(fileError);
+
+      const [error, result] = await repository.getAll();
+
+      expect(fsAsync.readdir).toBeCalledTimes(1);
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+    });
+
     it(`Should successfully get all file identity`, async () => {
       (<jest.Mock>fsAsync.readdir)
         .mockResolvedValueOnce([dirListFirstLevel1, dirListFirstLevel2])

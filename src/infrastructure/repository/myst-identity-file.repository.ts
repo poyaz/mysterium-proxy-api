@@ -31,6 +31,9 @@ export class MystIdentityFileRepository implements IAccountIdentityFileRepositor
 
       return [null, identityList, identityList.length];
     } catch (error) {
+      if ('errno' in error && error.errno === -2) {
+        return [null, [], 0];
+      }
       return [new RepositoryException(error)];
     }
   }
