@@ -1,4 +1,4 @@
-import {IsDefined, IsEnum, IsIn, IsNumber, IsOptional, IsString} from 'class-validator';
+import {IsDefined, IsEnum, IsIn, IsNumber, IsOptional, IsString, IsUrl} from 'class-validator';
 import {EnvironmentEnv} from '@src-loader/configure/enum/environment.env';
 import {BooleanEnv} from '@src-loader/configure/enum/boolean.env';
 import {Transform} from 'class-transformer';
@@ -120,6 +120,39 @@ export class EnvConfigDto {
   @IsOptional()
   @IsNumber()
   DOCKER_CONTROLLER_PORT: number;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_MYST_IMAGE: string;
+
+  @IsOptional()
+  @IsNumber()
+  DOCKER_MYST_HTTP_PORT: number;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_MYST_VOLUME_KEYSTORE_PATH: string;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_MYST_CONNECT_IMAGE: string;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_LABEL_NAMESPACE: string;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  MYST_DISCOVER_API_ADDR: string;
+
+  @IsDefined()
+  @IsString()
+  MYST_NODE_AUTH_USERNAME: string;
+
+  @IsDefined()
+  @IsString()
+  MYST_NODE_AUTH_PASSWORD: string;
 }
 
 

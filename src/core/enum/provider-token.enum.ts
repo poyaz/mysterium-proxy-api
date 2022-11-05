@@ -72,7 +72,7 @@ export enum ProviderTokenEnum {
   /**
    *
    * {@link DockerRunnerRepository}
-   * @implements ICreateRunnerRepository
+   * @implements IRunnerRepositoryInterface
    */
   DOCKER_RUNNER_REPOSITORY = 'DOCKER_RUNNER_REPOSITORY',
   /**

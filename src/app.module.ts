@@ -25,10 +25,10 @@ import {JwtStrategy} from '@src-api/http/auth/jwt.strategy';
 import {Repository} from 'typeorm';
 import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
 import {UsersModel} from '@src-core/model/users.model';
-import {SquidConfigInterface} from '@src-loader/configure/interface/squid-config.interface';
-import {UsersSquidFileRepository} from '@src-infrastructure/repository/users-squid-file.repository';
+import {HtpasswdConfigInterface} from '@src-loader/configure/interface/htpasswd-config.interface';
+import {UsersHtpasswdFileRepository} from '@src-infrastructure/repository/users-htpasswd-file.repository';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
-import {RedisModule} from '@liaoliaots/nestjs-redis';
+import {RedisModule, RedisService} from '@liaoliaots/nestjs-redis';
 import {RedisConfigInterface} from '@src-loader/configure/interface/redis-config.interface';
 import {MulterModule} from '@nestjs/platform-express';
 import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
@@ -39,7 +39,20 @@ import {IRunnerServiceInterface} from '@src-core/interface/i-runner-service.inte
 import {SystemInfoRepository} from '@src-infrastructure/system/system-info.repository';
 import {DockerModule} from './module/docker/docker.module';
 import {DockerConfigInterface} from '@src-loader/configure/interface/docker-config.interface';
-import {DockerOptions} from 'dockerode';
+import Dockerode, {DockerOptions} from 'dockerode';
+import {UsersAdapterRepository} from '@src-infrastructure/repository/users-adapter.repository';
+import {IUsersHtpasswdFileInterface} from '@src-core/interface/i-users-htpasswd-file.interface';
+import {MystProviderCacheApiRepository} from '@src-infrastructure/repository/myst-provider-cache-api.repository';
+import {MystProviderApiRepository} from '@src-infrastructure/repository/myst-provider-api.repository';
+import {MystConfigInterface} from '@src-loader/configure/interface/myst-config.interface';
+import {MystProviderAggregateRepository} from '@src-infrastructure/repository/myst-provider-aggregate.repository';
+import {DockerService} from './module/docker/docker.service';
+import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
+import {DockerRunnerRepository} from '@src-infrastructure/repository/docker-runner.repository';
+import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {DockerRunnerCreateStrategyRepository} from '@src-infrastructure/repository/docker-runner-create-strategy.repository';
+import {DockerRunnerCreateMystRepository} from '@src-infrastructure/repository/docker-runner-create-myst.repository';
+import {DockerRunnerCreateMystConnectRepository} from '@src-infrastructure/repository/docker-runner-create-myst-connect.repository';
 
 @Module({
   imports: [
@@ -80,10 +93,10 @@ import {DockerOptions} from 'dockerode';
         const dockerConfig = configService.get<DockerConfigInterface>('docker');
 
         return {
-          protocol: <DockerOptions["protocol"]>dockerConfig.protocol,
+          protocol: <DockerOptions['protocol']>dockerConfig.protocol,
           host: dockerConfig.host,
           port: dockerConfig.port,
-        }
+        };
       },
     }),
   ],
@@ -155,38 +168,98 @@ import {DockerOptions} from 'dockerode';
 
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ConfigService,
+        DockerService,
+        ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        docker: DockerService,
+        dockerRunnerCreateRepository: ICreateRunnerRepository,
+      ) => {
+        const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
+
+        return new DockerRunnerRepository(
+          docker.getInstance(),
+          dockerRunnerCreateRepository,
+          {
+            baseVolumePath:
+              {
+                myst: DOCKER_CONFIG.containerInfo.myst.volumes.keystore,
+              },
+            networkName: DOCKER_CONFIG.networkName,
+          },
+          DOCKER_CONFIG.labelNamespace,
+        );
+      },
     },
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ConfigService,
+        DockerService,
+        ProviderTokenEnum.IDENTIFIER_UUID,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        docker: DockerService,
+        identity: IIdentifier,
+      ) => {
+        const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
+
+        return new DockerRunnerCreateMystRepository(
+          docker.getInstance(),
+          identity,
+          {
+            imageName: DOCKER_CONFIG.containerInfo.myst.image,
+            httpPort: DOCKER_CONFIG.containerInfo.myst.httpPort,
+            dataVolumePath: DOCKER_CONFIG.containerInfo.myst.volumes.keystore,
+            networkName: DOCKER_CONFIG.networkName,
+          },
+          DOCKER_CONFIG.labelNamespace,
+        );
+      },
     },
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ConfigService,
+        DockerService,
+        ProviderTokenEnum.IDENTIFIER_UUID,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        docker: DockerService,
+        identity: IIdentifier,
+      ) => {
+        const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
+        const REDIS_CONFIG = configService.get<RedisConfigInterface>('redis');
+
+        return new DockerRunnerCreateMystConnectRepository(
+          docker.getInstance(),
+          identity,
+          {
+            imageName: DOCKER_CONFIG.containerInfo.mystConnect.image,
+            networkName: DOCKER_CONFIG.networkName,
+          },
+          {
+            host: REDIS_CONFIG.host,
+            port: REDIS_CONFIG.port,
+            db: REDIS_CONFIG.db,
+          },
+          DOCKER_CONFIG.labelNamespace,
+        );
+      },
     },
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
-    },
-    {
-      provide: ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
-    },
-    {
-      provide: ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
-    },
-    {
-      provide: ProviderTokenEnum.MYST_PROVIDER_CACHE_ID_API_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY,
+      ],
+      useFactory: (...dockerRunnerCreateList: Array<ICreateRunnerRepository>) =>
+        new DockerRunnerCreateStrategyRepository(dockerRunnerCreateList),
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
@@ -204,24 +277,83 @@ import {DockerOptions} from 'dockerode';
       useFactory: () => ({}),
     },
     {
+      provide: ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
+      inject: [
+        ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+        ProviderTokenEnum.MYST_PROVIDER_CACHE_API_REPOSITORY,
+      ],
+      useFactory: (
+        dockerRunnerRepository: IRunnerRepositoryInterface,
+        mystProviderCacheApiRepository: IMystApiRepositoryInterface,
+      ) =>
+        new MystProviderAggregateRepository(dockerRunnerRepository, mystProviderCacheApiRepository),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
+      inject: [
+        ConfigService,
+        ProviderTokenEnum.IDENTIFIER_UUID,
+        Logger,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        identifier: IIdentifier,
+        logger: Logger,
+      ) => {
+        const MYST_CONFIG = configService.get<MystConfigInterface>('myst');
+
+        return new MystProviderApiRepository(
+          identifier,
+          MYST_CONFIG.discoveryHostAddr,
+          MYST_CONFIG.node.auth.username,
+          MYST_CONFIG.node.auth.password,
+          logger,
+        );
+      },
+    },
+    {
+      provide: ProviderTokenEnum.MYST_PROVIDER_CACHE_API_REPOSITORY,
+      inject: [
+        RedisService,
+        ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
+        Logger,
+      ],
+      useFactory: (
+        redis: RedisService,
+        mystProviderApiRepository: IMystApiRepositoryInterface,
+        logger: Logger,
+      ) => new MystProviderCacheApiRepository(redis, mystProviderApiRepository, logger),
+    },
+    {
       provide: ProviderTokenEnum.USER_ADAPTER_REPOSITORY,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ProviderTokenEnum.USER_PG_REPOSITORY,
+        ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
+      ],
+      useFactory: (
+        userPgRepository: IGenericRepositoryInterface<UsersModel>,
+        usersHtpasswdFileRepository: IUsersHtpasswdFileInterface,
+      ) =>
+        new UsersAdapterRepository(userPgRepository, usersHtpasswdFileRepository),
+    },
+    {
+      provide: ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const HTPASSWD_CONFIG = configService.get<HtpasswdConfigInterface>('htpasswd');
+
+        return new UsersHtpasswdFileRepository(HTPASSWD_CONFIG.pwdFile);
+      },
     },
     {
       provide: ProviderTokenEnum.USER_PG_REPOSITORY,
-      inject: [getRepositoryToken(UsersEntity), ProviderTokenEnum.IDENTIFIER_UUID, ProviderTokenEnum.DATE_TIME_DEFAULT],
+      inject: [
+        getRepositoryToken(UsersEntity),
+        ProviderTokenEnum.IDENTIFIER_UUID,
+        ProviderTokenEnum.DATE_TIME_DEFAULT,
+      ],
       useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
         new UsersPgRepository(db, identifier, dateTime),
-    },
-    {
-      provide: ProviderTokenEnum.USERS_SQUID_FILE_REPOSITORY,
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const SQUID_CONFIG = configService.get<SquidConfigInterface>('squid');
-
-        return new UsersSquidFileRepository(SQUID_CONFIG.pwdFile);
-      },
     },
 
     {
