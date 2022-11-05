@@ -20,6 +20,6 @@ COPY --chown=node:node \
 
 VOLUME /data/storage/tmp
 
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY ./docker/images/node/docker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
