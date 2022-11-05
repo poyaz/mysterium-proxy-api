@@ -97,7 +97,7 @@ services:
     build:
       context: ./docker/images/myst
       dockerfile: Dockerfile
-    image: myst-service:latest
+    image: myst-service:v1.0
     network_mode: "bridge"
     restart: "no"
     entrypoint: ""
@@ -107,7 +107,7 @@ services:
     build:
       context: ./docker/images/myst-connect
       dockerfile: Dockerfile
-    image: myst-connect-service:latest
+    image: myst-connect-service:v1.0
     network_mode: "bridge"
     restart: "no"
     entrypoint: ""
