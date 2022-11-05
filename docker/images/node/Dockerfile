@@ -1,6 +1,6 @@
 FROM node:16.16.0-alpine3.16
 
-RUN apk add --no-cache apache2-utils curl su-exec
+RUN apk add --no-cache apache2-utils curl su-exec bash
 
 COPY ./docker/images/node/docker-entrypoint.sh /usr/local/bin/
 
