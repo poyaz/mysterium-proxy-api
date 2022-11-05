@@ -114,6 +114,12 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       return [new ExistException()];
     }
 
+    const [errorFile, dataFile] = await this._mystIdentityFileRepository.getIdentityByFilePath(path.join(model.path, model.filename));
+    if (errorFile) {
+      return [errorFile];
+    }
+
+    model.identity = dataFile;
     const [errorMovePath, dataMovePath] = await this._mystIdentityFileRepository.moveAndRenameFile(
       path.join(model.path, model.filename),
       `${model.identity}.json`,

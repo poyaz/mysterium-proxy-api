@@ -915,8 +915,25 @@ describe('MystIdentityAggregateRepository', () => {
       expect(error).toBeInstanceOf(ExistException);
     });
 
+    it(`Should error add new identity when get identity address`, async () => {
+      repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputModel);
+
+      expect(repositoryGetAllStub).toHaveBeenCalled();
+      expect((<FilterModel<MystIdentityModel>>repositoryGetAllStub.mock.calls[0][0]).getCondition('identity')).toMatchObject({
+        $opr: 'eq',
+        identity: inputModel.identity,
+      });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
     it(`Should error add new identity when move file`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputModel);
@@ -926,6 +943,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -936,6 +955,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when check identity exist in database`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -949,6 +969,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -964,6 +986,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when create identity in database (If identity not exist)`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -978,6 +1001,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1003,6 +1028,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when get identity after exist error on add (If identity not exist)`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1019,6 +1045,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1044,6 +1072,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when not found identity after exist error on add (If identity not exist)`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1058,6 +1087,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1084,6 +1115,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when fail on check runner exist`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1099,6 +1131,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1133,6 +1167,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when fail on check runner exist (Skipped add identity on database if myst exist already)`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1147,6 +1182,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1172,6 +1209,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when fail on check runner exist (Skipped add identity on database when exit error on add)`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1189,6 +1227,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1223,6 +1263,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when fail on remove exist runner`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1239,6 +1280,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1275,6 +1318,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error add new identity when create identity runner`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1291,6 +1335,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
@@ -1342,6 +1388,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully add new identity`, async () => {
       repositoryGetAllStub.mockResolvedValue([null, [], 0]);
+      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, inputModel.identity]);
       mystIdentityFileRepository.moveAndRenameFile.mockResolvedValue([
         null,
         `${identityBasePath}${inputModel.identity}/${inputModel.identity}.json`,
@@ -1358,6 +1405,8 @@ describe('MystIdentityAggregateRepository', () => {
         $opr: 'eq',
         identity: inputModel.identity,
       });
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getIdentityByFilePath).toBeCalledWith(`${inputModel.path}${inputModel.filename}`);
       expect(mystIdentityFileRepository.moveAndRenameFile).toHaveBeenCalled();
       expect(mystIdentityFileRepository.moveAndRenameFile).toBeCalledWith(
         `${inputModel.path}${inputModel.filename}`,
