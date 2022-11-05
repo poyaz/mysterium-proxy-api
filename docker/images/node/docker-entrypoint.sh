@@ -20,7 +20,7 @@ file_env() {
 }
 
 _main() {
-  chown -R node:node /data
+  chown -R node:node /data/storage
 
   if [ "$(id -u)" = '0' ]; then
     exec su-exec node "$BASH_SOURCE" "$@"
