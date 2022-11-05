@@ -66,18 +66,20 @@ export class OutputTransferInterceptor implements NestInterceptor {
 
         let isDataArray = false;
         let isResultFind = false;
-        if (typeof result !== undefined && result !== undefined && result !== null && ['boolean', 'string', 'number'].indexOf(typeof result) === -1) {
+        if (typeof result !== undefined && result !== undefined && result !== null) {
           isResultFind = true;
 
-          if (Array.isArray(result)) {
-            isDataArray = true;
-            result.map((v) => {
-              v.insertDate = this._convertDateToString(v.insertDate);
-              v.updateDate = this._convertDateToString(v.updateDate);
-            });
-          } else {
-            result.insertDate = this._convertDateToString(result.insertDate);
-            result.updateDate = this._convertDateToString(result.updateDate);
+          if (['boolean', 'string', 'number'].indexOf(typeof result) === -1) {
+            if (Array.isArray(result)) {
+              isDataArray = true;
+              result.map((v) => {
+                v.insertDate = this._convertDateToString(v.insertDate);
+                v.updateDate = this._convertDateToString(v.updateDate);
+              });
+            } else {
+              result.insertDate = this._convertDateToString(result.insertDate);
+              result.updateDate = this._convertDateToString(result.updateDate);
+            }
           }
         }
 
