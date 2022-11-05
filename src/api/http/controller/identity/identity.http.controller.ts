@@ -17,7 +17,6 @@ import {
   ApiTags,
   ApiUnauthorizedResponse, ApiUnprocessableEntityResponse, getSchemaPath,
 } from '@nestjs/swagger';
-import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {DefaultSuccessDto} from '@src-api/http/dto/default-success.dto';
 import {DefaultArraySuccessDto} from '@src-api/http/dto/default-array-success.dto';
 import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
@@ -27,7 +26,7 @@ import {Roles} from '@src-api/http/decorator/roles.decorator';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {FindIdentityQueryDto} from '@src-api/http/controller/identity/dto/find-identity-query.dto';
 import {
-  RemoveSpecialFieldOfIdentityInterceptor
+  RemoveSpecialFieldOfIdentityInterceptor,
 } from '@src-api/http/controller/identity/interceptor/remove-special-field-of-identity.interceptor';
 import {ForbiddenExceptionDto} from '@src-api/http/dto/forbidden-exception.dto';
 import {FindIdentityOutputDto} from '@src-api/http/controller/identity/dto/find-identity-output.dto';
@@ -37,7 +36,7 @@ import {FileInterceptor} from '@nestjs/platform-express';
 import {CreateIdentityInputDto} from '@src-api/http/controller/identity/dto/create-identity-input.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
 import {
-  IdentityJsonFileValidationPipe
+  IdentityJsonFileValidationPipe,
 } from '@src-api/http/controller/identity/pipe/identity-json-file-validation.pipe';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
@@ -133,7 +132,42 @@ export class IdentityHttpController {
       ],
     },
   })
-  @ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+    schema: {
+      anyOf: [
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNKNOWN_ERROR,
+              description: 'Unknown error happened',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  })
   async findAll(@Query() queryFilterDto: FindIdentityQueryDto) {
     return this._mystIdentityService.getAll(FindIdentityQueryDto.toModel(queryFilterDto));
   }
@@ -162,7 +196,7 @@ export class IdentityHttpController {
     schema: {
       allOf: [
         {
-          $ref: getSchemaPath(NotFoundExceptionDto)
+          $ref: getSchemaPath(NotFoundExceptionDto),
         },
         {
           properties: {
@@ -172,7 +206,7 @@ export class IdentityHttpController {
           },
         },
       ],
-    }
+    },
   })
   @ApiBadRequestResponse({
     description: 'Bad Request',
@@ -186,6 +220,24 @@ export class IdentityHttpController {
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
             },
           ],
         },
@@ -225,8 +277,8 @@ export class IdentityHttpController {
             },
           ],
         },
-      ]
-    }
+      ],
+    },
   })
   async findOne(@Param('identityId') identityId: string) {
     return this._mystIdentityService.getById(identityId);
@@ -282,6 +334,24 @@ export class IdentityHttpController {
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
             },
           ],
         },
@@ -385,6 +455,24 @@ export class IdentityHttpController {
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
             },
           ],
         },

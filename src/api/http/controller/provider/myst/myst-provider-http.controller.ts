@@ -45,9 +45,8 @@ import {NoBodySuccessDto} from '@src-api/http/dto/no-body-success.dto';
 @Roles(UserRoleEnum.ADMIN)
 @ApiTags('provider')
 @ApiBearerAuth()
-@ApiExtraModels(DefaultArraySuccessDto, FindProviderQueryDto, FindProviderOutputDto)
+@ApiExtraModels(DefaultArraySuccessDto, FindProviderQueryDto, FindProviderOutputDto, DefaultExceptionDto)
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
-@ApiBadRequestResponse({description: 'Bad Request', type: DefaultExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 export class MystProviderHttpController {
   constructor(
@@ -113,6 +112,60 @@ export class MystProviderHttpController {
       ],
     },
   })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+    schema: {
+      anyOf: [
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNKNOWN_ERROR,
+              description: 'Unknown error happened',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.FILL_DATA_REPOSITORY_ERROR,
+              description: 'Can not fill data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.FILL_DATA_REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  })
   async findAll(@Query() queryFilterDto: FindProviderQueryDto) {
     return this._providerService.getAll(FindProviderQueryDto.toModel(queryFilterDto));
   }
@@ -125,16 +178,112 @@ export class MystProviderHttpController {
     type: NoBodySuccessDto,
   })
   @ApiNotFoundResponse({
-    description: 'The provider id not found.',
+    description: 'The provider id not found',
     schema: {
-      allOf: [
-        {$ref: getSchemaPath(NotFoundExceptionDto)},
+      anyOf: [
         {
-          properties: {
-            action: {
-              example: ExceptionEnum.NOT_FOUND_ERROR,
+          allOf: [
+            {
+              title: ExceptionEnum.NOT_FOUND_ERROR,
+              description: 'The provider id not found',
+              $ref: getSchemaPath(NotFoundExceptionDto),
             },
-          },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.NOT_FOUND_ERROR,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR,
+              description: 'The myst identity not found',
+              $ref: getSchemaPath(NotFoundExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+    schema: {
+      anyOf: [
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNKNOWN_ERROR,
+              description: 'Unknown error happened',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.PROVIDER_IDENTITY_IN_USE,
+              description: 'The provider identity is in use',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.PROVIDER_IDENTITY_IN_USE,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.NOT_RUNNING_SERVICE,
+              description: 'Can not found running myst identity service',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR,
+                },
+              },
+            },
+          ],
         },
       ],
     },
@@ -166,6 +315,78 @@ export class MystProviderHttpController {
               example: ExceptionEnum.NOT_FOUND_ERROR,
             },
           },
+        },
+      ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+    schema: {
+      anyOf: [
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNKNOWN_ERROR,
+              description: 'Unknown error happened',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.PROVIDER_IDENTITY_NOT_CONNECTING,
+              description: 'The provider identity is not connect',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.PROVIDER_IDENTITY_NOT_CONNECTING,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.NOT_RUNNING_SERVICE,
+              description: 'Can not found running myst identity service',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR,
+                },
+              },
+            },
+          ],
         },
       ],
     },
