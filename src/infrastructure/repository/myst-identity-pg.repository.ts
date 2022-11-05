@@ -75,12 +75,11 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
   }
 
   async add(model: MystIdentityModel): Promise<AsyncReturn<Error, MystIdentityModel>> {
-    const data = instanceToPlain(model, {excludePrefixes: ['id', 'insertDate', 'updateDate', 'deleteDate', 'isUse', 'filename']});
-    data.identity = model.identity;
-
-    const entity = plainToInstance(AccountIdentityEntity, data);
-
+    const entity = new AccountIdentityEntity();
     entity.id = this._identifier.generateId();
+    entity.identity = model.identity;
+    entity.passphrase = model.passphrase;
+    entity.path = model.path;
     entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
 
     try {
