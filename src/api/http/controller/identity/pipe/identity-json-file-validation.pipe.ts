@@ -5,6 +5,14 @@ export class IdentityJsonFileValidationPipe implements PipeTransform<Express.Mul
   transform(value: Express.Multer.File, metadata: ArgumentMetadata) {
     const twoKb = 2000;
 
+    if (!value) {
+      throw new UnprocessableEntityException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: [`Identity file not found`],
+        error: 'Unprocessable Entity',
+      });
+    }
+
     if (value.size > twoKb) {
       throw new UnprocessableEntityException({
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
