@@ -25,6 +25,7 @@ type MystDockerContainerOption = {
 type RedisOption = {
   host: string,
   port: number,
+  db?: number,
 }
 
 export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRepository {
@@ -81,6 +82,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
           `PROVIDER_IDENTITY=${vpnModelData.providerIdentity}`,
           `REDIS_HOST=${this._redisConnection.host}`,
           `REDIS_PORT=${this._redisConnection.port}`,
+          `REDIS_DB=${this._redisConnection.db}`,
         ],
         HostConfig: {
           Binds: [

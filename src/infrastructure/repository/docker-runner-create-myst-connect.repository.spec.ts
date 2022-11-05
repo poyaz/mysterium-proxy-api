@@ -37,6 +37,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
   let imageName: string;
   let redisHost: string;
   let redisPort: number;
+  let redisDb: number;
   let namespace: string;
 
   beforeEach(async () => {
@@ -49,6 +50,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
     imageName = 'mysterium-proxy-api-myst-connect';
     redisHost = '127.0.0.1';
     redisPort = 6379;
+    redisDb = 1;
     namespace = 'com.mysterium-proxy';
 
     const module: TestingModule = await Test.createTestingModule({
@@ -69,7 +71,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
               docker,
               identity,
               {imageName, networkName},
-              {host: redisHost, port: redisPort},
+              {host: redisHost, port: redisPort, db: redisDb},
               namespace,
             ),
         },
@@ -469,6 +471,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `PROVIDER_IDENTITY=${outputVpnProviderValid.providerIdentity}`,
           `REDIS_HOST=${redisHost}`,
           `REDIS_PORT=${redisPort}`,
+          `REDIS_DB=${redisDb}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -552,6 +555,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `PROVIDER_IDENTITY=${outputVpnProviderValid.providerIdentity}`,
           `REDIS_HOST=${redisHost}`,
           `REDIS_PORT=${redisPort}`,
+          `REDIS_DB=${redisDb}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -635,6 +639,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `PROVIDER_IDENTITY=${outputVpnProviderValid.providerIdentity}`,
           `REDIS_HOST=${redisHost}`,
           `REDIS_PORT=${redisPort}`,
+          `REDIS_DB=${redisDb}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
