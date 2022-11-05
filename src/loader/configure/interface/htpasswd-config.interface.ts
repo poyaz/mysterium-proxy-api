@@ -1,3 +1,3 @@
 export interface HtpasswdConfigInterface {
-  readonly pwdFile: string,
+  readonly pwdFile: string;
 }

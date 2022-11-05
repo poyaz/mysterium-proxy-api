@@ -1,6 +1,6 @@
 export interface RedisConfigInterface {
-  readonly host: string,
-  readonly port: number,
-  readonly db: number,
-  readonly password?: string,
+  readonly host: string;
+  readonly port: number;
+  readonly db: number;
+  readonly password?: string;
 }
