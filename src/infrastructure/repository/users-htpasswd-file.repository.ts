@@ -1,4 +1,4 @@
-import {IUsersSquidFileInterface} from '@src-core/interface/i-users-squid-file.interface';
+import {IUsersHtpasswdFileInterface} from '@src-core/interface/i-users-htpasswd-file.interface';
 import {AsyncReturn} from '@src-core/utility';
 import {Injectable} from '@nestjs/common';
 import * as fs from 'fs';
@@ -7,7 +7,7 @@ import {spawn} from 'child_process';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 
 @Injectable()
-export class UsersSquidFileRepository implements IUsersSquidFileInterface {
+export class UsersHtpasswdFileRepository implements IUsersHtpasswdFileInterface {
   constructor(private readonly _passwordFileAddr: string) {
   }
 

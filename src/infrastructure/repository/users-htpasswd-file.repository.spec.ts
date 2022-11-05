@@ -6,12 +6,12 @@ import * as fsAsync from 'fs/promises';
 jest.mock('child_process');
 import {spawn} from 'child_process';
 
-import {UsersSquidFileRepository} from './users-squid-file.repository';
+import {UsersHtpasswdFileRepository} from './users-htpasswd-file.repository';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {PassThrough} from 'stream';
 
 describe('UsersSquidFileRepository', () => {
-  let repository: UsersSquidFileRepository;
+  let repository: UsersHtpasswdFileRepository;
   let fileAddr;
 
   beforeEach(async () => {
@@ -20,15 +20,15 @@ describe('UsersSquidFileRepository', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: UsersSquidFileRepository,
+          provide: UsersHtpasswdFileRepository,
           inject: [],
           useFactory: () =>
-            new UsersSquidFileRepository(fileAddr),
+            new UsersHtpasswdFileRepository(fileAddr),
         },
       ],
     }).compile();
 
-    repository = module.get<UsersSquidFileRepository>(UsersSquidFileRepository);
+    repository = module.get<UsersHtpasswdFileRepository>(UsersHtpasswdFileRepository);
   });
 
   afterEach(() => {

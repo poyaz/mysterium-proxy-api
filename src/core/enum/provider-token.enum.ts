@@ -137,17 +137,16 @@ export enum ProviderTokenEnum {
   USER_ADAPTER_REPOSITORY = 'USER_ADAPTER_REPOSITORY',
   /**
    *
-   * {@link UsersPgRepository}
-   * @implements IGenericRepositoryInterface<UsersModel>
-   */
-  USER_PG_REPOSITORY = 'USER_PG_REPOSITORY',
-
-  /**
-   *
    * {@link UsersHtpasswdFileRepository}
    * @implements IUsersHtpasswdFileInterface
    */
   USERS_HTPASSWD_FILE_REPOSITORY = 'USERS_HTPASSWD_FILE_REPOSITORY',
+  /**
+   *
+   * {@link UsersPgRepository}
+   * @implements IGenericRepositoryInterface<UsersModel>
+   */
+  USER_PG_REPOSITORY = 'USER_PG_REPOSITORY',
 
   /**
    *

@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
 import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
 import {UsersModel} from '@src-core/model/users.model';
-import {IUsersSquidFileInterface} from '@src-core/interface/i-users-squid-file.interface';
+import {IUsersHtpasswdFileInterface} from '@src-core/interface/i-users-htpasswd-file.interface';
 import {AsyncReturn} from '@src-core/utility';
 import {FilterModel} from '@src-core/model/filter.model';
 import {ExistException} from '@src-core/exception/exist.exception';
@@ -11,7 +11,7 @@ import {UpdateModel} from '@src-core/model/update.model';
 export class UsersAdapterRepository implements IGenericRepositoryInterface<UsersModel> {
   constructor(
     private readonly _usersPgRepository: IGenericRepositoryInterface<UsersModel>,
-    private readonly _usersSquidFileRepository: IUsersSquidFileInterface) {
+    private readonly _usersSquidFileRepository: IUsersHtpasswdFileInterface) {
   }
 
   async add(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {

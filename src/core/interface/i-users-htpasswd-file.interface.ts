@@ -1,6 +1,6 @@
 import {AsyncReturn} from '@src-core/utility';
 
-export interface IUsersSquidFileInterface {
+export interface IUsersHtpasswdFileInterface {
   add(username: string, password: string): Promise<AsyncReturn<Error, null>>;
 
   verify(username: string, password: string): Promise<AsyncReturn<Error, boolean>>;
