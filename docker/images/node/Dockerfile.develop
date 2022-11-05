@@ -18,6 +18,8 @@ COPY --chown=node:node \
         src/ \
         ./src
 
+RUN chown -R node:node /data
+
 VOLUME /data/storage/tmp
 
 COPY ./docker/images/node/docker-entrypoint.sh /usr/local/bin/
