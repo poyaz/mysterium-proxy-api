@@ -141,6 +141,10 @@ export class EnvConfigDto {
   @IsString()
   DOCKER_LABEL_NAMESPACE: string;
 
+  @IsDefined()
+  @IsString()
+  DOCKER_REAL_PROJECT_PATH: string;
+
   @IsOptional()
   @IsString()
   @IsUrl()

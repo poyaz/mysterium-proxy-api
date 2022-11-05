@@ -16,4 +16,5 @@ export interface DockerConfigInterface {
   };
   readonly networkName: string;
   readonly labelNamespace: string;
+  readonly realProjectPath: string;
 }

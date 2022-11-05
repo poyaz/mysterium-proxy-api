@@ -20,5 +20,6 @@ export default registerAs('docker', (): DockerConfigInterface => {
     },
     networkName: process.env.DOCKER_PROJECT_NETWORK_NAME || 'network-mysterium-proxy-main',
     labelNamespace: process.env.DOCKER_LABEL_NAMESPACE || 'com.mysterium-proxy',
+    realProjectPath: process.env.DOCKER_REAL_PROJECT_PATH,
   };
 });

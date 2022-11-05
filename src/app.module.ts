@@ -228,6 +228,7 @@ import {DockerRunnerService} from '@src-core/service/docker-runner.service';
             httpPort: DOCKER_CONFIG.containerInfo.myst.httpPort,
             dataVolumePath: DOCKER_CONFIG.containerInfo.myst.volumes.keystore,
             networkName: DOCKER_CONFIG.networkName,
+            realPath: DOCKER_CONFIG.realProjectPath,
           },
           DOCKER_CONFIG.labelNamespace,
         );

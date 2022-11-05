@@ -21,12 +21,14 @@ import {IPv4CidrRange} from 'ip-num';
 import {EndpointSettings} from 'dockerode';
 import {setTimeout} from 'timers/promises';
 import Docker = require('dockerode');
+import * as path from "path";
 
 type MystDockerContainerOption = {
   imageName: string,
   httpPort: number,
   dataVolumePath: string,
   networkName: string,
+  realPath: string,
 }
 
 @Injectable()
@@ -160,7 +162,7 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
         Name: `myst-keystore-${mystIdentityModel.identity}`,
         Driver: 'local',
         DriverOpts: {
-          device: keystoreVolume.source,
+          device: keystoreVolume.source.replace(new RegExp(`^${path.resolve()}`), this._mystContainerOption.realPath),
           o: 'bind',
           type: 'none',
         },
