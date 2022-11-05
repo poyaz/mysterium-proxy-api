@@ -23,12 +23,13 @@ file_env() {
 }
 
 docker_setup_env() {
-  file_env 'MYST_TEQUILAPI_API_HOST' '127.0.0.1'
-  file_env 'MYST_TEQUILAPI_API_PORT' '4449'
-  file_env 'MYST_TEQUILAPI_API_USERNAME' 'myst'
-  file_env 'MYST_TEQUILAPI_API_PASSWORD' 'mystberry'
-  file_env 'MYST_CONSUMER_ID'
-  file_env 'MYST_PROVIDER_ID'
+  file_env 'MYST_API_BASE_ADDRESS' 'https://127.0.0.1:4050'
+  file_env 'MYST_IDENTITY'
+  file_env 'PROVIDER_IDENTITY'
+  file_env 'REDIS_HOST'
+  file_env 'REDIS_PORT' '6379'
+  file_env 'REDIS_DB'
+  file_env 'REDIS_PROVIDER_INFO_KEY'
 }
 
 check_total_interface_count() {
@@ -60,15 +61,12 @@ create_token() {
 }
 
 check_vpn_connected() {
-  declare -r TOKEN=$1
-
   declare -r RES=$(
     curl -s \
       -w "\n%{http_code}" \
       -X GET \
       -H 'content-type: application/json' \
-      -H 'authorization: Bearer '$TOKEN \
-      "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/connection"
+      "${MYST_API_BASE_ADDRESS}/connection"
   )
   declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
   declare -r CONTENT=$(sed '$ d' <<<"$RES")
@@ -87,17 +85,14 @@ check_vpn_connected() {
 }
 
 connect_vpn() {
-  declare -r TOKEN=$1
-
-  local consumer_id=$MYST_CONSUMER_ID
-  if [ -z $MYST_CONSUMER_ID ]; then
+  local consumer_id=$MYST_IDENTITY
+  if [ -z $MYST_IDENTITY ]; then
     declare -r RES_CONSUMER=$(
       curl -s \
         -w "\n%{http_code}" \
         -X GET \
         -H 'content-type: application/json' \
-        -H 'authorization: Bearer '$TOKEN \
-        "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/connection"
+        "${MYST_API_BASE_ADDRESS}/connection"
     )
     declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
     declare -r CONTENT_CONSUMER=$(sed '$ d' <<<"$RES")
@@ -115,9 +110,8 @@ connect_vpn() {
       -w "\n%{http_code}" \
       -X PUT \
       -H 'content-type: application/json' \
-      -H 'authorization: Bearer '$TOKEN \
-      -d '{"consumer_id": "'$consumer_id'", "provider_id": "'$MYST_PROVIDER_ID'", "service_type": "wireguard"}' \
-      "http://$MYST_TEQUILAPI_API_HOST:$MYST_TEQUILAPI_API_PORT/tequilapi/connection"
+      -d '{"consumer_id": "'${consumer_id}'", "provider_id": "'${PROVIDER_IDENTITY}'", "service_type": "wireguard"}' \
+      "${MYST_API_BASE_ADDRESS}/connection"
   )
   declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
 
@@ -126,14 +120,57 @@ connect_vpn() {
     exit 1
   fi
 
-  echo "[INFO] The server now connect to provider $MYST_PROVIDER_ID"
+  echo "[INFO] The server now connect to provider ${PROVIDER_IDENTITY}"
+}
+
+get_current_ip() {
+  declare -r RES=$(
+    curl -s \
+      -w "\n%{http_code}" \
+      -X GET \
+      -H 'content-type: application/json' \
+      "${MYST_API_BASE_ADDRESS}/connection/ip"
+  )
+  declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
+  declare -r CONTENT=$(sed '$ d' <<<"$RES")
+
+  if [ $HTTP_CODE -ne 200 ]; then
+    echo "[ERR] Fail after execute get current ip!"
+    exit 1
+  fi
+
+  local IP=$(echo "$CONTENT" | jq -r .ip)
+
+  echo $IP
+}
+
+store_ip_in_redis() {
+  declare -r IP=$1
+
+  local execute_redis=(
+    redis-cli
+    -h "${REDIS_HOST}"
+    -p $REDIS_PORT
+  )
+
+  if ! [ -z $REDIS_DB ]; then
+    execute_redis+=(-n $REDIS_DB)
+  fi
+
+  execute_redis+=(HMSET "${REDIS_PROVIDER_INFO_KEY}" "${PROVIDER_IDENTITY}" "${IP}")
+
+  "${execute_redis[@]}"
 }
 
 run() {
   echo "[INFO] Run process service"
 
   while true; do
-    sleep 1000
+    local IP=$(get_current_ip)
+
+    store_ip_in_redis $IP
+
+    sleep 3000
   done
 }
 
@@ -143,19 +180,27 @@ _main() {
 
     docker_setup_env
 
-    if [ -z $MYST_PROVIDER_ID ]; then
-      echo "[ERR] Please fill variable \"MYST_PROVIDER_ID\"!"
+    if [ -z $PROVIDER_IDENTITY ]; then
+      echo "[ERR] Please fill variable \"PROVIDER_IDENTITY\"!"
+      exit 1
+    fi
+
+    if [ -z $REDIS_HOST ]; then
+      echo "[ERR] Please fill variable \"REDIS_HOST\"!"
+      exit 1
+    fi
+
+    if [ -z $REDIS_PROVIDER_INFO_KEY ]; then
+      echo "[ERR] Please fill variable \"REDIS_HOST\"!"
       exit 1
     fi
 
     check_total_interface_count
 
-    local TOKEN=$(create_token)
-
-    local IS_CONNECTED=$(check_vpn_connected $TOKEN)
+    local IS_CONNECTED=$(check_vpn_connected)
 
     if [ $IS_CONNECTED -eq 0 ]; then
-      connect_vpn $TOKEN
+      connect_vpn
     else
       echo "[INFO] Skipping connect to provider because it has already connected."
     fi
