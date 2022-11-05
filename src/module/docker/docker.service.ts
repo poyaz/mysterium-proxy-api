@@ -1,11 +1,11 @@
 import {Inject, Injectable, Logger, Optional} from '@nestjs/common';
 import Dockerode, {DockerOptions} from 'dockerode';
 import Docker = require('dockerode');
-import {DOCKER_MODULE_OPTIONS} from "./docker.constant";
+import {DOCKER_MODULE_OPTIONS} from './docker.constant';
 
 @Injectable()
 export class DockerService {
-  private readonly _docker;
+  private readonly _docker: Dockerode;
 
   constructor(
     @Optional()
