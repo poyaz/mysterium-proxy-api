@@ -8,7 +8,7 @@ services:
       - 3000
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - $PWD/storage:/data/storage
+      - $PWD/storage/tmp:/data/storage/tmp
     networks:
       main:
         ipv4_address: 10.110.0.2
