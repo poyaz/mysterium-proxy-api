@@ -3,8 +3,8 @@ import {DockerConfigInterface} from '@src-loader/configure/interface/docker-conf
 
 export default registerAs('docker', (): DockerConfigInterface => {
   return {
-    protocol: process.env.DOCKER_PROTOCOL,
-    host: process.env.DOCKER_HOST,
-    port: Number(process.env.DOCKER_PORT),
+    protocol: process.env.DOCKER_PROTOCOL || 'http',
+    host: process.env.DOCKER_HOST || '127.0.0.1',
+    port: Number(process.env.DOCKER_PORT || 2375),
   };
 });

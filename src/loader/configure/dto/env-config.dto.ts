@@ -108,16 +108,16 @@ export class EnvConfigDto {
   @IsString()
   SQUID_PWD_FILE?: string;
 
-  @IsDefined()
+  @IsOptional()
   @IsString()
   @IsIn(['http', 'https'])
   DOCKER_PROTOCOL: string;
 
-  @IsDefined()
+  @IsOptional()
   @IsString()
   DOCKER_HOST: string;
 
-  @IsDefined()
+  @IsOptional()
   @IsNumber()
   DOCKER_PORT: number;
 }
