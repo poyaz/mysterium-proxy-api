@@ -303,11 +303,11 @@ describe('MystIdentityFileRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(fileError);
     });
 
-    it(`Should error move and rename file when move file`, async () => {
+    it(`Should error move and rename file when copy file`, async () => {
       repositoryGetIdentityByFilePathStub.mockResolvedValue([null, 'identity1']);
       (<jest.Mock>fsAsync.mkdir).mockResolvedValue(null);
       const fileError = new Error('File error');
-      (<jest.Mock>fsAsync.rename).mockRejectedValue(fileError);
+      (<jest.Mock>fsAsync.copyFile).mockRejectedValue(fileError);
 
       const [error] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
 
@@ -315,8 +315,29 @@ describe('MystIdentityFileRepository', () => {
       expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
       expect(fsAsync.mkdir).toHaveBeenCalled();
       expect(fsAsync.mkdir).toHaveBeenCalledWith(path.join(storeBasePath, 'identity1'), {recursive: true});
-      expect(fsAsync.rename).toHaveBeenCalled();
-      expect(fsAsync.rename).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(fsAsync.copyFile).toHaveBeenCalled();
+      expect(fsAsync.copyFile).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should error move and rename file when remove old file`, async () => {
+      repositoryGetIdentityByFilePathStub.mockResolvedValue([null, 'identity1']);
+      (<jest.Mock>fsAsync.mkdir).mockResolvedValue(null);
+      (<jest.Mock>fsAsync.copyFile).mockResolvedValue(null);
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.unlink).mockRejectedValue(fileError);
+
+      const [error] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
+
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalled();
+      expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
+      expect(fsAsync.mkdir).toHaveBeenCalled();
+      expect(fsAsync.mkdir).toHaveBeenCalledWith(path.join(storeBasePath, 'identity1'), {recursive: true});
+      expect(fsAsync.copyFile).toHaveBeenCalled();
+      expect(fsAsync.copyFile).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(fsAsync.unlink).toHaveBeenCalled();
+      expect(fsAsync.unlink).toHaveBeenCalledWith(inputFilePath);
       expect(error).toBeInstanceOf(RepositoryException);
       expect((error as RepositoryException).additionalInfo).toEqual(fileError);
     });
@@ -324,7 +345,8 @@ describe('MystIdentityFileRepository', () => {
     it(`Should successfully move and rename file`, async () => {
       repositoryGetIdentityByFilePathStub.mockResolvedValue([null, 'identity1']);
       (<jest.Mock>fsAsync.mkdir).mockResolvedValue(null);
-      (<jest.Mock>fsAsync.rename).mockResolvedValue(null);
+      (<jest.Mock>fsAsync.copyFile).mockResolvedValue(null);
+      (<jest.Mock>fsAsync.unlink).mockResolvedValue(null);
 
       const [error, result] = await repository.moveAndRenameFile(inputFilePath, inputRenameFile1);
 
@@ -332,8 +354,10 @@ describe('MystIdentityFileRepository', () => {
       expect(repositoryGetIdentityByFilePathStub).toHaveBeenCalledWith(inputFilePath);
       expect(fsAsync.mkdir).toHaveBeenCalled();
       expect(fsAsync.mkdir).toHaveBeenCalledWith(path.join(storeBasePath, 'identity1'), {recursive: true});
-      expect(fsAsync.rename).toHaveBeenCalled();
-      expect(fsAsync.rename).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(fsAsync.copyFile).toHaveBeenCalled();
+      expect(fsAsync.copyFile).toHaveBeenCalledWith(inputFilePath, path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
+      expect(fsAsync.unlink).toHaveBeenCalled();
+      expect(fsAsync.unlink).toHaveBeenCalledWith(inputFilePath);
       expect(error).toBeNull();
       expect(result).toEqual(path.join(storeBasePath, 'identity1', path.sep, inputRenameFile1));
     });

@@ -95,7 +95,8 @@ export class MystIdentityFileRepository implements IAccountIdentityFileRepositor
     const destinationFile = path.join(this._storeBasePath, dataFetchIdentity, path.sep, renameFile);
     try {
       await fsAsync.mkdir(path.dirname(destinationFile), {recursive: true});
-      await fsAsync.rename(filePath, destinationFile);
+      await fsAsync.copyFile(filePath, destinationFile);
+      await fsAsync.unlink(filePath);
 
       return [null, destinationFile];
     } catch (error) {
