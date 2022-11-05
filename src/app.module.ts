@@ -68,7 +68,7 @@ import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-iden
       inject: [ConfigService],
       useClass: PgConfigService,
     }),
-    TypeOrmModule.forFeature([UsersEntity]),
+    TypeOrmModule.forFeature([UsersEntity, AccountIdentityEntity]),
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
