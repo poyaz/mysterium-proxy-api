@@ -17,6 +17,7 @@ import {ExistException} from '@src-core/exception/exist.exception';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {MystIdentityInUseException} from '@src-core/exception/myst-identity-in-use.exception';
+import * as path from 'path';
 
 export class MystIdentityAggregateRepository implements IGenericRepositoryInterface<MystIdentityModel> {
   private static RUNNER_FAKE_SERIAL = '0000000000000000000000000000000000000000000000000000000000000000';
@@ -114,7 +115,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     }
 
     const [errorMovePath, dataMovePath] = await this._mystIdentityFileRepository.moveAndRenameFile(
-      `${model.path}${model.filename}`,
+      path.join(model.path, model.filename),
       `${model.identity}.json`,
     );
     if (errorMovePath) {
