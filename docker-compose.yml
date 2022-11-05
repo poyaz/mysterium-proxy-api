@@ -119,6 +119,7 @@ volumes:
 
 networks:
   main:
+    name: network-mysterium-proxy-main
     driver: bridge
     ipam:
       driver: default
