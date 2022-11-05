@@ -1,6 +1,6 @@
 FROM node:16.16.0-alpine3.16 AS build
 
-RUN apk add --no-cache apache2-utils curl; \
+RUN apk add --no-cache apache2-utils curl su-exec; \
     mkdir -p /data /data/src /data/storage/tmp; \
     chown -R node:node /data
 
@@ -19,4 +19,7 @@ COPY --chown=node:node \
         ./src
 
 VOLUME /data/storage/tmp
-USER node
+
+COPY docker-entrypoint.sh /usr/local/bin/
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
