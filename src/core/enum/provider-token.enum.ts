@@ -110,7 +110,7 @@ export enum ProviderTokenEnum {
    * {@link MystProviderCacheApiRepository}
    * @implements IMystApiRepositoryInterface
    */
-  MYST_PROVIDER_CACHE_ID_API_REPOSITORY = 'MYST_PROVIDER_CACHE_ID_API_REPOSITORY',
+  MYST_PROVIDER_CACHE_API_REPOSITORY = 'MYST_PROVIDER_CACHE_API_REPOSITORY',
   /**
    *
    * {@link MystIdentityAggregateRepository}
@@ -144,10 +144,10 @@ export enum ProviderTokenEnum {
 
   /**
    *
-   * {@link UsersSquidFileRepository}
-   * @implements IUsersSquidFileInterface
+   * {@link UsersHtpasswdFileRepository}
+   * @implements IUsersHtpasswdFileInterface
    */
-  USERS_SQUID_FILE_REPOSITORY = 'USERS_SQUID_FILE_REPOSITORY',
+  USERS_HTPASSWD_FILE_REPOSITORY = 'USERS_HTPASSWD_FILE_REPOSITORY',
 
   /**
    *

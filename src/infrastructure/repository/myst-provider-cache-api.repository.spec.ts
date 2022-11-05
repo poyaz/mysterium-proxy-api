@@ -23,7 +23,7 @@ import {
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
-import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
+import {defaultModelFactory} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 
@@ -52,7 +52,7 @@ describe('MystProviderCacheApiRepository', () => {
           useValue: redisService,
         },
         {
-          provide: ProviderTokenEnum.MYST_PROVIDER_CACHE_ID_API_REPOSITORY,
+          provide: ProviderTokenEnum.MYST_PROVIDER_CACHE_API_REPOSITORY,
           useValue: mystProviderApiRepository,
         },
         {
@@ -61,7 +61,7 @@ describe('MystProviderCacheApiRepository', () => {
         },
         {
           provide: MystProviderCacheApiRepository,
-          inject: [RedisService, ProviderTokenEnum.MYST_PROVIDER_CACHE_ID_API_REPOSITORY, Logger],
+          inject: [RedisService, ProviderTokenEnum.MYST_PROVIDER_CACHE_API_REPOSITORY, Logger],
           useFactory: (redisService: RedisService, mystProviderApiRepository: IMystApiRepositoryInterface, logger: Logger) =>
             new MystProviderCacheApiRepository(redisService, mystProviderApiRepository, logger),
         },
