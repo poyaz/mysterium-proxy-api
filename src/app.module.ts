@@ -58,6 +58,9 @@ import {AccountIdentityEntity} from '@src-infrastructure/entity/account-identity
 import {MystIdentityFileRepository} from '@src-infrastructure/repository/myst-identity-file.repository';
 import {MystIdentityAggregateRepository} from '@src-infrastructure/repository/myst-identity-aggregate.repository';
 import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
+import {MystProviderService} from '@src-core/service/myst-provider.service';
+import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
+import {DockerRunnerService} from '@src-core/service/docker-runner.service';
 
 @Module({
   imports: [
@@ -138,14 +141,15 @@ import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-iden
     },
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY],
+      useFactory: (dockerRunnerRepository: IRunnerRepositoryInterface) =>
+        new DockerRunnerService(dockerRunnerRepository),
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE,
       inject: [
         ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
-        ProviderTokenEnum.MYST_PROVIDER_API_REPOSITORY,
+        ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
         ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
       ],
       useFactory: (
@@ -156,13 +160,16 @@ import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-iden
     },
     {
       provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE,
-      inject: [],
-      useFactory: () => ({}),
-    },
-    {
-      provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [
+        ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_SERVICE,
+        ProviderTokenEnum.MYST_IDENTITY_SERVICE,
+      ],
+      useFactory: (
+        mystApiRepository: IMystApiRepositoryInterface,
+        runnerService: IRunnerServiceInterface,
+        mystIdentityService: IMystIdentityServiceInterface,
+      ) => new MystProviderService(mystApiRepository, runnerService, mystIdentityService),
     },
     {
       provide: ProviderTokenEnum.USER_SERVICE,
