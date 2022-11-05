@@ -670,14 +670,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should error get identity for aggregation when fail on get all data from file`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([new UnknownException()]);
+      mystIdentityFileRepository.getByDirPath.mockResolvedValue([new UnknownException()]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -692,14 +692,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with return null if file not found`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, null]);
+      mystIdentityFileRepository.getByDirPath.mockResolvedValue([null, null]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -715,14 +715,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with return null if myst runner not found`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
+      mystIdentityFileRepository.getByDirPath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -738,14 +738,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with return null if not match myst runner`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
+      mystIdentityFileRepository.getByDirPath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystNotMatchData3], 1]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -761,14 +761,14 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with with 'isUse' false`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
+      mystIdentityFileRepository.getByDirPath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [outputRunnerMystData1], 1]);
 
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -791,7 +791,7 @@ describe('MystIdentityAggregateRepository', () => {
 
     it(`Should successfully get identity for aggregation with with 'isUse' true`, async () => {
       mystIdentityPgRepository.getById.mockResolvedValue([null, outputIdentityData]);
-      mystIdentityFileRepository.getIdentityByFilePath.mockResolvedValue([null, outputFileData]);
+      mystIdentityFileRepository.getByDirPath.mockResolvedValue([null, outputFileData]);
       dockerRunnerRepository.getAll.mockResolvedValue([
         null,
         [outputRunnerMystData1, outputConnectRunnerMystConnectData2],
@@ -801,8 +801,8 @@ describe('MystIdentityAggregateRepository', () => {
       const [error, result] = await repository.getById(inputId);
 
       expect(mystIdentityPgRepository.getById).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalled();
-      expect(mystIdentityFileRepository.getIdentityByFilePath).toHaveBeenCalledWith(outputIdentityData.path);
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalled();
+      expect(mystIdentityFileRepository.getByDirPath).toHaveBeenCalledWith(outputIdentityData.path);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toBeCalledWith(expect.objectContaining({skipPagination: true}));
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toMatchObject({
@@ -1380,6 +1380,7 @@ describe('MystIdentityAggregateRepository', () => {
           identity: inputModel.identity,
           passphrase: inputModel.passphrase,
         },
+        volumes: [{name: RunnerServiceVolumeEnum.MYST_KEYSTORE, source: `${identityBasePath}${inputModel.identity}/`, dest: '-'}],
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       });
@@ -1450,6 +1451,7 @@ describe('MystIdentityAggregateRepository', () => {
           identity: inputModel.identity,
           passphrase: inputModel.passphrase,
         },
+        volumes: [{name: RunnerServiceVolumeEnum.MYST_KEYSTORE, source: `${identityBasePath}${inputModel.identity}/`, dest: '-'}],
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       });

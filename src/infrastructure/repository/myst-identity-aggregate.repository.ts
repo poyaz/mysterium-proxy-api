@@ -8,7 +8,8 @@ import {
   RunnerExecEnum,
   RunnerModel,
   RunnerObjectLabel,
-  RunnerServiceEnum, RunnerServiceVolumeEnum,
+  RunnerServiceEnum,
+  RunnerServiceVolumeEnum,
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
@@ -76,7 +77,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       [errorFile, dataFile],
       [errorRunner, dataRunnerList, totalRunnerCount],
     ] = await Promise.all([
-      this._mystIdentityFileRepository.getIdentityByFilePath(dataIdentity.path),
+      this._mystIdentityFileRepository.getByDirPath(dataIdentity.path),
       this._dockerRunnerRepository.getAll(runnerFilter),
     ]);
     const fetchError = errorFile || errorRunner;
@@ -331,6 +332,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       service: RunnerServiceEnum.MYST,
       exec: RunnerExecEnum.DOCKER,
       socketType: RunnerSocketTypeEnum.HTTP,
+      volumes: [{name: RunnerServiceVolumeEnum.MYST_KEYSTORE, source: model.path, dest: '-'}],
       status: RunnerStatusEnum.CREATING,
       insertDate: new Date(),
     });
