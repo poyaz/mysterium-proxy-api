@@ -18,4 +18,5 @@ COPY --chown=node:node \
         src/ \
         ./src
 
+VOLUME /data/storage/tmp
 USER node
