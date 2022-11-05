@@ -1,7 +1,7 @@
 import {UsersAdapterRepository} from './users-adapter.repository';
 import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
 import {UsersModel} from '@src-core/model/users.model';
-import {IUsersSquidFileInterface} from '@src-core/interface/i-users-squid-file.interface';
+import {IUsersHtpasswdFileInterface} from '@src-core/interface/i-users-htpasswd-file.interface';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {Test, TestingModule} from '@nestjs/testing';
@@ -15,12 +15,12 @@ import {UpdateModel} from '@src-core/model/update.model';
 describe('UsersAdapterRepository', () => {
   let repository: UsersAdapterRepository;
   let usersPgRepository: MockProxy<IGenericRepositoryInterface<UsersModel>>;
-  let usersSquidFileRepository: MockProxy<IUsersSquidFileInterface>;
+  let usersSquidFileRepository: MockProxy<IUsersHtpasswdFileInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
     usersPgRepository = mock<IGenericRepositoryInterface<UsersModel>>();
-    usersSquidFileRepository = mock<IUsersSquidFileInterface>();
+    usersSquidFileRepository = mock<IUsersHtpasswdFileInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
@@ -32,13 +32,13 @@ describe('UsersAdapterRepository', () => {
           useValue: usersPgRepository,
         },
         {
-          provide: ProviderTokenEnum.USERS_SQUID_FILE_REPOSITORY,
+          provide: ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
           useValue: usersSquidFileRepository,
         },
         {
           provide: UsersAdapterRepository,
-          inject: [ProviderTokenEnum.USER_PG_REPOSITORY, ProviderTokenEnum.USERS_SQUID_FILE_REPOSITORY],
-          useFactory: (usersPgRepository: IGenericRepositoryInterface<UsersModel>, usersSquidFileRepository: IUsersSquidFileInterface) =>
+          inject: [ProviderTokenEnum.USER_PG_REPOSITORY, ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY],
+          useFactory: (usersPgRepository: IGenericRepositoryInterface<UsersModel>, usersSquidFileRepository: IUsersHtpasswdFileInterface) =>
             new UsersAdapterRepository(usersPgRepository, usersSquidFileRepository),
         },
       ],
