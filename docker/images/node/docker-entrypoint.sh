@@ -19,12 +19,7 @@ file_env() {
   unset "$fileVar"
 }
 
-docker_setup_env() {
-}
-
 _main() {
-  docker_setup_env
-
   chown -R node:node /data
 
   if [ "$(id -u)" = '0' ]; then
