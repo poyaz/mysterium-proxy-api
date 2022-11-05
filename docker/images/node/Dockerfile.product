@@ -15,9 +15,9 @@ COPY --chown=node:node \
         src/ \
         ./src
 
-RUN chown -R node:node /data
-
 RUN npm install --only=prod; npm run build
+
+RUN chown -R node:node /data
 
 FROM node:16.16.0-alpine3.16
 
