@@ -821,6 +821,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -917,6 +918,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -1027,6 +1029,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -1188,6 +1191,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -1292,6 +1296,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -1404,6 +1409,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -1519,6 +1525,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -1635,6 +1642,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,

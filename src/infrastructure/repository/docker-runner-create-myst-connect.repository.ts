@@ -31,6 +31,7 @@ type RedisOption = {
 export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRepository {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.MYST_CONNECT;
   private readonly _MYST_API_BASE_ADDRESS = 'https://127.0.0.1:4050';
+  private readonly _REDIS_PROVIDER_INFO_KEY = 'myst_provider:info:all';
 
   private readonly _namespace: string;
 
@@ -75,6 +76,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.MYST_CONNECT,
           ...containerLabel,
+          autoheal: 'true',
         },
         Env: [
           `MYST_API_BASE_ADDRESS=${this._MYST_API_BASE_ADDRESS.replace(/(.+)\/?$/, '$1')}`,
@@ -83,6 +85,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
           `REDIS_HOST=${this._redisConnection.host}`,
           `REDIS_PORT=${this._redisConnection.port}`,
           `REDIS_DB=${this._redisConnection.db}`,
+          `REDIS_PROVIDER_INFO_KEY=${this._REDIS_PROVIDER_INFO_KEY}`,
         ],
         HostConfig: {
           Binds: [

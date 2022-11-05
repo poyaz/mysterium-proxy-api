@@ -457,6 +457,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST_CONNECT,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.project`]: RunnerServiceEnum.MYST_CONNECT,
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -472,6 +473,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `REDIS_HOST=${redisHost}`,
           `REDIS_PORT=${redisPort}`,
           `REDIS_DB=${redisDb}`,
+          `REDIS_PROVIDER_INFO_KEY=myst_provider:info:all`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -541,6 +543,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST_CONNECT,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.project`]: RunnerServiceEnum.MYST_CONNECT,
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -556,6 +559,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `REDIS_HOST=${redisHost}`,
           `REDIS_PORT=${redisPort}`,
           `REDIS_DB=${redisDb}`,
+          `REDIS_PROVIDER_INFO_KEY=myst_provider:info:all`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -625,6 +629,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
         Image: imageName,
         name: RunnerServiceEnum.MYST_CONNECT,
         Labels: {
+          autoheal: 'true',
           [`${namespace}.id`]: identifierMock.generateId(),
           [`${namespace}.project`]: RunnerServiceEnum.MYST_CONNECT,
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
@@ -640,6 +645,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `REDIS_HOST=${redisHost}`,
           `REDIS_PORT=${redisPort}`,
           `REDIS_DB=${redisDb}`,
+          `REDIS_PROVIDER_INFO_KEY=myst_provider:info:all`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([

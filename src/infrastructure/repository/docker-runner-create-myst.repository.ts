@@ -225,6 +225,7 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.MYST,
           ...containerLabel,
+          autoheal: 'true',
         },
         Env: [
           `MYST_IDENTITY=${mystIdentityModel.identity}`,
