@@ -30,7 +30,7 @@ type RedisOption = {
 
 export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRepository {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.MYST_CONNECT;
-  private readonly _MYST_API_BASE_ADDRESS = 'https://127.0.0.1:4050';
+  private readonly _MYST_API_BASE_ADDRESS = 'http://127.0.0.1:4050';
   private readonly _REDIS_PROVIDER_INFO_KEY = 'myst_provider:info:all';
 
   private readonly _namespace: string;
