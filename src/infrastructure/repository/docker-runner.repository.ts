@@ -18,10 +18,12 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import Dockerode, {NetworkInfo} from 'dockerode';
 import Docker = require('dockerode');
 import {filterAndSortRunner} from '@src-infrastructure/utility/filterAndSortRunner';
+import * as path from 'path';
 
 export type dockerContainerOption = {
   baseVolumePath: { myst: string },
   networkName: string,
+  realPath: string,
 }
 
 export class DockerRunnerRepository implements IRunnerRepositoryInterface {
@@ -70,17 +72,24 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     }
 
     try {
-      const containerFetchList = await this._docker.listContainers({
-        all: true,
-        filters: JSON.stringify(filtersObj),
-      });
+      const [containerFetchList, volumeFetchList] = await Promise.all([
+        this._docker.listContainers({
+          all: true,
+          filters: JSON.stringify(filtersObj),
+        }),
+        this._docker.listVolumes({
+          filters: JSON.stringify({
+            label: [`${this._namespace}.create-by`],
+          }),
+        }),
+      ]);
       if (containerFetchList.length === 0) {
         return [null, [], 0];
       }
 
       const networkDependencyObj = await this._getAllNetworkDependency(containerFetchList);
 
-      const data = containerFetchList.map((v) => this._fillModel<T>(v, networkDependencyObj));
+      const data = containerFetchList.map((v) => this._fillModel<T>(v, networkDependencyObj, volumeFetchList.Volumes));
 
       const result = filterAndSortRunner<T>(data, filter);
 
@@ -99,17 +108,24 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     };
 
     try {
-      const containerFetchList = await this._docker.listContainers({
-        all: true,
-        filters: JSON.stringify(filtersObj),
-      });
+      const [containerFetchList, volumeFetchList] = await Promise.all([
+        this._docker.listContainers({
+          all: true,
+          filters: JSON.stringify(filtersObj),
+        }),
+        this._docker.listVolumes({
+          filters: JSON.stringify({
+            label: [`${this._namespace}.create-by`],
+          }),
+        }),
+      ]);
       if (containerFetchList.length === 0) {
         return [null, null];
       }
 
       const networkDependencyObj = await this._getAllNetworkDependency(containerFetchList);
 
-      const result = this._fillModel<T>(containerFetchList[0], networkDependencyObj);
+      const result = this._fillModel<T>(containerFetchList[0], networkDependencyObj, volumeFetchList.Volumes);
 
       return [null, result];
     } catch (error) {
@@ -200,7 +216,11 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     return dependencyContainerFetchObj;
   }
 
-  private _fillModel<T>(row: Dockerode.ContainerInfo, networkDependencyObj: Record<string, NetworkInfo>) {
+  private _fillModel<T>(
+    row: Dockerode.ContainerInfo,
+    networkDependencyObj: Record<string, NetworkInfo>,
+    volumeFetchList: Dockerode.VolumeInspectInfo[],
+  ) {
     let service: RunnerServiceEnum;
     let socketType: RunnerSocketTypeEnum;
     let socketUri: string;
@@ -270,11 +290,21 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
       socketUri,
       socketPort,
       label: DockerLabelParser.convertObjectToLabel(this._namespace, row.Labels),
-      volumes: row.Mounts.map((v) => ({
-        source: v.Source,
-        dest: v.Destination,
-        ...(v.Destination.search(this._containerOption.baseVolumePath.myst) !== -1 && {name: RunnerServiceVolumeEnum.MYST_KEYSTORE}),
-      })),
+      volumes: row.Mounts.map((v) => {
+        let source = v.Source;
+        if (v.Type === 'volume') {
+          const find = volumeFetchList.find((volume) => volume.Name === v.Name);
+          if (find) {
+            source = find.Options.device.replace(new RegExp(`^${this._containerOption.realPath}`), path.resolve());
+          }
+        }
+
+        return {
+          source,
+          dest: v.Destination,
+          ...(v.Destination.search(this._containerOption.baseVolumePath.myst) !== -1 && {name: RunnerServiceVolumeEnum.MYST_KEYSTORE}),
+        };
+      }),
       status,
       insertDate: new Date(row.Created * 1000),
     });

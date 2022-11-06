@@ -40,6 +40,7 @@ describe('DockerRunnerRepository', () => {
   let identifierMock: MockProxy<IIdentifier>;
   let mystDataVolume: string;
   let networkName: string;
+  let realPath: string;
   let namespace: string;
 
   beforeEach(async () => {
@@ -51,6 +52,7 @@ describe('DockerRunnerRepository', () => {
 
     mystDataVolume = '/var/lib/mysterium-node/keystore/';
     networkName = 'mysterium-proxy-api_main';
+    realPath = '/real/path/';
     namespace = 'com.mysterium-proxy';
 
     const module: TestingModule = await Test.createTestingModule({
@@ -67,10 +69,16 @@ describe('DockerRunnerRepository', () => {
           provide: DockerRunnerRepository,
           inject: [ProviderTokenEnum.DOCKER_DYNAMIC_MODULE, ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY],
           useFactory: (docker: Docker, dockerCreateStrategy: ICreateRunnerRepository) =>
-            new DockerRunnerRepository(docker, dockerCreateStrategy, {
-              networkName,
-              baseVolumePath: {myst: mystDataVolume},
-            }, namespace),
+            new DockerRunnerRepository(
+              docker,
+              dockerCreateStrategy,
+              {
+                networkName,
+                baseVolumePath: {myst: mystDataVolume},
+                realPath,
+              },
+              namespace,
+            ),
         },
       ],
     }).compile();
@@ -371,6 +379,50 @@ describe('DockerRunnerRepository', () => {
       expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
 
+    it(`Should error get all with multi instance label when search volume`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          convertLabelToObject: convertLabelToObjectMock,
+        };
+      });
+      docker.listContainers.mockResolvedValue([]);
+      const executeError = new Error('Error in get list of volume');
+      docker.listVolumes.mockRejectedValue(executeError);
+
+      const [error] = await repository.getAll(inputLabelArrayFilter);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          name: [],
+          label: [
+            `${namespace}.create-by`,
+            `${namespace}.myst-identity-model.identity=${outputMystIdentityValid.identity}`,
+            `${namespace}.vpn-provider-model.user-identity=${outputVpnProviderValid.userIdentity}`,
+            `${namespace}.vpn-provider-model.provider-identity=${outputVpnProviderValid.providerIdentity}`,
+          ],
+        }),
+      });
+      expect(docker.listVolumes).toHaveBeenCalled();
+      expect(docker.listVolumes.mock.calls[0][0]).toEqual({
+        filters: JSON.stringify({
+          label: [`${namespace}.create-by`],
+        }),
+      });
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
     it(`Should successfully get all and return empty array if not found any container`, async () => {
       const parseLabelMock = jest.fn().mockReturnValue([null]);
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
@@ -443,7 +495,7 @@ describe('DockerRunnerRepository', () => {
             providerIdentity: outputVpnProviderValid.providerIdentity,
           },
         ]);
-
+      docker.listVolumes.mockResolvedValue({Volumes: [], Warnings: []});
 
       const [error, result, total] = await repository.getAll(inputLabelMystFilter);
 
@@ -466,6 +518,12 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           id: [outputDocker1.Id],
+          label: [`${namespace}.create-by`],
+        }),
+      });
+      expect(docker.listVolumes).toHaveBeenCalled();
+      expect(docker.listVolumes.mock.calls[0][0]).toEqual({
+        filters: JSON.stringify({
           label: [`${namespace}.create-by`],
         }),
       });
@@ -673,6 +731,33 @@ describe('DockerRunnerRepository', () => {
       expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
 
+    it(`Should error get by id when fetch volume lists`, async () => {
+      docker.listContainers.mockResolvedValue([]);
+      const executeError = new Error('Error in get list of container');
+      docker.listVolumes.mockRejectedValue(executeError);
+
+      const [error] = await repository.getById(inputId);
+
+      expect(docker.listContainers).toHaveBeenCalled();
+      expect(docker.listContainers.mock.calls[0][0]).toEqual({
+        all: true,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.create-by`,
+            `${namespace}.id=${inputId}`,
+          ],
+        }),
+      });
+      expect(docker.listVolumes).toHaveBeenCalled();
+      expect(docker.listVolumes.mock.calls[0][0]).toEqual({
+        filters: JSON.stringify({
+          label: [`${namespace}.create-by`],
+        }),
+      });
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
     it(`Should successfully get by id and return null if not found any container with id`, async () => {
       docker.listContainers.mockResolvedValueOnce([]);
 
@@ -710,6 +795,7 @@ describe('DockerRunnerRepository', () => {
             providerIdentity: outputVpnProviderValid.providerIdentity,
           },
         ]);
+      docker.listVolumes.mockResolvedValue({Volumes: [], Warnings: []});
 
       const [error, result] = await repository.getById(inputId);
 
@@ -727,6 +813,12 @@ describe('DockerRunnerRepository', () => {
         all: true,
         filters: JSON.stringify({
           id: [outputDocker1.Id],
+          label: [`${namespace}.create-by`],
+        }),
+      });
+      expect(docker.listVolumes).toHaveBeenCalled();
+      expect(docker.listVolumes.mock.calls[0][0]).toEqual({
+        filters: JSON.stringify({
           label: [`${namespace}.create-by`],
         }),
       });
