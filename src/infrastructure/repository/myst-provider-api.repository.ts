@@ -16,6 +16,7 @@ import {RunnerModel} from '@src-core/model/runner.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
+import {UnlockMystIdentityException} from '@src-core/exception/unlock-myst-identity.exception';
 
 @Injectable()
 export class MystProviderApiRepository implements IMystApiRepositoryInterface {
@@ -259,6 +260,10 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
 
       return [null, null];
     } catch (error) {
+      if (error?.response?.status === 403) {
+        return [new UnlockMystIdentityException()];
+      }
+
       return [new RepositoryException(error)];
     }
   }

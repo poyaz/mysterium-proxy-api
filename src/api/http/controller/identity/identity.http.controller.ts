@@ -409,6 +409,24 @@ export class IdentityHttpController {
             },
           ],
         },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNLOCK_MYST_IDENTITY,
+              description: 'Fail to unlock myst identity! Maybe the passphrase is wrong',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.UNLOCK_MYST_IDENTITY,
+                },
+              },
+            },
+          ],
+        },
       ],
     },
   })
