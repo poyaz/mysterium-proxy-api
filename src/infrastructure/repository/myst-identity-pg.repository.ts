@@ -32,6 +32,10 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
         if (getIdentity) {
           findOptions.where.push({identity: getIdentity.identity});
         }
+
+        if (findOptions.where.length === 0) {
+          delete findOptions.where;
+        }
       }
 
       if (filterModel.getLengthOfSortBy() > 0) {

@@ -58,6 +58,10 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
         if (getIsEnable) {
           findOptions.where.push({isEnable: getIsEnable.isEnable});
         }
+
+        if (findOptions.where.length === 0) {
+          delete findOptions.where;
+        }
       }
 
       if (filterModel.getLengthOfSortBy() > 0) {
