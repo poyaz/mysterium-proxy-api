@@ -129,17 +129,17 @@ describe('MystProviderCacheApiRepository', () => {
       });
 
       outputRedisGetAll = {
-        [outputVpnProviderData1.providerIdentity]: JSON.stringify(
+        [outputVpnProviderData1.id]: JSON.stringify(
           {
             ip: '127.0.0.1',
           },
         ),
       };
       outputRedisGetAllInvalidJson = {
-        [outputVpnProviderData1.providerIdentity]: 'invalid-json',
+        [outputVpnProviderData1.id]: 'invalid-json',
       };
       outputRedisGetAllInvalidData = {
-        [outputVpnProviderData1.providerIdentity]: JSON.stringify(
+        [outputVpnProviderData1.id]: JSON.stringify(
           {
             ip: 'invalid-ip',
           },
@@ -559,7 +559,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeNull();
       expect(result).toEqual(<VpnProviderModel>{
         id: outputVpnProviderData.id,
@@ -589,7 +589,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeInstanceOf(RepositoryException);
       expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
@@ -609,7 +609,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeInstanceOf(FillDataRepositoryException);
     });
 
@@ -628,7 +628,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeInstanceOf(FillDataRepositoryException);
       expect((<FillDataRepositoryException<VpnProviderModel>>error).fillProperties).toEqual(expect.arrayContaining<keyof VpnProviderModel>(['ip']));
     });
@@ -648,7 +648,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeNull();
       expect(result).toEqual(<VpnProviderModel>{
         id: outputVpnProviderData.id,
@@ -677,7 +677,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeNull();
       expect(result).toEqual(<VpnProviderModel>{
         id: outputVpnProviderData.id,
@@ -706,7 +706,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIdentity: outputVpnProviderData.providerIdentity,
       });
       expect(redis.hmget).toHaveBeenCalled();
-      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.providerIdentity);
+      expect(redis.hmget).toHaveBeenCalledWith('myst_provider:info:all', outputVpnProviderData.id);
       expect(error).toBeNull();
       expect(result).toEqual(<VpnProviderModel>{
         id: outputVpnProviderData.id,

@@ -55,7 +55,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
 
     const addCacheData = [];
     for (const vpnData of vpnDataList) {
-      vpnData.ip = connectionInfoObj[vpnData.providerIdentity]?.ip;
+      vpnData.ip = connectionInfoObj[vpnData.id]?.ip;
 
       addCacheData.push(`${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}:${vpnData.id}`, vpnData.providerIdentity);
     }
@@ -100,12 +100,12 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     }
 
     const vpnData = dataList[0];
-    const [connectionInfoError, connectionInfoObj] = await this._getProviderConnectionInfo(vpnData.providerIdentity);
+    const [connectionInfoError, connectionInfoObj] = await this._getProviderConnectionInfo(vpnData.id);
     if (connectionInfoError) {
       return [connectionInfoError];
     }
 
-    vpnData.ip = connectionInfoObj[vpnData.providerIdentity]?.ip;
+    vpnData.ip = connectionInfoObj[vpnData.id]?.ip;
 
     return [null, vpnData];
   }
@@ -126,8 +126,8 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     return this._mystProviderApiRepository.unlockIdentity(runner, identity);
   }
 
-  private async _getProviderConnectionInfo(providerIdentity?: string): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
-    const [error, data] = await this._getProviderConnectionInfoFromRedis(providerIdentity);
+  private async _getProviderConnectionInfo(providerId?: string): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
+    const [error, data] = await this._getProviderConnectionInfoFromRedis(providerId);
     if (error) {
       return [error];
     }
@@ -148,15 +148,15 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     }
   }
 
-  private async _getProviderConnectionInfoFromRedis(providerIdentity?: string): Promise<AsyncReturn<Error, Record<string, string>>> {
+  private async _getProviderConnectionInfoFromRedis(providerId?: string): Promise<AsyncReturn<Error, Record<string, string>>> {
     try {
-      if (!providerIdentity) {
+      if (!providerId) {
         const dataObj = await this._redis.hgetall(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`);
 
         return [null, dataObj];
       }
 
-      const dataList = await this._redis.hmget(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`, providerIdentity);
+      const dataList = await this._redis.hmget(`${MystProviderCacheApiRepository.PREFIX_KEY_INFO}:all`, providerId);
       if (dataList.length === 0) {
         return [null, {}];
       }
@@ -164,7 +164,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
         return [null, {}];
       }
 
-      const dataObj = {[providerIdentity]: dataList[0]};
+      const dataObj = {[providerId]: dataList[0]};
 
       return [null, dataObj];
     } catch (error) {

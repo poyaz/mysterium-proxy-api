@@ -30,6 +30,7 @@ docker_setup_env() {
   file_env 'MYST_API_BASE_ADDRESS' 'https://127.0.0.1:4050'
   file_env 'MYST_IDENTITY'
   file_env 'PROVIDER_IDENTITY'
+  file_env 'API_PROVIDER_ID'
   file_env 'REDIS_HOST'
   file_env 'REDIS_PORT' '6379'
   file_env 'REDIS_DB'
@@ -147,7 +148,7 @@ get_current_ip() {
 }
 
 store_ip_in_redis() {
-  declare -r DATA="$1"
+  declare -r DATA=$(echo "$1" | jq -S '. |= . + {"provider_identity": "'$PROVIDER_IDENTITY'"}')
 
   local execute_redis=(
     redis-cli
@@ -159,7 +160,7 @@ store_ip_in_redis() {
     execute_redis+=(-n $REDIS_DB)
   fi
 
-  execute_redis+=(HMSET "${REDIS_PROVIDER_INFO_KEY}" "${PROVIDER_IDENTITY}" "${DATA}")
+  execute_redis+=(HMSET "${REDIS_PROVIDER_INFO_KEY}" "${API_PROVIDER_ID}" "${DATA}")
 
   "${execute_redis[@]}" >/dev/null 2>&1
 }
@@ -189,6 +190,11 @@ _main() {
 
     if [ -z $PROVIDER_IDENTITY ]; then
       echo "[ERR] Please fill variable \"PROVIDER_IDENTITY\"!"
+      exit 1
+    fi
+
+    if [ -z API_PROVIDER_ID ]; then
+      echo "[ERR] Please fill variable \"API_PROVIDER_ID\"!"
       exit 1
     fi
 

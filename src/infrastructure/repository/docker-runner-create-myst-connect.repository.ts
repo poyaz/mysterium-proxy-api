@@ -83,6 +83,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
           `MYST_API_BASE_ADDRESS=${this._MYST_API_BASE_ADDRESS.replace(/(.+)\/?$/, '$1')}`,
           `MYST_IDENTITY=${mystModelData.identity}`,
           `PROVIDER_IDENTITY=${vpnModelData.providerIdentity}`,
+          `API_PROVIDER_ID=${vpnModelData.id}`,
           `REDIS_HOST=${this._redisConnection.host}`,
           `REDIS_PORT=${this._redisConnection.port}`,
           `REDIS_DB=${this._redisConnection.db}`,
