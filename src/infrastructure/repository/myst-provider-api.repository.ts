@@ -82,7 +82,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
         return [null, [], 0];
       }
 
-      const result = response.data.map((v) => this._fillModel(v));
+      const result = response.data.map((v) => this._fillModel(v)).filter((v) => v);
       let count = result.length;
 
       if (pageNumber && pageSize) {
@@ -269,12 +269,17 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
   }
 
   private _fillModel(row) {
+    const providerIpType = MystProviderApiRepository._convertProviderIpType(row['location']['ip_type']);
+    if (!providerIpType) {
+      return null;
+    }
+
     return new VpnProviderModel({
       id: this._identifier.generateId(row['provider_id']),
       serviceType: VpnServiceTypeEnum.WIREGUARD,
       providerName: VpnProviderName.MYSTERIUM,
       providerIdentity: row['provider_id'],
-      providerIpType: MystProviderApiRepository._convertProviderIpType(row['location']['ip_type']),
+      providerIpType,
       country: row['location']['country'],
       isRegister: false,
       quality: row['quality']['quality'],
@@ -299,7 +304,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
       case 'education':
         return VpnProviderIpTypeEnum.EDUCATION;
       default:
-        throw new FillDataRepositoryException<VpnProviderModel>(['providerIpType']);
+        return null;
     }
   }
 

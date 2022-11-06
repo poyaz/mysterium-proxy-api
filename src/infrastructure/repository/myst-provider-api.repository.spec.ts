@@ -283,12 +283,12 @@ describe('MystProviderApiRepository', () => {
       expect((error as RepositoryException).additionalInfo).toEqual(apiError);
     });
 
-    it(`Should error get all vpn provider when fill 'providerIpType'`, async () => {
+    it(`Should successfully get all vpn provider and return null when 'providerIpType' is unknown`, async () => {
       (<jest.Mock>axios.get).mockResolvedValue({
         data: [outputFailAxiosData],
       });
 
-      const [error] = await repository.getAll(inputRunnerModel);
+      const [error, result] = await repository.getAll(inputRunnerModel);
 
       expect(axios.get).toHaveBeenCalled();
       expect(axios.get).toBeCalledWith(
@@ -302,10 +302,8 @@ describe('MystProviderApiRepository', () => {
           },
         }),
       );
-      expect(error).toBeInstanceOf(FillDataRepositoryException);
-      expect((<FillDataRepositoryException<VpnProviderModel>>error).fillProperties).toEqual(
-        expect.arrayContaining(<Array<keyof VpnProviderModel>>['serviceType']),
-      );
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
     });
 
     it(`Should successfully get all vpn provider with empty record`, async () => {
