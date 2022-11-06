@@ -9,6 +9,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - $PWD/storage/tmp:/data/storage/tmp
+    environment:
+      - DOCKER_REAL_PROJECT_PATH=$PWD
     networks:
       main:
         ipv4_address: 10.110.0.2
