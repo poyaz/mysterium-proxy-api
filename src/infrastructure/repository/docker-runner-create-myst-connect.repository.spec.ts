@@ -330,14 +330,14 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       const getClassInstanceMock = jest.fn()
         .mockReturnValueOnce([null, outputMystIdentityValid])
         .mockReturnValueOnce([null, outputVpnProviderValid]);
-      const convertLabelToObjectMock = jest.fn().mockReturnValueOnce({
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
         return {
           parseLabel: parseLabelMock,
           getClassInstance: getClassInstanceMock,
-          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
       const executeError = new Error('Error in get list of container');
@@ -350,8 +350,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
         all: false,
@@ -371,14 +371,14 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       const getClassInstanceMock = jest.fn()
         .mockReturnValueOnce([null, outputMystIdentityValid])
         .mockReturnValueOnce([null, outputVpnProviderValid]);
-      const convertLabelToObjectMock = jest.fn().mockReturnValueOnce({
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
         return {
           parseLabel: parseLabelMock,
           getClassInstance: getClassInstanceMock,
-          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
       docker.listContainers.mockResolvedValue(outputEmptyContainerList);
@@ -390,8 +390,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
         all: false,
@@ -410,10 +410,11 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       const getClassInstanceMock = jest.fn()
         .mockReturnValueOnce([null, outputMystIdentityValid])
         .mockReturnValueOnce([null, outputVpnProviderValid]);
-      const convertLabelToObjectMock = jest.fn()
+      const convertLabelToObjectAndPickMock = jest.fn()
         .mockReturnValueOnce({
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-        })
+        });
+      const convertLabelToObjectMock = jest.fn()
         .mockReturnValueOnce({
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
@@ -426,6 +427,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           parseLabel: parseLabelMock,
           getClassInstance: getClassInstanceMock,
           convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
       docker.listContainers.mockResolvedValue(outputExistContainerList);
@@ -439,8 +441,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(2);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
         all: false,
@@ -451,7 +453,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           ],
         }),
       }));
-      expect(convertLabelToObjectMock.mock.calls[1][1]).toHaveLength(0);
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
@@ -496,10 +499,11 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       const getClassInstanceMock = jest.fn()
         .mockReturnValueOnce([null, outputMystIdentityValid])
         .mockReturnValueOnce([null, outputVpnProviderValid]);
-      const convertLabelToObjectMock = jest.fn()
+      const convertLabelToObjectAndPickMock = jest.fn()
         .mockReturnValueOnce({
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-        })
+        });
+      const convertLabelToObjectMock = jest.fn()
         .mockReturnValueOnce({
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
@@ -512,6 +516,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           parseLabel: parseLabelMock,
           getClassInstance: getClassInstanceMock,
           convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
       docker.listContainers.mockResolvedValue(outputExistContainerList);
@@ -526,8 +531,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(2);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
         all: false,
@@ -538,7 +543,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           ],
         }),
       }));
-      expect(convertLabelToObjectMock.mock.calls[1][1]).toHaveLength(0);
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
@@ -584,10 +590,11 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       const getClassInstanceMock = jest.fn()
         .mockReturnValueOnce([null, outputMystIdentityValid])
         .mockReturnValueOnce([null, outputVpnProviderValid]);
-      const convertLabelToObjectMock = jest.fn()
+      const convertLabelToObjectAndPickMock = jest.fn()
         .mockReturnValueOnce({
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-        })
+        });
+      const convertLabelToObjectMock = jest.fn()
         .mockReturnValueOnce({
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.myst-identity-model.identity`]: outputMystIdentityValid.identity,
@@ -600,6 +607,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           parseLabel: parseLabelMock,
           getClassInstance: getClassInstanceMock,
           convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
       docker.listContainers.mockResolvedValue(outputExistContainerList);
@@ -613,8 +621,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(2);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
         all: false,
@@ -625,7 +633,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           ],
         }),
       }));
-      expect(convertLabelToObjectMock.mock.calls[1][1]).toHaveLength(0);
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
       expect(docker.createContainer).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,

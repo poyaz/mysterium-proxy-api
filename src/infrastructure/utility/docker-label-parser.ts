@@ -55,21 +55,21 @@ export class DockerLabelParser<T> {
     const obj = {};
 
     this._models.map((dataModel) => {
-      const namespace = dataModel.namespace.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
+      this._convertLabelToObject(obj, dataModel, prefixNamespace, ignoreKeys);
+    });
 
-      Object
-        .keys(dataModel.data)
-        .filter((v) =>
-          ['clone', 'isDefaultProperty', 'getDefaultProperties', 'IS_DEFAULT_MODEL'].indexOf(v) === -1
-          && v.match(/^[^_].+/),
-        )
-        .filter((v) => !(<defaultModelType<any>><unknown>dataModel.data).isDefaultProperty(v))
-        .filter((v) => ignoreKeys.indexOf(<any><unknown>v) === -1)
-        .map((v) => {
-          const key = v.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
+    return obj;
+  }
 
-          obj[`${prefixNamespace}.${namespace}.${key}`] = `${dataModel.data[v]}`;
-        });
+  convertLabelToObjectAndPick<S>(prefixNamespace: string, cls: ClassConstructor<S>, ignoreKeys: Array<keyof S> = []): Record<string, string> {
+    const obj = {};
+
+    this._models.map((dataModel) => {
+      if (dataModel.namespace !== cls.name) {
+        return;
+      }
+
+      this._convertLabelToObject(obj, dataModel, prefixNamespace, ignoreKeys);
     });
 
     return obj;
@@ -203,5 +203,23 @@ export class DockerLabelParser<T> {
         defaultProperties,
       ),
     });
+  }
+
+  private _convertLabelToObject<S>(obj: Record<string, string>, dataModel, prefixNamespace: string, ignoreKeys: Array<keyof S> = []) {
+    const namespace = dataModel.namespace.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
+
+    Object
+      .keys(dataModel.data)
+      .filter((v) =>
+        ['clone', 'isDefaultProperty', 'getDefaultProperties', 'IS_DEFAULT_MODEL'].indexOf(v) === -1
+        && v.match(/^[^_].+/),
+      )
+      .filter((v) => !(<defaultModelType<any>><unknown>dataModel.data).isDefaultProperty(v))
+      .filter((v) => ignoreKeys.indexOf(<any><unknown>v) === -1)
+      .map((v) => {
+        const key = v.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-(.+)$/, '$1');
+
+        obj[`${prefixNamespace}.${namespace}.${key}`] = `${dataModel.data[v]}`;
+      });
   }
 }

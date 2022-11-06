@@ -177,7 +177,11 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
   }
 
   private async _getMystContainerId(dockerLabelParser: DockerLabelParser<any>) {
-    const containerIdentityLabel = dockerLabelParser.convertLabelToObject<MystIdentityModel>(this._namespace, ['identity', 'passphrase']);
+    const containerIdentityLabel = dockerLabelParser.convertLabelToObjectAndPick<MystIdentityModel>(
+      this._namespace,
+      MystIdentityModel,
+      ['identity', 'passphrase'],
+    );
     const searchLabelList = Object.keys(containerIdentityLabel).map((v) => `${v}=${containerIdentityLabel[v]}`);
     const filtersObj = {
       label: [
