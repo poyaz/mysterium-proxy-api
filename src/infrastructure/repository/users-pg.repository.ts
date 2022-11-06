@@ -22,9 +22,12 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
   }
 
   async add(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {
-    const data = instanceToPlain(model, {excludePrefixes: ['id', 'insertDate', 'updateDate', 'deleteDate']});
-    const entity = plainToInstance(UsersEntity, data);
+    const entity = new UsersEntity();
     entity.id = this._identifier.generateId();
+    entity.username = model.username;
+    entity.password = model.password;
+    entity.role = model.role;
+    entity.isEnable = model.isEnable;
     entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
 
     try {
