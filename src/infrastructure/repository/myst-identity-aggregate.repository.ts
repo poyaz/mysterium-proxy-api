@@ -19,9 +19,12 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {MystIdentityInUseException} from '@src-core/exception/myst-identity-in-use.exception';
 import * as path from 'path';
+import {checkPortInUse} from '@src-infrastructure/utility/utility';
+import {setTimeout} from 'timers/promises';
 
 export class MystIdentityAggregateRepository implements IGenericRepositoryInterface<MystIdentityModel> {
   private static RUNNER_FAKE_SERIAL = '0000000000000000000000000000000000000000000000000000000000000000';
+  private readonly _maxPortRetry = 6;
 
   constructor(
     private readonly _mystIdentityFileRepository: IAccountIdentityFileRepository,
@@ -140,11 +143,12 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
       return [errorAddIdentity];
     }
 
-    const [errorCreateRunner] = await this._createRunner(dataAddIdentity);
+    const [errorCreateRunner, createRunnerData] = await this._createRunner(dataAddIdentity);
     if (errorCreateRunner) {
       return [errorCreateRunner];
     }
 
+    await this._portIsAvailable(createRunnerData.socketUri, createRunnerData.socketPort);
 
     return [null, dataAddIdentity];
   }
@@ -307,7 +311,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     return [null, dataAdd];
   }
 
-  private async _createRunner(model: MystIdentityModel) {
+  private async _createRunner(model: MystIdentityModel): Promise<AsyncReturn<Error, RunnerModel<MystIdentityModel>>> {
     const runnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>();
     runnerFilter.addCondition({
       $opr: 'eq',
@@ -450,5 +454,20 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
     }
 
     return [null];
+  }
+
+  private async _portIsAvailable(ip, port) {
+    const totalTryList = new Array(this._maxPortRetry).fill(null);
+    for await (const tryCount of totalTryList) {
+      try {
+        const isPortUp = await checkPortInUse(ip, port);
+        if (isPortUp) {
+          break;
+        }
+      } catch (e) {
+      }
+
+      await setTimeout(2000, 'resolved');
+    }
   }
 }

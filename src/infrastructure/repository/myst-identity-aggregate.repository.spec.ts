@@ -23,6 +23,9 @@ import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {UpdateModel} from '@src-core/model/update.model';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {MystIdentityInUseException} from '@src-core/exception/myst-identity-in-use.exception';
+import {checkPortInUse} from '@src-infrastructure/utility/utility';
+
+jest.mock('@src-infrastructure/utility/utility');
 
 describe('MystIdentityAggregateRepository', () => {
   let repository: MystIdentityAggregateRepository;
@@ -1380,7 +1383,11 @@ describe('MystIdentityAggregateRepository', () => {
           identity: inputModel.identity,
           passphrase: inputModel.passphrase,
         },
-        volumes: [{name: RunnerServiceVolumeEnum.MYST_KEYSTORE, source: `${identityBasePath}${inputModel.identity}/`, dest: '-'}],
+        volumes: [{
+          name: RunnerServiceVolumeEnum.MYST_KEYSTORE,
+          source: `${identityBasePath}${inputModel.identity}/`,
+          dest: '-',
+        }],
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       });
@@ -1397,7 +1404,8 @@ describe('MystIdentityAggregateRepository', () => {
       mystIdentityPgRepository.getAll.mockResolvedValue([null, [], 0]);
       mystIdentityPgRepository.add.mockResolvedValue([null, outputMystAddData]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-      dockerRunnerRepository.create.mockResolvedValue([null]);
+      dockerRunnerRepository.create.mockResolvedValue([null, outputMystRunnerData]);
+      (<jest.Mock>checkPortInUse).mockResolvedValue(true);
 
       const [error, result] = await repository.add(inputModel);
 
@@ -1451,7 +1459,11 @@ describe('MystIdentityAggregateRepository', () => {
           identity: inputModel.identity,
           passphrase: inputModel.passphrase,
         },
-        volumes: [{name: RunnerServiceVolumeEnum.MYST_KEYSTORE, source: `${identityBasePath}${inputModel.identity}/`, dest: '-'}],
+        volumes: [{
+          name: RunnerServiceVolumeEnum.MYST_KEYSTORE,
+          source: `${identityBasePath}${inputModel.identity}/`,
+          dest: '-',
+        }],
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       });
