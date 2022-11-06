@@ -18,6 +18,15 @@ class ProviderConnectionInfoDto {
   @IsString()
   @IsIP('4')
   ip: string;
+
+  @IsDefined()
+  @IsString()
+  provider_identity: string;
+}
+
+interface ProviderConnectionInfo {
+  ip: string;
+  providerIdentity: string;
 }
 
 @Injectable()
@@ -126,7 +135,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     return this._mystProviderApiRepository.unlockIdentity(runner, identity);
   }
 
-  private async _getProviderConnectionInfo(providerId?: string): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfoDto>>> {
+  private async _getProviderConnectionInfo(providerId?: string): Promise<AsyncReturn<Error, Record<string, ProviderConnectionInfo>>> {
     const [error, data] = await this._getProviderConnectionInfoFromRedis(providerId);
     if (error) {
       return [error];
@@ -172,15 +181,18 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     }
   }
 
-  private static async _fillProviderConnectionInfo(data: Record<string, string>): Promise<Record<string, ProviderConnectionInfoDto>> {
-    const result = {};
+  private static async _fillProviderConnectionInfo(data: Record<string, string>): Promise<Record<string, ProviderConnectionInfo>> {
+    const result: Record<string, ProviderConnectionInfo> = {};
 
     for await (const [key, value] of Object.entries(data)) {
       const dataObj = JSON.parse(<string>value);
       const dataInstance = plainToInstance(ProviderConnectionInfoDto, dataObj);
       const errorsList = await validate(dataInstance);
       if (errorsList.length === 0) {
-        result[key] = dataInstance;
+        result[key] = {
+          ip: dataInstance.ip,
+          providerIdentity: dataInstance.provider_identity,
+        };
         continue;
       }
 
@@ -199,7 +211,23 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
 
   private async _getProviderIdCache(id: string): Promise<string | null> {
     try {
-      return await this._redis.get(`${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}:${id}`);
+      const [providerIdentity, [providerIdentityError, providerIdentityData]] = await Promise.all([
+        this._redis.get(`${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}:${id}`),
+        this._getProviderConnectionInfo(id),
+      ]);
+
+      if (providerIdentity) {
+        return providerIdentity;
+      }
+
+      if (providerIdentityError) {
+        return null;
+      }
+      if (providerIdentityData[id]) {
+        return providerIdentityData[id].providerIdentity;
+      }
+
+      return null;
     } catch (error) {
       this._logger.error(
         `Fail to read key for prefix "${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}"`,

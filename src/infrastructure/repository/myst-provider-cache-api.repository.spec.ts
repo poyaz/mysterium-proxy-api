@@ -132,6 +132,7 @@ describe('MystProviderCacheApiRepository', () => {
         [outputVpnProviderData1.id]: JSON.stringify(
           {
             ip: '127.0.0.1',
+            provider_identity: outputVpnProviderData1.providerIdentity,
           },
         ),
       };
@@ -446,6 +447,7 @@ describe('MystProviderCacheApiRepository', () => {
         JSON.stringify(
           {
             ip: '127.0.0.1',
+            provider_identity: outputVpnProviderData.providerIdentity,
           },
         ),
       ];
