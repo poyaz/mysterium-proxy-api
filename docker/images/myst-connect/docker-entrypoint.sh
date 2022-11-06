@@ -4,6 +4,14 @@ set -Eeo pipefail
 trap "echo The script is terminated with SIGINT; exit" SIGINT
 trap "echo The script is terminated with SIGKILL; exit" SIGKILL
 
+print_stdout() {
+  echo "$1" >/dev/tty
+}
+
+print_stderr() {
+  echo "$1" >/dev/stderr
+}
+
 file_env() {
   local var="$1"
   local fileVar="${var}_FILE"
@@ -35,7 +43,7 @@ docker_setup_env() {
 check_total_interface_count() {
   declare -r RES=$(ip -o a show | cut -d ' ' -f 2 | wc -l)
   if [ -z "$RES" ] || [ $RES -eq 1 ]; then
-    echo "[ERR] The interface count not valid (Can't found primary interface for execute)!"
+    print_stderr "[ERR] The interface count not valid (Can't found primary interface for execute)!"
     exit 1
   fi
 }
@@ -53,7 +61,7 @@ create_token() {
   declare -r CONTENT=$(sed '$ d' <<<"$RES")
 
   if [ $HTTP_CODE -ne 200 ]; then
-    echo "[ERR] Fail after execute authenticate!"
+    print_stderr "[ERR] Fail after execute authenticate!"
     exit 1
   fi
 
@@ -72,7 +80,7 @@ check_vpn_connected() {
   declare -r CONTENT=$(sed '$ d' <<<"$RES")
 
   if [ $HTTP_CODE -ne 200 ]; then
-    echo "[ERR] Fail after execute get connection info!"
+    print_stderr "[ERR] Fail after execute get connection info!"
     exit 1
   fi
 
@@ -98,7 +106,7 @@ connect_vpn() {
     declare -r CONTENT_CONSUMER=$(sed '$ d' <<<"$RES")
 
     if [ $HTTP_CODE -ne 200 ]; then
-      echo "[ERR] Fail after execute get customer id from connection info!"
+      print_stderr "[ERR] Fail after execute get customer id from connection info!"
       exit 1
     fi
 
@@ -116,7 +124,7 @@ connect_vpn() {
   declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
 
   if [ $HTTP_CODE -ne 201 ]; then
-    echo "[ERR] Fail after execute connect to provider API!"
+    print_stderr "[ERR] Fail after execute connect to provider API!"
     exit 1
   fi
 
@@ -135,7 +143,7 @@ get_current_ip() {
   declare -r CONTENT=$(sed '$ d' <<<"$RES")
 
   if [ $HTTP_CODE -ne 200 ]; then
-    echo "[ERR] Fail after execute get current ip!"
+    print_stderr "[ERR] Fail after execute get current ip!"
     exit 1
   fi
 
@@ -163,10 +171,15 @@ store_ip_in_redis() {
 }
 
 run() {
-  echo "[INFO] Run process service"
+  print_stdout "[INFO] Run process service"
 
   while true; do
-    local IP=$(get_current_ip)
+    local IP IP_RC
+    IP=$(get_current_ip)
+    IP_RC=$?
+    if [ $IP_RC -ne 0 ]; then
+      exit $IP_RC
+    fi
 
     store_ip_in_redis $IP
 
@@ -197,12 +210,17 @@ _main() {
 
     check_total_interface_count
 
-    local IS_CONNECTED=$(check_vpn_connected)
+    local IS_CONNECTED IS_CONNECTED_RC
+    IS_CONNECTED=$(check_vpn_connected)
+    IS_CONNECTED_RC=$?
+    if [ $IS_CONNECTED_RC -ne 0 ]; then
+      exit $IS_CONNECTED_RC
+    fi
 
     if [ $IS_CONNECTED -eq 0 ]; then
       connect_vpn
     else
-      echo "[INFO] Skipping connect to provider because it has already connected."
+      print_stdout "[INFO] Skipping connect to provider because it has already connected."
     fi
 
     run
