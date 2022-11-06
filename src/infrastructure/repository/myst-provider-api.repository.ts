@@ -274,7 +274,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
       serviceType: VpnServiceTypeEnum.WIREGUARD,
       providerName: VpnProviderName.MYSTERIUM,
       providerIdentity: row['provider_id'],
-      providerIpType: MystProviderApiRepository._convertServiceType(row['location']['ip_type']),
+      providerIpType: MystProviderApiRepository._convertProviderIpType(row['location']['ip_type']),
       country: row['location']['country'],
       isRegister: false,
       quality: row['quality']['quality'],
@@ -284,8 +284,8 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
     });
   }
 
-  private static _convertServiceType(serviceType): VpnProviderIpTypeEnum {
-    switch (serviceType) {
+  private static _convertProviderIpType(providerIpType): VpnProviderIpTypeEnum {
+    switch (providerIpType) {
       case 'hosting':
         return VpnProviderIpTypeEnum.HOSTING;
       case 'residential':
@@ -294,8 +294,10 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
         return VpnProviderIpTypeEnum.BUSINESS;
       case 'mobile':
         return VpnProviderIpTypeEnum.MOBILE;
+      case 'organization':
+        return VpnProviderIpTypeEnum.ORGANIZATION;
       default:
-        throw new FillDataRepositoryException<VpnProviderModel>(['serviceType']);
+        throw new FillDataRepositoryException<VpnProviderModel>(['providerIpType']);
     }
   }
 
