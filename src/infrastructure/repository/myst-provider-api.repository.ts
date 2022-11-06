@@ -72,7 +72,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
     }
 
     try {
-      const response = await axios.get(`${this._myst_api_prefix}/proposals`, {
+      const response = await axios.get(`${this._myst_api_prefix}proposals`, {
         headers: {
           'content-type': 'application.json',
         },
@@ -104,7 +104,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
 
   async getById(runner: RunnerModel, id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
     try {
-      const response = await axios.get(`${this._myst_api_prefix}/proposals`, {
+      const response = await axios.get(`${this._myst_api_prefix}proposals`, {
         headers: {
           'content-type': 'application.json',
         },
