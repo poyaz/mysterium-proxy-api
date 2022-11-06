@@ -15,6 +15,7 @@ export enum VpnProviderIpTypeEnum {
   BUSINESS = 'business',
   MOBILE = 'mobile',
   ORGANIZATION = 'organization',
+  EDUCATION = 'education',
 }
 
 export enum VpnProviderStatusEnum {

@@ -296,6 +296,8 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
         return VpnProviderIpTypeEnum.MOBILE;
       case 'organization':
         return VpnProviderIpTypeEnum.ORGANIZATION;
+      case 'education':
+        return VpnProviderIpTypeEnum.EDUCATION;
       default:
         throw new FillDataRepositoryException<VpnProviderModel>(['providerIpType']);
     }
