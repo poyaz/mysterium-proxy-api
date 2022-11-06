@@ -4,10 +4,6 @@ set -Eeo pipefail
 trap "echo The script is terminated with SIGINT; exit" SIGINT
 trap "echo The script is terminated with SIGKILL; exit" SIGKILL
 
-print_stdout() {
-  echo "$1" >/dev/tty
-}
-
 print_stderr() {
   echo "$1" >/dev/stderr
 }
@@ -171,7 +167,7 @@ store_ip_in_redis() {
 }
 
 run() {
-  print_stdout "[INFO] Run process service"
+  echo "[INFO] Run process service"
 
   while true; do
     local IP IP_RC
@@ -220,7 +216,7 @@ _main() {
     if [ $IS_CONNECTED -eq 0 ]; then
       connect_vpn
     else
-      print_stdout "[INFO] Skipping connect to provider because it has already connected."
+      echo "[INFO] Skipping connect to provider because it has already connected."
     fi
 
     run
