@@ -23,7 +23,7 @@ class ProviderConnectionInfoDto {
 @Injectable()
 export class MystProviderCacheApiRepository implements IMystApiRepositoryInterface {
   private readonly _redis: Redis;
-  private static PREFIX_KEY_ID: string = 'myst_provider:id';
+  private static PREFIX_KEY_TMP_ID: string = 'myst_provider:tmp:id';
   private static PREFIX_KEY_INFO: string = 'myst_provider:info';
   private static EXPIRE_KEY: number = 5 * 60;
 
@@ -57,7 +57,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
     for (const vpnData of vpnDataList) {
       vpnData.ip = connectionInfoObj[vpnData.providerIdentity]?.ip;
 
-      addCacheData.push(`${MystProviderCacheApiRepository.PREFIX_KEY_ID}:${vpnData.id}`, vpnData.providerIdentity);
+      addCacheData.push(`${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}:${vpnData.id}`, vpnData.providerIdentity);
     }
 
     try {
@@ -69,7 +69,7 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
       }
       Promise.all(tasks).catch((error) => {
         this._logger.error(
-          `Fail to update expire key for prefix "${MystProviderCacheApiRepository.PREFIX_KEY_ID}"`,
+          `Fail to update expire key for prefix "${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}"`,
           error.stack,
           this.constructor.name,
         );
@@ -199,10 +199,10 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
 
   private async _getProviderIdCache(id: string): Promise<string | null> {
     try {
-      return await this._redis.get(`${MystProviderCacheApiRepository.PREFIX_KEY_ID}:${id}`);
+      return await this._redis.get(`${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}:${id}`);
     } catch (error) {
       this._logger.error(
-        `Fail to read key for prefix "${MystProviderCacheApiRepository.PREFIX_KEY_ID}"`,
+        `Fail to read key for prefix "${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}"`,
         error.stack,
         this.constructor.name,
       );

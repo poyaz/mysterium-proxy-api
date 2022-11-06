@@ -229,9 +229,9 @@ describe('MystProviderCacheApiRepository', () => {
       expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
-        `myst_provider:id:${outputVpnProviderData1.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData1.id}`,
         outputVpnProviderData1.providerIdentity,
-        `myst_provider:id:${outputVpnProviderData2.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData2.id}`,
         outputVpnProviderData2.providerIdentity,
       ]));
       expect(error).toBeInstanceOf(RepositoryException);
@@ -255,14 +255,14 @@ describe('MystProviderCacheApiRepository', () => {
       expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
-        `myst_provider:id:${outputVpnProviderData1.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData1.id}`,
         outputVpnProviderData1.providerIdentity,
-        `myst_provider:id:${outputVpnProviderData2.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData2.id}`,
         outputVpnProviderData2.providerIdentity,
       ]));
       expect(redis.expire).toHaveBeenCalledTimes(2);
-      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData1.id}`, 5 * 60]));
-      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData2.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:tmp:id:${outputVpnProviderData1.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:tmp:id:${outputVpnProviderData2.id}`, 5 * 60]));
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(error).toBeNull();
       expect(result.length).toEqual(2);
@@ -313,14 +313,14 @@ describe('MystProviderCacheApiRepository', () => {
       expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
-        `myst_provider:id:${outputVpnProviderData1.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData1.id}`,
         outputVpnProviderData1.providerIdentity,
-        `myst_provider:id:${outputVpnProviderData2.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData2.id}`,
         outputVpnProviderData2.providerIdentity,
       ]));
       expect(redis.expire).toHaveBeenCalledTimes(2);
-      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData1.id}`, 5 * 60]));
-      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData2.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:tmp:id:${outputVpnProviderData1.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:tmp:id:${outputVpnProviderData2.id}`, 5 * 60]));
       expect(logger.error).toHaveBeenCalled();
       expect(error).toBeNull();
       expect(result.length).toEqual(2);
@@ -365,14 +365,14 @@ describe('MystProviderCacheApiRepository', () => {
       expect(redis.hgetall).toHaveBeenCalledWith('myst_provider:info:all');
       expect(redis.mset).toHaveBeenCalled();
       expect(redis.mset).toBeCalledWith(expect.arrayContaining([
-        `myst_provider:id:${outputVpnProviderData1.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData1.id}`,
         outputVpnProviderData1.providerIdentity,
-        `myst_provider:id:${outputVpnProviderData2.id}`,
+        `myst_provider:tmp:id:${outputVpnProviderData2.id}`,
         outputVpnProviderData2.providerIdentity,
       ]));
       expect(redis.expire).toHaveBeenCalledTimes(2);
-      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData1.id}`, 5 * 60]));
-      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:id:${outputVpnProviderData2.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[0]).toEqual(expect.arrayContaining([`myst_provider:tmp:id:${outputVpnProviderData1.id}`, 5 * 60]));
+      expect(redis.expire.mock.calls[1]).toEqual(expect.arrayContaining([`myst_provider:tmp:id:${outputVpnProviderData2.id}`, 5 * 60]));
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(error).toBeNull();
       expect(result.length).toEqual(2);
