@@ -95,7 +95,7 @@ export class MystProviderService implements IProviderServiceInterface {
       return [forceDisconnectError];
     }
 
-    await setTimeout(1000, 'resolved');
+    await setTimeout(4000, 'resolved');
 
     providerData.userIdentity = freeMystIdentityList[0].identity;
     return this._mystApiRepository.connect(mystRunnerList[0], providerData);
