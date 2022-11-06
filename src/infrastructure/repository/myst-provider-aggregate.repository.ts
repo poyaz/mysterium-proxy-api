@@ -98,7 +98,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       $opr: 'eq',
       label: {
         $namespace: MystIdentityModel.name,
-        id,
+        id: (<RunnerModel<[MystIdentityModel, VpnProviderModel]>><any>mystConnectRunnerDataList[0]).label.find((v) => v.$namespace === MystIdentityModel.name).id,
       },
     });
     const [
