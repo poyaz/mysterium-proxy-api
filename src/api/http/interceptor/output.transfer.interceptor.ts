@@ -75,10 +75,16 @@ export class OutputTransferInterceptor implements NestInterceptor {
               result.map((v) => {
                 v.insertDate = this._convertDateToString(v.insertDate);
                 v.updateDate = this._convertDateToString(v.updateDate);
+
+                delete v['IS_DEFAULT_MODEL'];
+                delete v['_defaultProperties'];
               });
             } else {
               result.insertDate = this._convertDateToString(result.insertDate);
               result.updateDate = this._convertDateToString(result.updateDate);
+
+              delete result['IS_DEFAULT_MODEL'];
+              delete result['_defaultProperties'];
             }
           }
         }
