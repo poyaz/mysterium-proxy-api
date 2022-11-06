@@ -143,13 +143,11 @@ get_current_ip() {
     exit 1
   fi
 
-  local IP=$(echo "$CONTENT" | jq -r .ip)
-
-  echo $IP
+  echo $(echo "$CONTENT")
 }
 
 store_ip_in_redis() {
-  declare -r IP=$1
+  declare -r DATA="$1"
 
   local execute_redis=(
     redis-cli
@@ -161,23 +159,23 @@ store_ip_in_redis() {
     execute_redis+=(-n $REDIS_DB)
   fi
 
-  execute_redis+=(HMSET "${REDIS_PROVIDER_INFO_KEY}" "${PROVIDER_IDENTITY}" "${IP}")
+  execute_redis+=(HMSET "${REDIS_PROVIDER_INFO_KEY}" "${PROVIDER_IDENTITY}" "${DATA}")
 
-  "${execute_redis[@]}"
+  "${execute_redis[@]}" >/dev/null 2>&1
 }
 
 run() {
   echo "[INFO] Run process service"
 
   while true; do
-    local IP IP_RC
-    IP=$(get_current_ip)
-    IP_RC=$?
-    if [ $IP_RC -ne 0 ]; then
-      exit $IP_RC
+    local DATA DATA_RC
+    DATA=$(get_current_ip)
+    DATA_RC=$?
+    if [ $DATA_RC -ne 0 ]; then
+      exit $DATA_RC
     fi
 
-    store_ip_in_redis $IP
+    store_ip_in_redis "$DATA"
 
     sleep 3000
   done
