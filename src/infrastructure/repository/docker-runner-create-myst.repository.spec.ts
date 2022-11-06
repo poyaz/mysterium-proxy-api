@@ -32,6 +32,7 @@ describe('DockerRunnerCreateMystRepository', () => {
   let networkName: string;
   let imageName: string;
   let httpPort: number;
+  let realPath: string;
   let namespace: string;
 
   beforeEach(async () => {
@@ -44,6 +45,7 @@ describe('DockerRunnerCreateMystRepository', () => {
     networkName = 'mysterium-proxy-api_main';
     imageName = 'mysterium-proxy-api-myst';
     httpPort = 4449;
+    realPath = '/real/path/';
     namespace = 'com.mysterium-proxy';
 
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +67,7 @@ describe('DockerRunnerCreateMystRepository', () => {
               networkName,
               dataVolumePath: mystDataVolume,
               httpPort,
+              realPath,
             }, namespace),
         },
       ],
@@ -426,6 +429,7 @@ describe('DockerRunnerCreateMystRepository', () => {
           type: 'none',
         },
         Labels: {
+          [`${namespace}.create-by`]: 'api',
           [`${namespace}.volume.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.volume.myst-identity-model.identity`]: outputMystIdentityValid.identity,
         },
@@ -820,6 +824,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -830,7 +835,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -926,6 +931,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -936,7 +942,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1046,6 +1052,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1056,7 +1063,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1217,6 +1224,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1227,7 +1235,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1331,6 +1339,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1341,7 +1350,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1453,6 +1462,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1463,7 +1473,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1578,6 +1588,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1588,7 +1599,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1704,6 +1715,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1714,7 +1726,7 @@ describe('DockerRunnerCreateMystRepository', () => {
         },
         Env: expect.arrayContaining([
           `MYST_IDENTITY=${outputMystIdentityValid.identity}`,
-          `"MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}"`,
+          `MYST_IDENTITY_PASS=${outputMystIdentityValid.passphrase}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([

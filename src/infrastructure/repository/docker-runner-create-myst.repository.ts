@@ -21,7 +21,7 @@ import {IPv4CidrRange} from 'ip-num';
 import {EndpointSettings} from 'dockerode';
 import {setTimeout} from 'timers/promises';
 import Docker = require('dockerode');
-import * as path from "path";
+import * as path from 'path';
 
 type MystDockerContainerOption = {
   imageName: string,
@@ -166,7 +166,10 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
           o: 'bind',
           type: 'none',
         },
-        Labels: volumeLabel,
+        Labels: {
+          [`${this._namespace}.create-by`]: 'api',
+          ...volumeLabel,
+        },
       });
 
       return [null];
@@ -223,6 +226,7 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
       const container = await this._docker.createContainer({
         Image: this._mystContainerOption.imageName,
         name,
+        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.MYST,
@@ -232,7 +236,7 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
         },
         Env: [
           `MYST_IDENTITY=${mystIdentityModel.identity}`,
-          `"MYST_IDENTITY_PASS=${mystIdentityModel.passphrase}"`,
+          `MYST_IDENTITY_PASS=${mystIdentityModel.passphrase}`,
         ],
         HostConfig: {
           Binds: [
