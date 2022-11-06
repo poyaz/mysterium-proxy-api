@@ -139,7 +139,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
 
     try {
       await axios.put(
-        `http://${hostAddr}/tequilapi/connection`,
+        `${hostAddr}/tequilapi/connection`,
         {
           consumer_id: vpnProviderModel.userIdentity,
           provider_id: vpnProviderModel.providerIdentity,
@@ -186,7 +186,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
 
     try {
       await axios.delete(
-        `http://${hostAddr}/tequilapi/connection`,
+        `${hostAddr}/tequilapi/connection`,
         {
           headers: {
             'content-type': 'application.json',
@@ -219,7 +219,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
 
     try {
       await axios.post(
-        `http://${hostAddr}/tequilapi/identities/${userIdentity}/register`,
+        `${hostAddr}/tequilapi/identities/${userIdentity}/register`,
         {},
         {
           headers: {
@@ -245,7 +245,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
 
     try {
       await axios.put(
-        `http://${hostAddr}/tequilapi/identities/${identity.identity}/unlock`,
+        `${hostAddr}/tequilapi/identities/${identity.identity}/unlock`,
         {
           passphrase: identity.passphrase,
         },
@@ -297,7 +297,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
   private async _doLogin(hostAddr: string): Promise<AsyncReturn<Error, string>> {
     try {
       const response = await axios.post(
-        `http://${hostAddr}/tequilapi/auth/login`,
+        `${hostAddr}/tequilapi/auth/login`,
         {
           username: this._myst_api_username,
           password: this._myst_api_password,
@@ -319,7 +319,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
   private static async _getCurrentIp(hostAddr: string, token: string): Promise<AsyncReturn<Error, string>> {
     try {
       const response = await axios.get(
-        `http://${hostAddr}/tequilapi/connection/ip`,
+        `${hostAddr}/tequilapi/connection/ip`,
         {
           headers: {
             'content-type': 'application.json',
