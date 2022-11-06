@@ -201,6 +201,7 @@ import {DockerRunnerService} from '@src-core/service/docker-runner.service';
                 myst: DOCKER_CONFIG.containerInfo.myst.volumes.keystore,
               },
             networkName: DOCKER_CONFIG.networkName,
+            realPath: DOCKER_CONFIG.realProjectPath,
           },
           DOCKER_CONFIG.labelNamespace,
         );
