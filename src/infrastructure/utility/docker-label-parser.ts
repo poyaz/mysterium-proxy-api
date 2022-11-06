@@ -59,7 +59,10 @@ export class DockerLabelParser<T> {
 
       Object
         .keys(dataModel.data)
-        .filter((v) => v !== 'clone' && v.match(/^[^_].+/))
+        .filter((v) =>
+          ['clone', 'isDefaultProperty', 'getDefaultProperties', 'IS_DEFAULT_MODEL'].indexOf(v) === -1
+          && v.match(/^[^_].+/),
+        )
         .filter((v) => !(<defaultModelType<any>><unknown>dataModel.data).isDefaultProperty(v))
         .filter((v) => ignoreKeys.indexOf(<any><unknown>v) === -1)
         .map((v) => {
