@@ -13,6 +13,7 @@ import {
   UseGuards,
   UseInterceptors,
   Query,
+  Request, Next,
 } from '@nestjs/common';
 import {CreateUserInputDto} from './dto/create-user-input.dto';
 import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
@@ -198,6 +199,46 @@ export class UsersHttpController {
   @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
   async findAll(@Query() queryFilterDto: FindUserQueryDto) {
     return this._usersService.findAll(FindUserQueryDto.toModel(queryFilterDto));
+  }
+
+  @Get('me')
+  @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
+  @UseInterceptors(RemovePasswordFieldOfUserInterceptor)
+  @ApiOperation({description: 'Get info of current user', operationId: 'Get current user'})
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(DefaultSuccessDto)},
+        {
+          properties: {
+            data: {
+              type: 'object',
+              $ref: getSchemaPath(FindUserOutputDto),
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'The user id not found.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(NotFoundExceptionDto)},
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_USER_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
+  async findMe(@Request() req) {
+    return this._usersService.findOne(req?.user?.userId);
   }
 
   @Get(':userId')

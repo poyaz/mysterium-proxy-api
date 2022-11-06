@@ -16,6 +16,7 @@ import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
 import {LoginInputDto} from './dto/login-input.dto';
 import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {IncomingMessage} from 'http';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -215,6 +216,61 @@ describe('UsersController', () => {
       expect((result[0] as UsersModel).username).toEqual(outputUserModel.username);
       expect((result[0] as UsersModel).password).toEqual(outputUserModel.password);
       expect((result[0] as UsersModel).isEnable).toEqual(outputUserModel.isEnable);
+    });
+  });
+
+  describe(`Find current user`, () => {
+    let inputReq: { user: { userId: string } };
+    let outputUserModel;
+
+    beforeEach(() => {
+      inputReq = {user: {userId: identifierMock.generateId()}};
+
+      outputUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
+      outputUserModel.id = identifierMock.generateId();
+      outputUserModel.username = 'my-user';
+      outputUserModel.isEnable = true;
+    });
+
+    it(`Should error get current user by id`, async () => {
+      usersService.findOne.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findMe(inputReq);
+
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toBeCalledWith(inputReq.user.userId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error get current user by id when user not found`, async () => {
+      usersService.findOne.mockResolvedValue([new NotFoundUserException()]);
+
+      const [error] = await controller.findMe(inputReq);
+
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toBeCalledWith(inputReq.user.userId);
+      expect(error).toBeInstanceOf(NotFoundUserException);
+    });
+
+    it(`Should successfully get current user`, async () => {
+      usersService.findOne.mockResolvedValue([null, outputUserModel]);
+
+      const [error, result] = await controller.findMe(inputReq);
+
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toBeCalledWith(inputReq.user.userId);
+      expect(error).toBeNull();
+      expect((result as UsersModel).id).toEqual(identifierMock.generateId());
+      expect((result as UsersModel).username).toEqual(outputUserModel.username);
+      expect((result as UsersModel).password).toEqual(outputUserModel.password);
+      expect((result as UsersModel).isEnable).toEqual(outputUserModel.isEnable);
     });
   });
 
