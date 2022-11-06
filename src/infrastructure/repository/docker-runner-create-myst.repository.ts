@@ -226,7 +226,7 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
       const container = await this._docker.createContainer({
         Image: this._mystContainerOption.imageName,
         name,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.MYST,

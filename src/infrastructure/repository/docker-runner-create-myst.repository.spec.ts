@@ -824,7 +824,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -931,7 +931,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1052,7 +1052,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1224,7 +1224,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1339,7 +1339,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1462,7 +1462,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1588,7 +1588,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
@@ -1715,7 +1715,7 @@ describe('DockerRunnerCreateMystRepository', () => {
       expect(docker.createContainer).toHaveBeenCalledWith(expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.MYST,
-        Cmd: ['--auto-reconnect', 'service', '--agreed-terms-and-conditions'],
+        Cmd: ['--auto-reconnect' , '--log-level', 'fatal', 'service', '--agreed-terms-and-conditions'],
         Labels: {
           autoheal: 'true',
           [`${namespace}.project`]: RunnerServiceEnum.MYST,
