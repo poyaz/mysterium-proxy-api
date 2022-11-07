@@ -1,18 +1,19 @@
 import {ApiProperty} from '@nestjs/swagger';
-import {IsNumber, IsOptional, IsString, Max, Min} from 'class-validator';
-import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {IsDefined, IsNumber, IsOptional, IsUUID, Max, Min} from 'class-validator';
+import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum, ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import {defaultModelFactory} from '@src-core/model/defaultModel';
 
 export class CreateProxyInputDto {
   @ApiProperty({
-    description: 'The ip or hostname of upstream proxy (Default use outgoing server ip)',
+    description: 'The identity of VPN provider',
     type: String,
-    required: false,
-    example: 'proxy.example.com',
+    format: 'uuid',
+    required: true,
+    example: '00000000-0000-0000-0000-000000000000',
   })
-  @IsOptional()
-  @IsString()
-  listenAddr?: string;
+  @IsDefined()
+  @IsUUID()
+  providerId: string;
 
   @ApiProperty({
     description: 'The port of upstream proxy',
@@ -31,16 +32,29 @@ export class CreateProxyInputDto {
   listenPort?: number;
 
   static toModel(dto: CreateProxyInputDto): ProxyUpstreamModel {
-    const defaultProperties: Array<keyof ProxyUpstreamModel> = ['id', 'proxyDownstream', 'insertDate'];
-    const obj: Pick<ProxyUpstreamModel, 'listenAddr' | 'listenPort'> = {
-      listenAddr: 'default-addr',
+    const defaultProperties: Array<keyof ProxyUpstreamModel> = ['id', 'listenAddr', 'insertDate'];
+    const obj: Pick<ProxyUpstreamModel, 'proxyDownstream' | 'listenPort'> = {
+      proxyDownstream: [],
       listenPort: 0,
     };
 
-    if (dto.listenAddr) {
-      obj.listenAddr = dto.listenAddr;
+    if (dto.providerId) {
+      obj.proxyDownstream = [
+        defaultModelFactory<ProxyDownstreamModel>(
+          ProxyDownstreamModel,
+          {
+            id: 'default-id',
+            refId: dto.providerId,
+            ip: 'default-ip',
+            mask: 32,
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.OFFLINE,
+          },
+          ['id', 'ip', 'mask', 'status'],
+        ),
+      ];
     } else {
-      defaultProperties.push('listenAddr');
+      defaultProperties.push('proxyDownstream');
     }
 
     if (dto.listenPort) {
@@ -53,8 +67,8 @@ export class CreateProxyInputDto {
       ProxyUpstreamModel,
       {
         id: 'default-id',
+        listenAddr: 'default-listen-addr',
         ...obj,
-        proxyDownstream: [],
         insertDate: new Date(),
       },
       defaultProperties,

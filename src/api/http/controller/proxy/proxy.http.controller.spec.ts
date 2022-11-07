@@ -183,19 +183,20 @@ describe('Proxy.HttpController', () => {
   });
 
   describe(`Create new proxy`, () => {
-    let inputProxyWithoutData: CreateProxyInputDto;
-    let inputProxyWithData: CreateProxyInputDto;
+    let inputProxyWithoutPort: CreateProxyInputDto;
+    let inputProxyWithPort: CreateProxyInputDto;
     let outputRunnerDownstreamModel: RunnerModel<MystIdentityModel>;
     let outputDownstreamProxyModel: ProxyDownstreamModel;
     let outputRunnerUpstreamModel: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
     let outputProxyUpstreamModel: ProxyUpstreamModel;
 
     beforeEach(() => {
-      inputProxyWithoutData = new CreateProxyInputDto();
+      inputProxyWithoutPort = new CreateProxyInputDto();
+      inputProxyWithoutPort.providerId = identifierMock.generateId();
 
-      inputProxyWithData = new CreateProxyInputDto();
-      inputProxyWithData.listenAddr = 'proxy.example.com';
-      inputProxyWithData.listenPort = 3128;
+      inputProxyWithPort = new CreateProxyInputDto();
+      inputProxyWithPort.providerId = identifierMock.generateId();
+      inputProxyWithPort.listenPort = 3128;
 
       outputRunnerDownstreamModel = new RunnerModel<MystIdentityModel>({
         id: '11111111-1111-1111-1111-111111111111',
@@ -250,8 +251,8 @@ describe('Proxy.HttpController', () => {
 
       outputProxyUpstreamModel = new ProxyUpstreamModel({
         id: identifierMock.generateId(),
-        listenAddr: inputProxyWithData.listenAddr,
-        listenPort: inputProxyWithData.listenPort,
+        listenAddr: '0.0.0.0',
+        listenPort: inputProxyWithPort.listenPort,
         proxyDownstream: [outputDownstreamProxyModel],
         runner: outputRunnerUpstreamModel,
         insertDate: new Date(),
@@ -261,11 +262,14 @@ describe('Proxy.HttpController', () => {
     it(`Should error create new proxy without data`, async () => {
       proxyService.create.mockResolvedValue([new UnknownException()]);
 
-      const [error] = await controller.create(inputProxyWithoutData);
+      const [error] = await controller.create(inputProxyWithoutPort);
 
       expect(proxyService.create).toHaveBeenCalled();
       expect((<DefaultModel<ProxyUpstreamModel>><unknown>proxyService.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
-        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'listenAddr', 'listenPort', 'proxyDownstream', 'insertDate']),
+        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'listenAddr', 'listenPort', 'insertDate']),
+      );
+      expect(proxyService.create.mock.calls[0][0].proxyDownstream).toEqual(
+        expect.arrayContaining([expect.objectContaining<Pick<ProxyDownstreamModel, 'refId'>>({refId: inputProxyWithPort.providerId})]),
       );
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -273,11 +277,14 @@ describe('Proxy.HttpController', () => {
     it(`Should error create new proxy with data`, async () => {
       proxyService.create.mockResolvedValue([new UnknownException()]);
 
-      const [error] = await controller.create(inputProxyWithData);
+      const [error] = await controller.create(inputProxyWithPort);
 
       expect(proxyService.create).toHaveBeenCalled();
       expect((<DefaultModel<ProxyUpstreamModel>><unknown>proxyService.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
-        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'proxyDownstream', 'insertDate']),
+        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'listenAddr', 'insertDate']),
+      );
+      expect(proxyService.create.mock.calls[0][0].proxyDownstream).toEqual(
+        expect.arrayContaining([expect.objectContaining<Pick<ProxyDownstreamModel, 'refId'>>({refId: inputProxyWithPort.providerId})]),
       );
       expect(error).toBeInstanceOf(UnknownException);
     });
@@ -285,11 +292,14 @@ describe('Proxy.HttpController', () => {
     it(`Should successfully create new proxy`, async () => {
       proxyService.create.mockResolvedValue([null, outputProxyUpstreamModel]);
 
-      const [error, result] = await controller.create(inputProxyWithData);
+      const [error, result] = await controller.create(inputProxyWithPort);
 
       expect(proxyService.create).toHaveBeenCalled();
       expect((<DefaultModel<ProxyUpstreamModel>><unknown>proxyService.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
-        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'proxyDownstream', 'insertDate']),
+        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'listenAddr', 'insertDate']),
+      );
+      expect(proxyService.create.mock.calls[0][0].proxyDownstream).toEqual(
+        expect.arrayContaining([expect.objectContaining<Pick<ProxyDownstreamModel, 'refId'>>({refId: inputProxyWithPort.providerId})]),
       );
       expect(error).toBeNull();
       expect(result).toEqual(outputProxyUpstreamModel);

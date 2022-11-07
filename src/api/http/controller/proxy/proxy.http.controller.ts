@@ -176,25 +176,15 @@ export class ProxyHttpController {
     type: CreateProxyInputDto,
     examples: {
       withoutListener: {
-        description: 'Without address (use default address) and port (use random port) listener',
-        value: {} as CreateProxyInputDto,
-      },
-      withAddressListener: {
-        description: 'With custom address listener (Use random port)',
+        description: 'Without port (use random port) listener',
         value: {
-          listenAddr: 'proxy2.example.com',
+          providerId: '00000000-0000-0000-0000-000000000000',
         } as CreateProxyInputDto,
       },
       withPortListener: {
-        description: 'With custom port listener (Use default address listener)',
+        description: 'With custom port listener',
         value: {
-          listenPort: 8080,
-        } as CreateProxyInputDto,
-      },
-      withAddressAndPortListener: {
-        description: 'With custom address and port listener',
-        value: {
-          listenAddr: 'proxy2.example.com',
+          providerId: '00000000-0000-0000-0000-000000000000',
           listenPort: 8080,
         } as CreateProxyInputDto,
       },
