@@ -18,7 +18,7 @@ export class ProxyDownstreamModel {
   ip: string;
   mask: number;
   type: ProxyTypeEnum;
-  runner?: RunnerModel;
+  runner?: RunnerModel<any>;
   status: ProxyStatusEnum;
 
   constructor(props: ModelRequireProp<typeof ProxyDownstreamModel.prototype>) {
@@ -35,7 +35,7 @@ export class ProxyUpstreamModel {
   listenAddr: string;
   listenPort: number;
   proxyDownstream: Array<ProxyDownstreamModel>;
-  runner?: RunnerModel;
+  runner?: RunnerModel<any>;
   insertDate: Date;
 
   constructor(props: ModelRequireProp<typeof ProxyUpstreamModel.prototype>) {
