@@ -31,7 +31,6 @@ import {
 import {ForbiddenExceptionDto} from '@src-api/http/dto/forbidden-exception.dto';
 import {FindIdentityOutputDto} from '@src-api/http/controller/identity/dto/find-identity-output.dto';
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
-import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {CreateIdentityInputDto} from '@src-api/http/controller/identity/dto/create-identity-input.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
@@ -321,7 +320,7 @@ export class IdentityHttpController {
     },
   })
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
-  @ApiNotFoundResponse({description: 'The identity service not found', type: NotFoundException})
+  @ApiNotFoundResponse({description: 'The identity service not found', type: NotFoundExceptionDto})
   @ApiBadRequestResponse({
     description: 'Bad request',
     schema: {
@@ -440,7 +439,7 @@ export class IdentityHttpController {
   @Delete(':identityId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({description: 'Delete identity with ID', operationId: 'Remove identity'})
-  @ApiParam({name: 'identity', type: String, example: '00000000-0000-0000-0000-000000000000'})
+  @ApiParam({name: 'identityId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiNoContentResponse({
     description: 'The identity has been successfully deleted.',
   })
