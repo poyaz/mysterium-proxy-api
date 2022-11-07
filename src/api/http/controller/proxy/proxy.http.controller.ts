@@ -303,5 +303,6 @@ export class ProxyHttpController {
     },
   })
   async remove(@Param('proxyId') proxyId: string) {
+    return this._proxyService.remove(proxyId);
   }
 }

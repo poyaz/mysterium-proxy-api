@@ -7,5 +7,5 @@ export interface IProxyServiceInterface {
 
   create(model: ProxyUpstreamModel): Promise<AsyncReturn<Error, ProxyUpstreamModel>>;
 
-  remove(id: string): Promise<AsyncReturn<ErrorEvent, null>>;
+  remove(id: string): Promise<AsyncReturn<Error, null>>;
 }

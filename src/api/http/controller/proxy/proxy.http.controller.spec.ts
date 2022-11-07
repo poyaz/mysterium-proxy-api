@@ -295,4 +295,22 @@ describe('Proxy.HttpController', () => {
       expect(result).toEqual(outputProxyUpstreamModel);
     });
   });
+
+  describe(`Remove proxy`, () => {
+    let inputId: string;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+    });
+
+    it(`Should error remove proxy with proxy id`, async () => {
+      proxyService.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.remove(inputId);
+
+      expect(proxyService.remove).toHaveBeenCalled();
+      expect(proxyService.remove).toHaveBeenCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+  });
 });
