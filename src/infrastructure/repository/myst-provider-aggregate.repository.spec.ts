@@ -331,6 +331,7 @@ describe('MystProviderAggregateRepository', () => {
     it(`Should successfully get all vpn for aggregation and 'isRegister' false because not found any runner`, async () => {
       mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData1, outputVpnProviderData2, outputVpnProviderData3], 3]);
       dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      (<jest.Mock>filterAndSortVpnProvider).mockReturnValue([[outputVpnProviderData1, outputVpnProviderData2, outputVpnProviderData3], 3]);
 
       const [error, result, totalCount] = await repository.getAll(inputRunnerModel);
 
@@ -345,6 +346,29 @@ describe('MystProviderAggregateRepository', () => {
       expect(result[1].isRegister).toEqual(false);
       expect(result[2].isRegister).toEqual(false);
       expect(totalCount).toEqual(3);
+    });
+
+    it(`Should successfully get all vpn for aggregation and return empty when 'isRegister' true and not found any runner`, async () => {
+      mystProviderApiRepository.getAll.mockResolvedValue([null, [outputVpnProviderData1, outputVpnProviderData2, outputVpnProviderData3], 3]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+
+      const [error, result, totalCount] = await repository.getAll(inputRunnerModel, inputIsRegisterFilter);
+
+      expect(mystProviderApiRepository.getAll).toHaveBeenCalled();
+      expect(mystProviderApiRepository.getAll).toBeCalledWith(inputRunnerModel, expect.objectContaining({
+        page: 2,
+        limit: 1,
+      }));
+      expect((<FilterModel<VpnProviderModel>>mystProviderApiRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toMatchObject({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).skipPagination).toEqual(true);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(0);
+      expect(error).toBeNull();
+      expect(result.length).toEqual(0);
+      expect(totalCount).toEqual(0);
     });
 
     it(`Should successfully get all vpn for aggregation with pagination`, async () => {

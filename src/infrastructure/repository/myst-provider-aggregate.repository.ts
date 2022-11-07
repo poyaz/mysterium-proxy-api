@@ -49,14 +49,16 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     if (apiTotalCount === 0) {
       return [null, [], 0];
     }
-    if (runnerTotalCount === 0) {
-      return [null, apiDataList, apiTotalCount];
+
+    const dataFilter: FilterModel<VpnProviderModel> = !filter ? new FilterModel<VpnProviderModel>() : <any>filter;
+    if (dataFilter.getCondition('isRegister')?.isRegister && runnerTotalCount === 0) {
+      return [null, [], 0];
     }
 
     const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData(runnerDataList);
     const dataList = apiDataList.map((v) => MystProviderAggregateRepository._mergeData(v, runnerObj));
 
-    const dataFilter: FilterModel<VpnProviderModel> = !filter ? new FilterModel<VpnProviderModel>() : <any>filter;
+
     const [result, totalCount] = filterAndSortVpnProvider(dataList, dataFilter);
 
     return [null, result, totalCount];
