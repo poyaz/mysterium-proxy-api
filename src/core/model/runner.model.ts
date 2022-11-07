@@ -6,13 +6,14 @@ export enum RunnerExecEnum {
 
 export enum RunnerSocketTypeEnum {
   HTTP = 'http',
+  TCP = 'tcp',
   NONE = 'none',
 }
 
 export enum RunnerServiceEnum {
-  SQUID = 'squid',
   MYST_CONNECT = 'myst-connect',
   ENVOY = 'envoy',
+  SOCAT = 'socat',
   MYST = 'myst',
 }
 
