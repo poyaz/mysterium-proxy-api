@@ -21,6 +21,11 @@ export enum ProviderTokenEnum {
   MYST_IDENTITY_SERVICE_DEFAULT = 'MYST_IDENTITY_SERVICE',
   /**
    *
+   * @implements IProxyServiceInterface
+   */
+  PROXY_SERVICE_DEFAULT = 'PROXY_SERVICE',
+  /**
+   *
    * {@link USER_SERVICE}
    * @implements IUsersServiceInterface
    */
@@ -62,6 +67,11 @@ export enum ProviderTokenEnum {
    * @implements IProviderServiceInterface
    */
   MYST_PROVIDER_SERVICE = 'MYST_PROVIDER_SERVICE',
+  /**
+   *
+   * @implements IProxyServiceInterface
+   */
+  PROXY_SERVICE = 'PROXY_SERVICE',
   /**
    *
    * {@link UsersService}

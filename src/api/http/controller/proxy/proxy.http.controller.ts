@@ -1,4 +1,16 @@
-import {Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards, UseInterceptors,
+} from '@nestjs/common';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {
   ApiBadRequestResponse,
@@ -29,16 +41,18 @@ import {DefaultSuccessDto} from '@src-api/http/dto/default-success.dto';
 import {FindProxyQueryDto} from '@src-api/http/controller/proxy/dto/find-proxy-query.dto';
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {CreateProxyInputDto} from '@src-api/http/controller/proxy/dto/create-proxy-input.dto';
-import {FindUserOutputDto} from '@src-api/http/controller/users/dto/find-user-output.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
-import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interface';
+import {OutputProxyInterceptor} from '@src-api/http/controller/proxy/interceptor/output-proxy.interceptor';
 
 @Controller({
   path: 'proxy',
   version: '1',
 })
 @UseGuards(RoleGuard)
+@UseInterceptors(OutputProxyInterceptor)
 @ApiTags('proxy')
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -51,6 +65,12 @@ import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 export class ProxyHttpController {
+  constructor(
+    @Inject(ProviderTokenEnum.PROXY_SERVICE_DEFAULT)
+    private readonly _proxyService: IProxyServiceInterface,
+  ) {
+  }
+
   @Get()
   @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({description: 'Get list of all proxy', operationId: 'Get all proxy'})
@@ -146,6 +166,7 @@ export class ProxyHttpController {
     },
   })
   async findAll(@Query() queryFilterDto: FindProxyQueryDto) {
+    return this._proxyService.getAll(FindProxyQueryDto.toModel(queryFilterDto));
   }
 
   @Post()
