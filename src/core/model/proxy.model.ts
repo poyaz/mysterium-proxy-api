@@ -34,9 +34,9 @@ export class ProxyUpstreamModel {
   id: string;
   listenAddr: string;
   listenPort: number;
-  auth: { username: string, password: string };
   proxyDownstream: Array<ProxyDownstreamModel>;
   runner?: RunnerModel;
+  insertDate: Date;
 
   constructor(props: ModelRequireProp<typeof ProxyUpstreamModel.prototype>) {
     Object.assign(this, props);
