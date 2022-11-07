@@ -2,10 +2,10 @@ import {CallHandler, ExecutionContext, Injectable, NestInterceptor} from '@nestj
 import {map, Observable} from 'rxjs';
 import {ProxyDownstreamModel, ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import {FindProxyOutputDto} from '@src-api/http/controller/proxy/dto/find-proxy-output.dto';
-import {InterceptorMap} from '@src-core/utility';
+import {Return} from '@src-core/utility';
 
-type InputMapData = InterceptorMap<Error, ProxyUpstreamModel | Array<ProxyUpstreamModel>>;
-type OutputMapData = InterceptorMap<Error, FindProxyOutputDto | Array<FindProxyOutputDto>>;
+type InputMapData = Return<Error, ProxyUpstreamModel | Array<ProxyUpstreamModel>>;
+type OutputMapData = Return<Error, FindProxyOutputDto | Array<FindProxyOutputDto>>;
 
 @Injectable()
 export class OutputProxyInterceptor implements NestInterceptor {
