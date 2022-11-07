@@ -161,6 +161,14 @@ export class EnvConfigDto {
   @IsOptional()
   @IsString()
   MYST_HOST_BASE_PATH_STORE: string;
+
+  @IsOptional()
+  @IsString()
+  PROXY_GLOBAL_UPSTREAM_ADDR: string;
+
+  @IsOptional()
+  @IsNumber()
+  PROXY_START_UPSTREAM_PORT: number;
 }
 
 

@@ -8,6 +8,7 @@ import redisConfig from './config/redis.config';
 import htpasswdConfig from './config/htpasswd.config';
 import dockerConfig from './config/docker.config';
 import mystConfig from './config/myst.config';
+import proxyConfig from './config/proxy.config';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import mystConfig from './config/myst.config';
         htpasswdConfig,
         dockerConfig,
         mystConfig,
+        proxyConfig,
       ],
     }),
   ],
