@@ -17,6 +17,8 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {FilterInstanceType, FilterModel, FilterOperationType} from '@src-core/model/filter.model';
+import {CreateProxyInputDto} from '@src-api/http/controller/proxy/dto/create-proxy-input.dto';
+import {DefaultModel} from '@src-core/model/defaultModel';
 
 describe('Proxy.HttpController', () => {
   let controller: ProxyHttpController;
@@ -177,6 +179,120 @@ describe('Proxy.HttpController', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(outputProxyUpstreamModel);
       expect(total).toEqual(1);
+    });
+  });
+
+  describe(`Create new proxy`, () => {
+    let inputProxyWithoutData: CreateProxyInputDto;
+    let inputProxyWithData: CreateProxyInputDto;
+    let outputRunnerDownstreamModel: RunnerModel<MystIdentityModel>;
+    let outputDownstreamProxyModel: ProxyDownstreamModel;
+    let outputRunnerUpstreamModel: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
+    let outputProxyUpstreamModel: ProxyUpstreamModel;
+
+    beforeEach(() => {
+      inputProxyWithoutData = new CreateProxyInputDto();
+
+      inputProxyWithData = new CreateProxyInputDto();
+      inputProxyWithData.listenAddr = 'proxy.example.com';
+      inputProxyWithData.listenPort = 3128;
+
+      outputRunnerDownstreamModel = new RunnerModel<MystIdentityModel>({
+        id: '11111111-1111-1111-1111-111111111111',
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputRunnerDownstreamModel.label = {
+        $namespace: MystIdentityModel.name,
+        id: '22222222-2222-2222-2222-222222222222',
+        identity: 'identity1',
+      };
+
+      outputDownstreamProxyModel = new ProxyDownstreamModel({
+        id: '33333333-3333-3333-3333-333333333333',
+        refId: '44444444-4444-4444-4444-444444444444',
+        ip: '25.14.65.1',
+        mask: 32,
+        type: ProxyTypeEnum.MYST,
+        runner: outputRunnerDownstreamModel,
+        status: ProxyStatusEnum.ONLINE,
+      });
+
+      outputRunnerUpstreamModel = new RunnerModel<[MystIdentityModel, VpnProviderModel]>({
+        id: '55555555-5555-5555-5555-555555555555',
+        serial: 'socat-serial',
+        name: 'socat-name',
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: '10.10.10.2',
+        socketPort: 3128,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputRunnerUpstreamModel.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: '22222222-2222-2222-2222-222222222222',
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: '66666666-6666-6666-6666-666666666666',
+        },
+      ];
+
+      outputProxyUpstreamModel = new ProxyUpstreamModel({
+        id: identifierMock.generateId(),
+        listenAddr: inputProxyWithData.listenAddr,
+        listenPort: inputProxyWithData.listenPort,
+        proxyDownstream: [outputDownstreamProxyModel],
+        runner: outputRunnerUpstreamModel,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create new proxy without data`, async () => {
+      proxyService.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.create(inputProxyWithoutData);
+
+      expect(proxyService.create).toHaveBeenCalled();
+      expect((<DefaultModel<ProxyUpstreamModel>><unknown>proxyService.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
+        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'listenAddr', 'listenPort', 'proxyDownstream', 'insertDate']),
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create new proxy with data`, async () => {
+      proxyService.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.create(inputProxyWithData);
+
+      expect(proxyService.create).toHaveBeenCalled();
+      expect((<DefaultModel<ProxyUpstreamModel>><unknown>proxyService.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
+        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'proxyDownstream', 'insertDate']),
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully create new proxy`, async () => {
+      proxyService.create.mockResolvedValue([null, outputProxyUpstreamModel]);
+
+      const [error, result] = await controller.create(inputProxyWithData);
+
+      expect(proxyService.create).toHaveBeenCalled();
+      expect((<DefaultModel<ProxyUpstreamModel>><unknown>proxyService.create.mock.calls[0][0]).getDefaultProperties()).toEqual(
+        expect.arrayContaining<keyof ProxyUpstreamModel>(['id', 'proxyDownstream', 'insertDate']),
+      );
+      expect(error).toBeNull();
+      expect(result).toEqual(outputProxyUpstreamModel);
     });
   });
 });

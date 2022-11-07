@@ -255,7 +255,7 @@ export class ProxyHttpController {
     },
   })
   async create(@Body() createProxyDto: CreateProxyInputDto) {
-
+    return this._proxyService.create(CreateProxyInputDto.toModel(createProxyDto));
   }
 
   @Delete(':proxyId')
