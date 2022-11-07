@@ -21,6 +21,7 @@ export enum ProviderTokenEnum {
   MYST_IDENTITY_SERVICE_DEFAULT = 'MYST_IDENTITY_SERVICE',
   /**
    *
+   * {@link ProxyService}
    * @implements IProxyServiceInterface
    */
   PROXY_SERVICE_DEFAULT = 'PROXY_SERVICE',
@@ -69,6 +70,7 @@ export enum ProviderTokenEnum {
   MYST_PROVIDER_SERVICE = 'MYST_PROVIDER_SERVICE',
   /**
    *
+   * {@link ProxyService}
    * @implements IProxyServiceInterface
    */
   PROXY_SERVICE = 'PROXY_SERVICE',
@@ -139,6 +141,11 @@ export enum ProviderTokenEnum {
    * @implements IGenericRepositoryInterface<MystIdentityModel>
    */
   MYST_IDENTITY_PG_REPOSITORY = 'MYST_IDENTITY_PG_REPOSITORY',
+  /**
+   *
+   * @implements IProxyRepositoryInterface
+   */
+  PROXY_AGGREGATE_REPOSITORY = 'PROXY_AGGREGATE_REPOSITORY',
   /**
    *
    * {@link UsersAdapterRepository}
