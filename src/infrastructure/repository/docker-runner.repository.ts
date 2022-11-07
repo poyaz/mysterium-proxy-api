@@ -243,9 +243,9 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
         socketType = RunnerSocketTypeEnum.HTTP;
         socketPort = 10001;
         break;
-      case RunnerServiceEnum.SQUID:
-        service = RunnerServiceEnum.SQUID;
-        socketType = RunnerSocketTypeEnum.NONE;
+      case RunnerServiceEnum.SOCAT:
+        service = RunnerServiceEnum.SOCAT;
+        socketType = RunnerSocketTypeEnum.TCP;
         socketPort = null;
         break;
       default:
