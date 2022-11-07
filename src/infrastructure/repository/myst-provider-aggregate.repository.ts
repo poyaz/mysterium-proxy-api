@@ -58,7 +58,6 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData(runnerDataList);
     const dataList = apiDataList.map((v) => MystProviderAggregateRepository._mergeData(v, runnerObj));
 
-
     const [result, totalCount] = filterAndSortVpnProvider(dataList, dataFilter);
 
     return [null, result, totalCount];
