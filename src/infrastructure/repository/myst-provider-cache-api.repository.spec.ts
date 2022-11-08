@@ -275,6 +275,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData1.providerIpType,
         country: outputVpnProviderData1.country,
         ip: '127.0.0.1',
+        mask: 32,
         isRegister: outputVpnProviderData1.isRegister,
         insertDate: outputVpnProviderData1.insertDate,
       });
@@ -333,6 +334,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData1.providerIpType,
         country: outputVpnProviderData1.country,
         ip: '127.0.0.1',
+        mask: 32,
         isRegister: outputVpnProviderData1.isRegister,
         insertDate: outputVpnProviderData1.insertDate,
       });
@@ -718,6 +720,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData.providerIpType,
         country: outputVpnProviderData.country,
         ip: '127.0.0.1',
+        mask: 32,
         isRegister: outputVpnProviderData.isRegister,
         insertDate: outputVpnProviderData.insertDate,
       });

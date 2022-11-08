@@ -64,7 +64,10 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
 
     const addCacheData = [];
     for (const vpnData of vpnDataList) {
-      vpnData.ip = connectionInfoObj[vpnData.id]?.ip;
+      if (connectionInfoObj[vpnData.id]?.ip) {
+        vpnData.ip = connectionInfoObj[vpnData.id].ip;
+        vpnData.mask = 32;
+      }
 
       addCacheData.push(`${MystProviderCacheApiRepository.PREFIX_KEY_TMP_ID}:${vpnData.id}`, vpnData.providerIdentity);
     }
@@ -114,7 +117,10 @@ export class MystProviderCacheApiRepository implements IMystApiRepositoryInterfa
       return [connectionInfoError];
     }
 
-    vpnData.ip = connectionInfoObj[vpnData.id]?.ip;
+    if (connectionInfoObj[vpnData.id]?.ip) {
+      vpnData.ip = connectionInfoObj[vpnData.id].ip;
+      vpnData.mask = 32;
+    }
 
     return [null, vpnData];
   }
