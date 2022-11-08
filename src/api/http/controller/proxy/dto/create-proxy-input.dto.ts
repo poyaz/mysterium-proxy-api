@@ -38,24 +38,20 @@ export class CreateProxyInputDto {
       listenPort: 0,
     };
 
-    if (dto.providerId) {
-      obj.proxyDownstream = [
-        defaultModelFactory<ProxyDownstreamModel>(
-          ProxyDownstreamModel,
-          {
-            id: 'default-id',
-            refId: dto.providerId,
-            ip: 'default-ip',
-            mask: 32,
-            type: ProxyTypeEnum.MYST,
-            status: ProxyStatusEnum.OFFLINE,
-          },
-          ['id', 'ip', 'mask', 'status'],
-        ),
-      ];
-    } else {
-      defaultProperties.push('proxyDownstream');
-    }
+    obj.proxyDownstream = [
+      defaultModelFactory<ProxyDownstreamModel>(
+        ProxyDownstreamModel,
+        {
+          id: 'default-id',
+          refId: dto.providerId,
+          ip: 'default-ip',
+          mask: 32,
+          type: ProxyTypeEnum.MYST,
+          status: ProxyStatusEnum.OFFLINE,
+        },
+        ['id', 'ip', 'mask', 'status'],
+      ),
+    ];
 
     if (dto.listenPort) {
       obj.listenPort = dto.listenPort;
