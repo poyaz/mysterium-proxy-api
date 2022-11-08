@@ -1,4 +1,5 @@
 import {ApiProperty} from '@nestjs/swagger';
+import {ProxyStatusEnum} from '@src-core/model/proxy.model';
 
 export class FindProxyOutputDto {
   @ApiProperty({
@@ -58,4 +59,14 @@ export class FindProxyOutputDto {
     example: '55.12.60.0',
   })
   outgoingIp: string;
+
+  @ApiProperty({
+    description: 'The status of proxy',
+    type: String,
+    enum: ProxyStatusEnum,
+    required: false,
+    readOnly: true,
+    example: ProxyStatusEnum.ONLINE,
+  })
+  status: ProxyStatusEnum;
 }
