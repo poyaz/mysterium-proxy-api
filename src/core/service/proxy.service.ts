@@ -36,7 +36,15 @@ export class ProxyService implements IProxyServiceInterface {
     return this._proxyRepository.create(model);
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    const [proxyError, proxyData] = await this._proxyRepository.getById(id);
+    if (proxyError) {
+      return [proxyError];
+    }
+    if (!proxyData) {
+      return [new NotFoundException()];
+    }
+
+    return this._proxyRepository.remove(id);
   }
 }

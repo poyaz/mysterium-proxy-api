@@ -398,4 +398,72 @@ describe('ProxyService', () => {
       expect(result).toEqual(outputProxyUpstreamModel);
     });
   });
+
+  describe(`Remove proxy`, () => {
+    let inputId: string;
+    let outputProxyUpstreamModel: ProxyUpstreamModel;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputProxyUpstreamModel = defaultModelFactory<ProxyUpstreamModel>(
+        ProxyUpstreamModel,
+        {
+          id: identifierMock.generateId(),
+          listenAddr: '0.0.0.0',
+          listenPort: 3128,
+          proxyDownstream: [],
+          insertDate: new Date(),
+        },
+        ['proxyDownstream', 'insertDate'],
+      );
+    });
+
+    it(`Should error remove proxy when get proxy info`, async () => {
+      proxyRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(proxyRepository.getById).toHaveBeenCalled();
+      expect(proxyRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove proxy when not found proxy`, async () => {
+      proxyRepository.getById.mockResolvedValue([null, null]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(proxyRepository.getById).toHaveBeenCalled();
+      expect(proxyRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(error).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error remove proxy`, async () => {
+      proxyRepository.getById.mockResolvedValue([null, outputProxyUpstreamModel]);
+      proxyRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.remove(inputId);
+
+      expect(proxyRepository.getById).toHaveBeenCalled();
+      expect(proxyRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(proxyRepository.remove).toHaveBeenCalled();
+      expect(proxyRepository.remove).toHaveBeenCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove proxy`, async () => {
+      proxyRepository.getById.mockResolvedValue([null, outputProxyUpstreamModel]);
+      proxyRepository.remove.mockResolvedValue([null, null]);
+
+      const [error, result] = await service.remove(inputId);
+
+      expect(proxyRepository.getById).toHaveBeenCalled();
+      expect(proxyRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(proxyRepository.remove).toHaveBeenCalled();
+      expect(proxyRepository.remove).toHaveBeenCalledWith(inputId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
