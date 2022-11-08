@@ -207,7 +207,7 @@ export class ProxyHttpController {
     },
   })
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
-  @ApiNotFoundResponse({description: 'The proxy not found', type: NotFoundExceptionDto})
+  @ApiNotFoundResponse({description: 'The provider not found', type: NotFoundExceptionDto})
   @ApiBadRequestResponse({
     description: 'Bad request',
     schema: {
@@ -236,6 +236,24 @@ export class ProxyHttpController {
               properties: {
                 action: {
                   example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.PROVIDER_IDENTITY_NOT_CONNECTING,
+              description: 'The provider identity is not connect',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.PROVIDER_IDENTITY_NOT_CONNECTING,
                 },
               },
             },
