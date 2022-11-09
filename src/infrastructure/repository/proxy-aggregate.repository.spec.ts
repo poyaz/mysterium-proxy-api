@@ -21,10 +21,9 @@ import {
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
-import {DefaultModel, defaultModelFactory} from '@src-core/model/defaultModel';
+import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {filterAndSortProxyUpstream} from '@src-infrastructure/utility/filterAndSortProxyUpstream';
 import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
-import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
 
 jest.mock('@src-infrastructure/utility/filterAndSortProxyUpstream');
 
@@ -1309,6 +1308,268 @@ describe('ProxyAggregateRepository', () => {
         runner: outputProxyUpstream.runner,
         insertDate: outputProxyUpstream.insertDate,
       });
+    });
+  });
+
+  describe(`Create new proxy`, () => {
+    let inputProxyWithPort: ProxyUpstreamModel;
+    let inputProxyWithoutPort: ProxyUpstreamModel;
+    let outgoingIpAddress: string;
+    let outputMystRunner: RunnerModel<MystIdentityModel>;
+    let outputVpnProvider: VpnProviderModel;
+    let outputProxyUpstream: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>;
+
+    beforeEach(() => {
+      inputProxyWithPort = defaultModelFactory(
+        ProxyUpstreamModel,
+        {
+          id: 'default-id',
+          listenAddr: 'listen-addr-default',
+          listenPort: 3128,
+          proxyDownstream: [
+            defaultModelFactory<ProxyDownstreamModel>(
+              ProxyDownstreamModel,
+              {
+                id: 'default-id',
+                refId: '44444444-4444-4444-4444-444444444444',
+                ip: 'default-ip',
+                mask: 32,
+                type: ProxyTypeEnum.MYST,
+                status: ProxyStatusEnum.OFFLINE,
+              },
+              ['id', 'ip', 'mask', 'status'],
+            ),
+          ],
+          insertDate: new Date(),
+        },
+        ['id', 'listenAddr', 'insertDate'],
+      );
+      inputProxyWithoutPort = defaultModelFactory(
+        ProxyUpstreamModel,
+        {
+          id: 'default-id',
+          listenAddr: 'listen-addr-default',
+          listenPort: 0,
+          proxyDownstream: [
+            defaultModelFactory<ProxyDownstreamModel>(
+              ProxyDownstreamModel,
+              {
+                id: 'default-id',
+                refId: '44444444-4444-4444-4444-444444444444',
+                ip: 'default-ip',
+                mask: 32,
+                type: ProxyTypeEnum.MYST,
+                status: ProxyStatusEnum.OFFLINE,
+              },
+              ['id', 'ip', 'mask', 'status'],
+            ),
+          ],
+          insertDate: new Date(),
+        },
+        ['id', 'listenAddr', 'listenPort', 'insertDate'],
+      );
+
+      outgoingIpAddress = '26.45.101.6';
+
+      outputMystRunner = new RunnerModel<MystIdentityModel>({
+        id: '11111111-1111-1111-1111-111111111111',
+        serial: 'myst-serial',
+        name: 'myst-name',
+        service: RunnerServiceEnum.MYST,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketUri: '10.10.10.1',
+        socketPort: 4449,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputMystRunner.label = {
+        $namespace: MystIdentityModel.name,
+        id: '11111111-1111-1111-1111-222222222222',
+        identity: 'identity1',
+      };
+
+      outputVpnProvider = new VpnProviderModel({
+        id: '44444444-4444-4444-4444-444444444444',
+        userIdentity: outputMystRunner.label.identity,
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'provider-identity1',
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        ip: '59.10.56.111',
+        mask: 32,
+        country: 'GB',
+        runner: outputMystRunner,
+        isRegister: true,
+        insertDate: new Date(),
+      });
+
+      outputProxyUpstream = new RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>({
+        id: 'socat-runner-id',
+        serial: 'socat-runner-serial',
+        name: `${RunnerServiceEnum.SOCAT}-${outputMystRunner.label.identity}`,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: inputProxyWithPort.listenPort,
+        status: null,
+        insertDate: null,
+      });
+      outputProxyUpstream.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: outputMystRunner.label.id,
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProvider.id,
+        },
+        {
+          $namespace: ProxyUpstreamModel.name,
+          id: '11111111-1111-1111-1111-555555555555',
+        },
+      ];
+    });
+
+    it(`Should error create new proxy when get vpn provider info`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([new UnknownException()]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+
+      const [error] = await repository.create(inputProxyWithPort);
+
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create new proxy when get outgoing ip addr`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.create(inputProxyWithPort);
+
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create new proxy with port when create upstream runner`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      dockerRunnerRepository.create.mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.create(inputProxyWithPort);
+
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(1);
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+        IS_DEFAULT_MODEL: true,
+        _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
+        id: expect.anything(),
+        serial: expect.anything(),
+        name: `${RunnerServiceEnum.SOCAT}-${outputMystRunner.label.identity}`,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: inputProxyWithPort.listenPort,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystRunner.label.id,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProvider.id,
+          },
+        ],
+        status: expect.anything(),
+        insertDate: expect.anything(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create new proxy without port when create upstream runner`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      dockerRunnerRepository.create.mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.create(inputProxyWithoutPort);
+
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(1);
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+        IS_DEFAULT_MODEL: true,
+        _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
+        id: expect.anything(),
+        serial: expect.anything(),
+        name: `${RunnerServiceEnum.SOCAT}-${outputMystRunner.label.identity}`,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystRunner.label.id,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProvider.id,
+          },
+        ],
+        status: expect.anything(),
+        insertDate: expect.anything(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create new proxy with port when create downstream runner`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      dockerRunnerRepository.create
+        .mockResolvedValueOnce([null, outputProxyUpstream])
+        .mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.create(inputProxyWithPort);
+
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(2);
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+        IS_DEFAULT_MODEL: true,
+        _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
+        id: expect.anything(),
+        serial: expect.anything(),
+        name: `${RunnerServiceEnum.SOCAT}-${outputMystRunner.label.identity}`,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: inputProxyWithPort.listenPort,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystRunner.label.id,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProvider.id,
+          },
+        ],
+        status: expect.anything(),
+        insertDate: expect.anything(),
+      });
+      expect(dockerRunnerRepository.create.mock.calls[1][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+        IS_DEFAULT_MODEL: true,
+        _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
+        id: expect.anything(),
+        serial: expect.anything(),
+        name: null,
+        service: null,
+        exec: null,
+        socketType: null,
+        socketPort: null,
+        label: null,
+        status: expect.anything(),
+        insertDate: expect.anything(),
+      });
+      expect(error).toBeInstanceOf(UnknownException);
     });
   });
 });

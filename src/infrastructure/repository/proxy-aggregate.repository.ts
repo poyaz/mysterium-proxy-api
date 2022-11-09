@@ -7,12 +7,13 @@ import {AsyncReturn} from '@src-core/utility';
 import {FilterModel} from '@src-core/model/filter.model';
 import {
   RunnerExecEnum,
+  RunnerLabelNamespace,
   RunnerModel,
   RunnerServiceEnum,
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
-import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {DefaultModel, defaultModelFactory} from '@src-core/model/defaultModel';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {filterAndSortProxyUpstream} from '@src-infrastructure/utility/filterAndSortProxyUpstream';
@@ -67,14 +68,9 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
       this._mystProviderRepository.getAll(this.FAKE_RUNNER, vpnProviderFilter),
       this._getOutgoingAddr(),
     ]);
-    if (runnerError) {
-      return [runnerError];
-    }
-    if (vpnProviderError) {
-      return [vpnProviderError];
-    }
-    if (proxyAddrError) {
-      return [proxyAddrError];
+    const error = runnerError || vpnProviderError || proxyAddrError;
+    if (error) {
+      return [error];
     }
     if (runnerTotal === 0) {
       return [null, [], 0];
@@ -154,8 +150,61 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     return [null, proxyUpstreamCombineList[0]];
   }
 
-  create(model: ProxyUpstreamModel): Promise<AsyncReturn<Error, ProxyUpstreamModel>> {
-    return Promise.resolve(undefined);
+  async create(model: ProxyUpstreamModel): Promise<AsyncReturn<Error, ProxyUpstreamModel>> {
+    const vpnProviderId = model.proxyDownstream[0]?.refId;
+    const [
+      [vpnProviderError, vpnProviderData],
+      [proxyAddrError, proxyAddrData],
+    ] = await Promise.all([
+      this._mystProviderRepository.getById(this.FAKE_RUNNER, vpnProviderId),
+      this._getOutgoingAddr(),
+    ]);
+    const error = vpnProviderError || proxyAddrError;
+    if (error) {
+      return [error];
+    }
+
+    const mystUserIdentity = vpnProviderData.userIdentity;
+    const mystIdentityId = (
+      <RunnerLabelNamespace<[MystIdentityModel]>>(
+        Array.isArray(vpnProviderData.runner.label) ? vpnProviderData.runner.label : [vpnProviderData.runner.label]
+      )
+    ).find((v) => v.$namespace === MystIdentityModel.name).id;
+
+    const proxyUpstreamDefaultModel = <DefaultModel<ProxyUpstreamModel>><unknown>model;
+    const isCreateWithPort = proxyUpstreamDefaultModel.IS_DEFAULT_MODEL && !proxyUpstreamDefaultModel.isDefaultProperty('listenPort');
+
+    const proxyUpstreamRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
+      RunnerModel,
+      {
+        id: 'default-id',
+        serial: 'default-serial',
+        name: `${RunnerServiceEnum.SOCAT}-${mystUserIdentity}`,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        ...(isCreateWithPort && {socketPort: model.listenPort}),
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: mystIdentityId,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: vpnProviderId,
+          },
+        ],
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      },
+      ['id', 'serial', 'status', 'insertDate'],
+    );
+    const [proxyUpstreamError, proxyUpstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel]>(proxyUpstreamRunner);
+    if (proxyUpstreamError) {
+      return [proxyUpstreamError];
+    }
+
+    return [null];
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
