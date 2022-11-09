@@ -100,8 +100,58 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     return [null, result, totalCount];
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, ProxyUpstreamModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, ProxyUpstreamModel | null>> {
+    const proxyUpstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
+    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.SOCAT});
+    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', label: {$namespace: ProxyUpstreamModel.name, id}});
+    const [proxyUpstreamError, proxyUpstreamList, proxyUpstreamTotal] = await this._runnerRepository.getAll(proxyUpstreamRunnerFilter);
+    if (proxyUpstreamError) {
+      return [proxyUpstreamError];
+    }
+    if (proxyUpstreamTotal === 0) {
+      return [null, null];
+    }
+
+    const proxyUpstreamData = (<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>proxyUpstreamList[0]);
+    const mystIdentityId = proxyUpstreamData.label.find((v) => v.$namespace === MystIdentityModel.name).id;
+    const vpnProviderId = proxyUpstreamData.label.find((v) => v.$namespace === VpnProviderModel.name).id;
+
+    const runnerFilter = new FilterModel<RunnerModel>();
+    runnerFilter.addCondition({$opr: 'eq', label: {$namespace: VpnProviderModel.name, id: vpnProviderId}});
+
+    const mystRunnerFilter = new FilterModel<RunnerModel>();
+    mystRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
+    mystRunnerFilter.addCondition({$opr: 'eq', label: {$namespace: MystIdentityModel.name, id: mystIdentityId}});
+
+    const [
+      [dependencyRunnerError, dependencyRunnerList],
+      [mystRunnerError, mystRunnerList],
+      [vpnProviderError, vpnProviderData],
+      [proxyAddrError, proxyAddrData],
+    ] = await Promise.all([
+      this._runnerRepository.getAll(runnerFilter),
+      this._runnerRepository.getAll(mystRunnerFilter),
+      this._mystProviderRepository.getById(this.FAKE_RUNNER, vpnProviderId),
+      this._getOutgoingAddr(),
+    ]);
+    const error = dependencyRunnerError || mystRunnerError || vpnProviderError || proxyAddrError;
+    if (error) {
+      return [error];
+    }
+
+    const vpnProviderList = vpnProviderData ? [vpnProviderData] : [];
+    const runnerList = [...dependencyRunnerList, ...mystRunnerList];
+
+    const runnerMap = ProxyAggregateRepository._runnerMapObject(runnerList, vpnProviderList);
+    const proxyUpstreamCombineList = [proxyUpstreamData].map((v) => ProxyAggregateRepository._mergeData(
+      runnerList,
+      vpnProviderList,
+      <RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>v,
+      runnerMap,
+      proxyAddrData,
+    ));
+
+    return [null, proxyUpstreamCombineList[0]];
   }
 
   create(model: ProxyUpstreamModel): Promise<AsyncReturn<Error, ProxyUpstreamModel>> {
