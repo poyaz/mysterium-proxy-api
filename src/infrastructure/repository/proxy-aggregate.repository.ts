@@ -21,8 +21,8 @@ import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-
 
 interface MystMapRunnerPos {
   vpnProvider: number;
-  mystConnect: number;
-  proxyDownstream: number;
+  mystConnectRunner: number;
+  proxyDownstreamRunner: number;
 }
 
 interface MystRunnerCombineMap {
@@ -152,14 +152,20 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
 
   async create(model: ProxyUpstreamModel): Promise<AsyncReturn<Error, ProxyUpstreamModel>> {
     const vpnProviderId = model.proxyDownstream[0]?.refId;
+    const mystConnectRunnerFilter = new FilterModel<RunnerModel>();
+    mystConnectRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST_CONNECT});
+    mystConnectRunnerFilter.addCondition({$opr: 'eq', label: {$namespace: VpnProviderModel.name, id: vpnProviderId}});
+
     const [
       [vpnProviderError, vpnProviderData],
+      [mystConnectRunnerError, mystConnectRunnerList],
       [proxyAddrError, proxyAddrData],
     ] = await Promise.all([
       this._mystProviderRepository.getById(this.FAKE_RUNNER, vpnProviderId),
+      this._runnerRepository.getAll(mystConnectRunnerFilter),
       this._getOutgoingAddr(),
     ]);
-    const error = vpnProviderError || proxyAddrError;
+    const error = vpnProviderError || mystConnectRunnerError || proxyAddrError;
     if (error) {
       return [error];
     }
@@ -174,7 +180,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     const proxyUpstreamDefaultModel = <DefaultModel<ProxyUpstreamModel>><unknown>model;
     const isCreateWithPort = proxyUpstreamDefaultModel.IS_DEFAULT_MODEL && !proxyUpstreamDefaultModel.isDefaultProperty('listenPort');
 
-    const proxyUpstreamRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
+    const proxyUpstreamCreateRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
       RunnerModel,
       {
         id: 'default-id',
@@ -199,12 +205,54 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
       },
       ['id', 'serial', 'status', 'insertDate'],
     );
-    const [proxyUpstreamError, proxyUpstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel]>(proxyUpstreamRunner);
+    const [proxyUpstreamError, proxyUpstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel]>(proxyUpstreamCreateRunner);
     if (proxyUpstreamError) {
       return [proxyUpstreamError];
     }
 
-    return [null];
+    const proxyDownstreamCreateRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
+      RunnerModel,
+      {
+        id: 'default-id',
+        serial: 'default-serial',
+        name: `${RunnerServiceEnum.ENVOY}-${mystUserIdentity}`,
+        service: RunnerServiceEnum.ENVOY,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: proxyUpstreamData.socketPort,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: mystIdentityId,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: vpnProviderId,
+          },
+        ],
+        status: RunnerStatusEnum.CREATING,
+        insertDate: new Date(),
+      },
+      ['id', 'serial', 'status', 'insertDate'],
+    );
+    const [proxyDownstreamError, proxyDownstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel]>(proxyDownstreamCreateRunner);
+    if (proxyDownstreamError) {
+      return [proxyDownstreamError];
+    }
+
+    const vpnProviderList = vpnProviderData ? [vpnProviderData] : [];
+    const runnerList = <Array<RunnerModel>><unknown>[proxyDownstreamData, ...mystConnectRunnerList, vpnProviderData.runner];
+
+    const runnerMap = ProxyAggregateRepository._runnerMapObject(runnerList, vpnProviderList);
+    const proxyUpstreamCombineList = [proxyUpstreamData].map((v) => ProxyAggregateRepository._mergeData(
+      runnerList,
+      vpnProviderList,
+      <RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>v,
+      runnerMap,
+      proxyAddrData,
+    ));
+
+    return [null, proxyUpstreamCombineList[0]];
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
@@ -220,6 +268,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
   }
 
   private static _runnerMapObject(runnerList: Array<RunnerModel>, vpnProviderList: Array<VpnProviderModel>): MystRunnerCombineMap {
+    console.log(runnerList, vpnProviderList);
     const runnerMap: MystRunnerCombineMap = {provider: {}, myst: {}};
     for (let i = 0; i < runnerList.length; i++) {
       const runner = runnerList[i];
@@ -232,21 +281,21 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
       const mystIdentityId = label.find((v) => v.$namespace === MystIdentityModel.name)?.id;
       const vpnProviderId = label.find((v) => v.$namespace === VpnProviderModel.name)?.id;
 
-      if (!(vpnProviderId in runnerMap.provider)) {
+      if (vpnProviderId && !(vpnProviderId in runnerMap.provider)) {
         runnerMap.provider[vpnProviderId] = {
           vpnProvider: -1,
-          mystConnect: -1,
-          proxyDownstream: -1,
+          mystConnectRunner: -1,
+          proxyDownstreamRunner: -1,
         };
       }
 
       switch (runner.service) {
         case RunnerServiceEnum.ENVOY: {
-          runnerMap.provider[vpnProviderId].proxyDownstream = i;
+          runnerMap.provider[vpnProviderId].proxyDownstreamRunner = i;
           break;
         }
         case RunnerServiceEnum.MYST_CONNECT: {
-          runnerMap.provider[vpnProviderId].mystConnect = i;
+          runnerMap.provider[vpnProviderId].mystConnectRunner = i;
           break;
         }
         case RunnerServiceEnum.MYST: {
@@ -301,8 +350,8 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     );
 
     if (vpnProviderId in runnerMap.provider) {
-      if (runnerMap.provider[vpnProviderId].proxyDownstream !== -1) {
-        const proxyDownstreamIndex = runnerMap.provider[vpnProviderId].proxyDownstream;
+      if (runnerMap.provider[vpnProviderId].proxyDownstreamRunner !== -1) {
+        const proxyDownstreamIndex = runnerMap.provider[vpnProviderId].proxyDownstreamRunner;
         const runner = <RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>><unknown>runnerList[proxyDownstreamIndex];
 
         proxyDownstreamModel.id = runner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id;
@@ -317,7 +366,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
         }
 
         const mystIdentityIndex = runnerMap.myst[mystIdentityId];
-        const mystConnectIndex = runnerMap.provider[vpnProviderId].mystConnect;
+        const mystConnectIndex = runnerMap.provider[vpnProviderId].mystConnectRunner;
 
         if (mystIdentityIndex !== -1 && mystConnectIndex !== -1) {
           if (
