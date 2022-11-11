@@ -18,6 +18,7 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {filterAndSortProxyUpstream} from '@src-infrastructure/utility/filterAndSortProxyUpstream';
 import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 
 interface MystMapRunnerPos {
   vpnProvider: number;
@@ -51,6 +52,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     private readonly _runnerRepository: IRunnerRepositoryInterface,
     private readonly _mystProviderRepository: IMystApiRepositoryInterface,
     private readonly _systemInfoRepository: ISystemInfoRepositoryInterface,
+    private readonly _identifier: IIdentifier,
     private readonly _proxyListenAddr?: string,
   ) {
   }
@@ -180,7 +182,8 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     const proxyUpstreamDefaultModel = <DefaultModel<ProxyUpstreamModel>><unknown>model;
     const isCreateWithPort = proxyUpstreamDefaultModel.IS_DEFAULT_MODEL && !proxyUpstreamDefaultModel.isDefaultProperty('listenPort');
 
-    const proxyUpstreamCreateRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
+    const proxyUpstreamId = this._identifier.generateId();
+    const proxyUpstreamCreateRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>>(
       RunnerModel,
       {
         id: 'default-id',
@@ -199,18 +202,23 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
             $namespace: VpnProviderModel.name,
             id: vpnProviderId,
           },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: proxyUpstreamId,
+          },
         ],
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       },
       ['id', 'serial', 'status', 'insertDate'],
     );
-    const [proxyUpstreamError, proxyUpstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel]>(proxyUpstreamCreateRunner);
+    const [proxyUpstreamError, proxyUpstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>(proxyUpstreamCreateRunner);
     if (proxyUpstreamError) {
       return [proxyUpstreamError];
     }
 
-    const proxyDownstreamCreateRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel]>>(
+    const proxyDownstreamId = this._identifier.generateId();
+    const proxyDownstreamCreateRunner = defaultModelFactory<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>>(
       RunnerModel,
       {
         id: 'default-id',
@@ -229,13 +237,17 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
             $namespace: VpnProviderModel.name,
             id: vpnProviderId,
           },
+          {
+            $namespace: ProxyDownstreamModel.name,
+            id: proxyDownstreamId,
+          }
         ],
         status: RunnerStatusEnum.CREATING,
         insertDate: new Date(),
       },
       ['id', 'serial', 'status', 'insertDate'],
     );
-    const [proxyDownstreamError, proxyDownstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel]>(proxyDownstreamCreateRunner);
+    const [proxyDownstreamError, proxyDownstreamData] = await this._runnerRepository.create<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>(proxyDownstreamCreateRunner);
     if (proxyDownstreamError) {
       return [proxyDownstreamError];
     }

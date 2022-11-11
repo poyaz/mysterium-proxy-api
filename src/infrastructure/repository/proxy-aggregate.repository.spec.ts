@@ -24,6 +24,7 @@ import {UnknownException} from '@src-core/exception/unknown.exception';
 import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {filterAndSortProxyUpstream} from '@src-infrastructure/utility/filterAndSortProxyUpstream';
 import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
+import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 
 jest.mock('@src-infrastructure/utility/filterAndSortProxyUpstream');
 
@@ -32,15 +33,18 @@ describe('ProxyAggregateRepository', () => {
   let dockerRunnerRepository: MockProxy<IRunnerRepositoryInterface>;
   let mystProviderRepository: MockProxy<IMystApiRepositoryInterface>;
   let systemInfoRepository: MockProxy<ISystemInfoRepositoryInterface>;
+  let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
     dockerRunnerRepository = mock<IRunnerRepositoryInterface>();
     mystProviderRepository = mock<IMystApiRepositoryInterface>();
     systemInfoRepository = mock<ISystemInfoRepositoryInterface>();
+    identifierMock = mock<IIdentifier>();
 
     const dockerRunnerRepositoryProvider = 'docker-runner-repository';
     const mystProviderRepositoryProvider = 'myst-provider-repository';
     const systemInfoRepositoryProvider = 'system-info-repository';
+    const identifierMockProvider = 'identifier';
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -57,13 +61,18 @@ describe('ProxyAggregateRepository', () => {
           useValue: systemInfoRepository,
         },
         {
+          provide: identifierMockProvider,
+          useValue: identifierMock,
+        },
+        {
           provide: ProxyAggregateRepository,
-          inject: [dockerRunnerRepositoryProvider, mystProviderRepositoryProvider, systemInfoRepositoryProvider],
+          inject: [dockerRunnerRepositoryProvider, mystProviderRepositoryProvider, systemInfoRepositoryProvider, identifierMockProvider],
           useFactory: (
             dockerRunnerRepository: IRunnerRepositoryInterface,
             mystProviderRepositoryProvider: IMystApiRepositoryInterface,
             systemInfoRepository: ISystemInfoRepositoryInterface,
-          ) => new ProxyAggregateRepository(dockerRunnerRepository, mystProviderRepositoryProvider, systemInfoRepository),
+            identifierMock: IIdentifier,
+          ) => new ProxyAggregateRepository(dockerRunnerRepository, mystProviderRepositoryProvider, systemInfoRepository, identifierMock),
         },
       ],
     }).compile();
@@ -1602,6 +1611,7 @@ describe('ProxyAggregateRepository', () => {
       mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
       dockerRunnerRepository.getAll.mockResolvedValueOnce([null, [outputMystConnectRunner1], 1]);
+      identifierMock.generateId.mockReturnValueOnce(outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id);
       dockerRunnerRepository.create.mockResolvedValueOnce([new UnknownException()]);
 
       const [error] = await repository.create(inputProxyWithPort);
@@ -1625,8 +1635,9 @@ describe('ProxyAggregateRepository', () => {
           },
         ]),
       );
+      expect(identifierMock.generateId).toHaveBeenCalledTimes(1);
       expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(1);
-      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
         id: expect.anything(),
@@ -1645,6 +1656,10 @@ describe('ProxyAggregateRepository', () => {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
           },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+          },
         ],
         status: expect.anything(),
         insertDate: expect.anything(),
@@ -1656,6 +1671,7 @@ describe('ProxyAggregateRepository', () => {
       mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
       dockerRunnerRepository.getAll.mockResolvedValueOnce([null, [outputMystConnectRunner1], 1]);
+      identifierMock.generateId.mockReturnValueOnce(outputProxyUpstreamRunnerWithoutPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id);
       dockerRunnerRepository.create.mockResolvedValueOnce([new UnknownException()]);
 
       const [error] = await repository.create(inputProxyWithoutPort);
@@ -1679,8 +1695,9 @@ describe('ProxyAggregateRepository', () => {
           },
         ]),
       );
+      expect(identifierMock.generateId).toHaveBeenCalledTimes(1);
       expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(1);
-      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
         id: expect.anything(),
@@ -1698,6 +1715,10 @@ describe('ProxyAggregateRepository', () => {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
           },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+          },
         ],
         status: expect.anything(),
         insertDate: expect.anything(),
@@ -1709,6 +1730,9 @@ describe('ProxyAggregateRepository', () => {
       mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
       dockerRunnerRepository.getAll.mockResolvedValueOnce([null, [outputMystConnectRunner1], 1]);
+      identifierMock.generateId
+        .mockReturnValueOnce(outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id)
+        .mockReturnValueOnce(outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id);
       dockerRunnerRepository.create
         .mockResolvedValueOnce([null, outputProxyUpstreamRunnerWithPort])
         .mockResolvedValueOnce([new UnknownException()]);
@@ -1734,8 +1758,9 @@ describe('ProxyAggregateRepository', () => {
           },
         ]),
       );
+      expect(identifierMock.generateId).toHaveBeenCalledTimes(2);
       expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(2);
-      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
         id: expect.anything(),
@@ -1754,11 +1779,15 @@ describe('ProxyAggregateRepository', () => {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
           },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+          },
         ],
         status: expect.anything(),
         insertDate: expect.anything(),
       });
-      expect(dockerRunnerRepository.create.mock.calls[1][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+      expect(dockerRunnerRepository.create.mock.calls[1][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
         id: expect.anything(),
@@ -1777,6 +1806,10 @@ describe('ProxyAggregateRepository', () => {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
           },
+          {
+            $namespace: ProxyDownstreamModel.name,
+            id: outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id
+          },
         ],
         status: expect.anything(),
         insertDate: expect.anything(),
@@ -1788,6 +1821,9 @@ describe('ProxyAggregateRepository', () => {
       mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
       dockerRunnerRepository.getAll.mockResolvedValueOnce([null, [outputMystConnectRunner1], 1]);
+      identifierMock.generateId
+        .mockReturnValueOnce(outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id)
+        .mockReturnValueOnce(outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id);
       dockerRunnerRepository.create
         .mockResolvedValueOnce([null, outputProxyUpstreamRunnerWithPort])
         .mockResolvedValueOnce([null, outputProxyDownstreamRunner]);
@@ -1813,8 +1849,9 @@ describe('ProxyAggregateRepository', () => {
           },
         ]),
       );
+      expect(identifierMock.generateId).toHaveBeenCalledTimes(2);
       expect(dockerRunnerRepository.create).toHaveBeenCalledTimes(2);
-      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+      expect(dockerRunnerRepository.create.mock.calls[0][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
         id: expect.anything(),
@@ -1833,11 +1870,15 @@ describe('ProxyAggregateRepository', () => {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
           },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+          },
         ],
         status: expect.anything(),
         insertDate: expect.anything(),
       });
-      expect(dockerRunnerRepository.create.mock.calls[1][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
+      expect(dockerRunnerRepository.create.mock.calls[1][0]).toEqual<Omit<defaultModelType<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>> & { _defaultProperties: Array<keyof RunnerModel> }, 'clone' | 'isDefaultProperty' | 'getDefaultProperties'>>({
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'serial', 'status', 'insertDate'],
         id: expect.anything(),
@@ -1846,7 +1887,7 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.ENVOY,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
-        socketPort: outputProxyUpstreamRunnerWithPort.socketPort,
+        socketPort: inputProxyWithPort.listenPort,
         label: [
           {
             $namespace: MystIdentityModel.name,
@@ -1855,6 +1896,10 @@ describe('ProxyAggregateRepository', () => {
           {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
+          },
+          {
+            $namespace: ProxyDownstreamModel.name,
+            id: outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id
           },
         ],
         status: expect.anything(),
