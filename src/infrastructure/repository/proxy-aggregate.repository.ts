@@ -268,7 +268,6 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
   }
 
   private static _runnerMapObject(runnerList: Array<RunnerModel>, vpnProviderList: Array<VpnProviderModel>): MystRunnerCombineMap {
-    console.log(runnerList, vpnProviderList);
     const runnerMap: MystRunnerCombineMap = {provider: {}, myst: {}};
     for (let i = 0; i < runnerList.length; i++) {
       const runner = runnerList[i];
