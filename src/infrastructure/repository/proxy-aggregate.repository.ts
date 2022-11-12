@@ -106,20 +106,15 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
   }
 
   async getById(id: string): Promise<AsyncReturn<Error, ProxyUpstreamModel | null>> {
-    const proxyUpstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
-    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.SOCAT});
-    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', label: {$namespace: ProxyUpstreamModel.name, id}});
-    const [proxyUpstreamError, proxyUpstreamList, proxyUpstreamTotal] = await this._runnerRepository.getAll(proxyUpstreamRunnerFilter);
+    const [proxyUpstreamError, proxyUpstreamData] = await this._getProxyUpstreamById(id);
     if (proxyUpstreamError) {
       return [proxyUpstreamError];
     }
-    if (proxyUpstreamTotal === 0) {
+    if (!proxyUpstreamData) {
       return [null, null];
     }
 
-    const proxyUpstreamData = (<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>proxyUpstreamList[0]);
     const vpnProviderId = proxyUpstreamData.label.find((v) => v.$namespace === VpnProviderModel.name).id;
-
     const [infoError, infoData] = await this._getDependencyRunnerAndOutgoingIpInfoByProviderId(vpnProviderId);
     if (infoError) {
       return [infoError];
@@ -262,18 +257,15 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
-    const proxyUpstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
-    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.SOCAT});
-    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', label: {$namespace: ProxyUpstreamModel.name, id}});
-    const [proxyUpstreamError, proxyUpstreamList, proxyUpstreamTotal] = await this._runnerRepository.getAll(proxyUpstreamRunnerFilter);
+    const [proxyUpstreamError, proxyUpstreamData] = await this._getProxyUpstreamById(id);
     if (proxyUpstreamError) {
       return [proxyUpstreamError];
     }
-    if (proxyUpstreamTotal === 0) {
+    if (!proxyUpstreamData) {
       return [null, null];
     }
 
-    const vpnProviderId = (<RunnerModel<[VpnProviderModel]>><unknown>proxyUpstreamList[0]).label.find((v) => v.$namespace === VpnProviderModel.name).id;
+    const vpnProviderId = proxyUpstreamData.label.find((v) => v.$namespace === VpnProviderModel.name).id;
     const proxyDownstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
     proxyDownstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.ENVOY});
     proxyDownstreamRunnerFilter.addCondition({
@@ -296,7 +288,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
       }
     }
 
-    return this._runnerRepository.remove(proxyUpstreamList[0].id);
+    return this._runnerRepository.remove(proxyUpstreamData.id);
   }
 
   private async _getOutgoingAddr(): Promise<AsyncReturn<Error, string>> {
@@ -305,6 +297,24 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     }
 
     return this._systemInfoRepository.getOutgoingIpAddress();
+  }
+
+  private async _getProxyUpstreamById(proxyUpstreamId: string): Promise<AsyncReturn<Error, RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]> | null>> {
+    const proxyUpstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
+    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.SOCAT});
+    proxyUpstreamRunnerFilter.addCondition({
+      $opr: 'eq',
+      label: {$namespace: ProxyUpstreamModel.name, id: proxyUpstreamId},
+    });
+    const [proxyUpstreamError, proxyUpstreamList, proxyUpstreamTotal] = await this._runnerRepository.getAll(proxyUpstreamRunnerFilter);
+    if (proxyUpstreamError) {
+      return [proxyUpstreamError];
+    }
+    if (proxyUpstreamTotal === 0) {
+      return [null, null];
+    }
+
+    return [null, <RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>proxyUpstreamList[0]];
   }
 
   private async _getDependencyRunnerAndOutgoingIpInfoByProviderId(vpnProviderId: string): Promise<AsyncReturn<Error, DependencyRunnerAndOutgoingIpInfoOutput>> {
