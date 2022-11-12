@@ -290,8 +290,10 @@ describe('DockerLabelParser', () => {
   describe(`Convert object to label`, () => {
     let prefixNamespace: string;
     let notMatchObj: Object;
-    let oneMatchObj: Object;
-    let twoMatchObj: Object;
+    let mystMatchObj: Object;
+    let mystAndProviderMatchObj: Object;
+    let mystAndProviderAndDownstreamMatchObj: Object;
+    let mystAndProviderAndUpstreamMatchObj: Object;
 
     beforeEach(() => {
       prefixNamespace = 'com.test';
@@ -300,19 +302,37 @@ describe('DockerLabelParser', () => {
         'not.match.label.id': 'id',
       };
 
-      oneMatchObj = {
+      mystMatchObj = {
         'not.match.label.id': 'id',
         [`${prefixNamespace}.myst-identity-model.id`]: 'obj1-myst-identity-id',
         [`${prefixNamespace}.myst-identity-model.identity`]: 'obj1-myst-identity-identity',
         [`${prefixNamespace}.myst-identity-model.passphrase`]: 'obj1-myst-identity-passphrase',
       };
 
-      twoMatchObj = {
+      mystAndProviderMatchObj = {
         'not.match.label.id': 'id',
         [`${prefixNamespace}.myst-identity-model.id`]: 'obj2-myst-identity-id',
         [`${prefixNamespace}.myst-identity-model.identity`]: 'obj2-myst-identity-identity',
         [`${prefixNamespace}.vpn-provider-model.user-identity`]: 'obj2-vpn-provider-userIdentity',
         [`${prefixNamespace}.vpn-provider-model.provider-identity`]: 'obj2-vpn-provider-providerIdentity',
+      };
+
+      mystAndProviderAndDownstreamMatchObj = {
+        'not.match.label.id': 'id',
+        [`${prefixNamespace}.myst-identity-model.id`]: 'obj3-myst-identity-id',
+        [`${prefixNamespace}.myst-identity-model.identity`]: 'obj3-myst-identity-identity',
+        [`${prefixNamespace}.vpn-provider-model.user-identity`]: 'obj3-vpn-provider-userIdentity',
+        [`${prefixNamespace}.vpn-provider-model.provider-identity`]: 'obj3-vpn-provider-providerIdentity',
+        [`${prefixNamespace}.proxy-downstream-model.id`]: 'obj3-proxy-downstream-id',
+      };
+
+      mystAndProviderAndUpstreamMatchObj = {
+        'not.match.label.id': 'id',
+        [`${prefixNamespace}.myst-identity-model.id`]: 'obj4-myst-identity-id',
+        [`${prefixNamespace}.myst-identity-model.identity`]: 'obj4-myst-identity-identity',
+        [`${prefixNamespace}.vpn-provider-model.user-identity`]: 'obj4-vpn-provider-userIdentity',
+        [`${prefixNamespace}.vpn-provider-model.provider-identity`]: 'obj4-vpn-provider-providerIdentity',
+        [`${prefixNamespace}.proxy-upstream-model.id`]: 'obj4-proxy-upstream-id',
       };
     });
 
@@ -322,33 +342,79 @@ describe('DockerLabelParser', () => {
       expect(result).toBeNull();
     });
 
-    it(`Should return one label after parse object`, () => {
-      const result = DockerLabelParser.convertObjectToLabel(prefixNamespace, oneMatchObj);
+    it(`Should return myst label after parse object`, () => {
+      const result = DockerLabelParser.convertObjectToLabel(prefixNamespace, mystMatchObj);
 
       expect(Object.keys(result)).toHaveLength(4);
       expect(result).toMatchObject(<RunnerLabelNamespace<MystIdentityModel>>{
         $namespace: MystIdentityModel.name,
-        id: oneMatchObj[`${prefixNamespace}.myst-identity-model.id`],
-        identity: oneMatchObj[`${prefixNamespace}.myst-identity-model.identity`],
-        passphrase: oneMatchObj[`${prefixNamespace}.myst-identity-model.passphrase`],
+        id: mystMatchObj[`${prefixNamespace}.myst-identity-model.id`],
+        identity: mystMatchObj[`${prefixNamespace}.myst-identity-model.identity`],
+        passphrase: mystMatchObj[`${prefixNamespace}.myst-identity-model.passphrase`],
       });
     });
 
-    it(`Should return two label after parse object`, () => {
-      const result = DockerLabelParser.convertObjectToLabel(prefixNamespace, twoMatchObj);
+    it(`Should return myst and provider label after parse object`, () => {
+      const result = DockerLabelParser.convertObjectToLabel(prefixNamespace, mystAndProviderMatchObj);
 
       expect(result).toHaveLength(2);
       expect(Object.keys(result[0])).toHaveLength(3);
       expect(result[0]).toMatchObject(<RunnerLabelNamespace<MystIdentityModel>>{
         $namespace: MystIdentityModel.name,
-        id: twoMatchObj[`${prefixNamespace}.myst-identity-model.id`],
-        identity: twoMatchObj[`${prefixNamespace}.myst-identity-model.identity`],
+        id: mystAndProviderMatchObj[`${prefixNamespace}.myst-identity-model.id`],
+        identity: mystAndProviderMatchObj[`${prefixNamespace}.myst-identity-model.identity`],
       });
       expect(Object.keys(result[1])).toHaveLength(3);
       expect(result[1]).toMatchObject(<RunnerLabelNamespace<VpnProviderModel>>{
         $namespace: VpnProviderModel.name,
-        userIdentity: twoMatchObj[`${prefixNamespace}.vpn-provider-model.user-identity`],
-        providerIdentity: twoMatchObj[`${prefixNamespace}.vpn-provider-model.provider-identity`],
+        userIdentity: mystAndProviderMatchObj[`${prefixNamespace}.vpn-provider-model.user-identity`],
+        providerIdentity: mystAndProviderMatchObj[`${prefixNamespace}.vpn-provider-model.provider-identity`],
+      });
+    });
+
+    it(`Should return myst and provider and downstream label after parse object`, () => {
+      const result = DockerLabelParser.convertObjectToLabel(prefixNamespace, mystAndProviderAndDownstreamMatchObj);
+
+      expect(result).toHaveLength(3);
+      expect(Object.keys(result[0])).toHaveLength(3);
+      expect(result[0]).toMatchObject(<RunnerLabelNamespace<MystIdentityModel>>{
+        $namespace: MystIdentityModel.name,
+        id: mystAndProviderAndDownstreamMatchObj[`${prefixNamespace}.myst-identity-model.id`],
+        identity: mystAndProviderAndDownstreamMatchObj[`${prefixNamespace}.myst-identity-model.identity`],
+      });
+      expect(Object.keys(result[1])).toHaveLength(3);
+      expect(result[1]).toMatchObject(<RunnerLabelNamespace<VpnProviderModel>>{
+        $namespace: VpnProviderModel.name,
+        userIdentity: mystAndProviderAndDownstreamMatchObj[`${prefixNamespace}.vpn-provider-model.user-identity`],
+        providerIdentity: mystAndProviderAndDownstreamMatchObj[`${prefixNamespace}.vpn-provider-model.provider-identity`],
+      });
+      expect(Object.keys(result[2])).toHaveLength(2);
+      expect(result[2]).toMatchObject(<RunnerLabelNamespace<ProxyDownstreamModel>>{
+        $namespace: ProxyDownstreamModel.name,
+        id: mystAndProviderAndDownstreamMatchObj[`${prefixNamespace}.proxy-downstream-model.id`],
+      });
+    });
+
+    it(`Should return myst and provider and upstream label after parse object`, () => {
+      const result = DockerLabelParser.convertObjectToLabel(prefixNamespace, mystAndProviderAndUpstreamMatchObj);
+
+      expect(result).toHaveLength(3);
+      expect(Object.keys(result[0])).toHaveLength(3);
+      expect(result[0]).toMatchObject(<RunnerLabelNamespace<MystIdentityModel>>{
+        $namespace: MystIdentityModel.name,
+        id: mystAndProviderAndUpstreamMatchObj[`${prefixNamespace}.myst-identity-model.id`],
+        identity: mystAndProviderAndUpstreamMatchObj[`${prefixNamespace}.myst-identity-model.identity`],
+      });
+      expect(Object.keys(result[1])).toHaveLength(3);
+      expect(result[1]).toMatchObject(<RunnerLabelNamespace<VpnProviderModel>>{
+        $namespace: VpnProviderModel.name,
+        userIdentity: mystAndProviderAndUpstreamMatchObj[`${prefixNamespace}.vpn-provider-model.user-identity`],
+        providerIdentity: mystAndProviderAndUpstreamMatchObj[`${prefixNamespace}.vpn-provider-model.provider-identity`],
+      });
+      expect(Object.keys(result[2])).toHaveLength(2);
+      expect(result[2]).toMatchObject(<RunnerLabelNamespace<ProxyUpstreamModel>>{
+        $namespace: ProxyUpstreamModel.name,
+        id: mystAndProviderAndUpstreamMatchObj[`${prefixNamespace}.proxy-upstream-model.id`],
       });
     });
   });

@@ -102,15 +102,12 @@ export class DockerLabelParser<T> {
           return g[1].toUpperCase();
         });
 
-        let namespace: string;
-        switch (moduleName) {
-          case MystIdentityModel.name:
-            namespace = moduleName;
-            break;
-          case VpnProviderModel.name:
-            namespace = moduleName;
-            break;
-        }
+        const namespace: string = [
+          MystIdentityModel.name,
+          VpnProviderModel.name,
+          ProxyDownstreamModel.name,
+          ProxyUpstreamModel.name,
+        ].find((v) => v === moduleName);
 
         const find = runnerLabelList.find((v) => v?.$namespace === namespace);
         if (!find) {
