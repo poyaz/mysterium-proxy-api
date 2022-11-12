@@ -261,8 +261,42 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     return [null, proxyUpstreamCombineList[0]];
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    const proxyUpstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
+    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.SOCAT});
+    proxyUpstreamRunnerFilter.addCondition({$opr: 'eq', label: {$namespace: ProxyUpstreamModel.name, id}});
+    const [proxyUpstreamError, proxyUpstreamList, proxyUpstreamTotal] = await this._runnerRepository.getAll(proxyUpstreamRunnerFilter);
+    if (proxyUpstreamError) {
+      return [proxyUpstreamError];
+    }
+    if (proxyUpstreamTotal === 0) {
+      return [null, null];
+    }
+
+    const vpnProviderId = (<RunnerModel<[VpnProviderModel]>><unknown>proxyUpstreamList[0]).label.find((v) => v.$namespace === VpnProviderModel.name).id;
+    const proxyDownstreamRunnerFilter = new FilterModel<RunnerModel<ProxyUpstreamModel>>();
+    proxyDownstreamRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.ENVOY});
+    proxyDownstreamRunnerFilter.addCondition({
+      $opr: 'eq',
+      label: {$namespace: VpnProviderModel.name, id: vpnProviderId},
+    });
+    const [proxyDownstreamError, proxyDownstreamList, proxyDownstreamTotal] = await this._runnerRepository.getAll(proxyDownstreamRunnerFilter);
+    if (proxyDownstreamError) {
+      return [proxyDownstreamError];
+    }
+
+    if (proxyDownstreamTotal !== 0) {
+      const tasks = proxyDownstreamList.map((v) => this._runnerRepository.remove(v.id));
+      const result = await Promise.all(tasks);
+
+      for (const [error] of result) {
+        if (error) {
+          return [error];
+        }
+      }
+    }
+
+    return this._runnerRepository.remove(proxyUpstreamList[0].id);
   }
 
   private async _getOutgoingAddr(): Promise<AsyncReturn<Error, string>> {

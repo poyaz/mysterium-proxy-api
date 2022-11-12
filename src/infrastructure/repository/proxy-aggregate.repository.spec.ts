@@ -1845,4 +1845,314 @@ describe('ProxyAggregateRepository', () => {
       });
     });
   });
+
+  describe(`Remove proxy`, () => {
+    let inputId: string;
+    let outputProxyDownstreamRunner1: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>;
+    let outputProxyUpstreamRunner1: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>;
+
+    beforeEach(() => {
+      inputId = '11111111-1111-1111-1111-777777777777';
+
+      outputProxyDownstreamRunner1 = new RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>({
+        id: '11111111-1111-1111-1111-555555555555',
+        serial: 'proxy-proxyDownstream-serial',
+        name: 'proxy-downstream-name',
+        service: RunnerServiceEnum.ENVOY,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: '10.10.10.1',
+        socketPort: 10001,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputProxyDownstreamRunner1.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: '11111111-1111-1111-1111-222222222222',
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: '11111111-1111-1111-1111-444444444444',
+        },
+        {
+          $namespace: ProxyDownstreamModel.name,
+          id: '11111111-1111-1111-1111-666666666666',
+        },
+      ];
+
+      outputProxyUpstreamRunner1 = new RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>({
+        id: inputId,
+        serial: 'proxy-upstream-serial',
+        name: 'proxy-upstream-name',
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: '10.10.10.2',
+        socketPort: 3128,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputProxyUpstreamRunner1.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: '11111111-1111-1111-1111-222222222222',
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: '11111111-1111-1111-1111-444444444444',
+        },
+        {
+          $namespace: ProxyUpstreamModel.name,
+          id: '11111111-1111-1111-1111-666666666666',
+        },
+      ];
+    });
+
+    it(`Should error remove proxy when get proxy upstream runner`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.SOCAT,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: ProxyUpstreamModel.name,
+              id: inputId,
+            },
+          },
+        ]),
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove proxy when get proxy downstream runner`, async () => {
+      dockerRunnerRepository.getAll
+        .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
+        .mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.SOCAT,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: ProxyUpstreamModel.name,
+              id: inputId,
+            },
+          },
+        ]),
+      );
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.ENVOY,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
+            },
+          },
+        ]),
+      );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove proxy when get remove downstream runner`, async () => {
+      dockerRunnerRepository.getAll
+        .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
+        .mockResolvedValueOnce([null, [outputProxyDownstreamRunner1], 1]);
+      dockerRunnerRepository.remove.mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.SOCAT,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: ProxyUpstreamModel.name,
+              id: inputId,
+            },
+          },
+        ]),
+      );
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.ENVOY,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
+            },
+          },
+        ]),
+      );
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledTimes(1);
+      expect(dockerRunnerRepository.remove).toHaveBeenNthCalledWith(1, outputProxyDownstreamRunner1.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove proxy when get remove upstream runner (not found downstream runner)`, async () => {
+      dockerRunnerRepository.getAll
+        .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
+        .mockResolvedValueOnce([null, [], 0]);
+      dockerRunnerRepository.remove.mockResolvedValueOnce([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.SOCAT,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: ProxyUpstreamModel.name,
+              id: inputId,
+            },
+          },
+        ]),
+      );
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.ENVOY,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
+            },
+          },
+        ]),
+      );
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledTimes(1);
+      expect(dockerRunnerRepository.remove).toHaveBeenNthCalledWith(1, outputProxyUpstreamRunner1.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove proxy (not found downstream runner)`, async () => {
+      dockerRunnerRepository.getAll
+        .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
+        .mockResolvedValueOnce([null, [], 0]);
+      dockerRunnerRepository.remove.mockResolvedValueOnce([null, null]);
+
+      const [error, result] = await repository.remove(inputId);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.SOCAT,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: ProxyUpstreamModel.name,
+              id: inputId,
+            },
+          },
+        ]),
+      );
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.ENVOY,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
+            },
+          },
+        ]),
+      );
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledTimes(1);
+      expect(dockerRunnerRepository.remove).toHaveBeenNthCalledWith(1, outputProxyUpstreamRunner1.id);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully remove proxy (found downstream runner)`, async () => {
+      dockerRunnerRepository.getAll
+        .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
+        .mockResolvedValueOnce([null, [outputProxyDownstreamRunner1], 1]);
+      dockerRunnerRepository.remove
+        .mockResolvedValueOnce([null, null])
+        .mockResolvedValueOnce([null, null]);
+
+      const [error, result] = await repository.remove(inputId);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.SOCAT,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: ProxyUpstreamModel.name,
+              id: inputId,
+            },
+          },
+        ]),
+      );
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            service: RunnerServiceEnum.ENVOY,
+          },
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
+            },
+          },
+        ]),
+      );
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledTimes(2);
+      expect(dockerRunnerRepository.remove).toHaveBeenNthCalledWith(1, outputProxyDownstreamRunner1.id);
+      expect(dockerRunnerRepository.remove).toHaveBeenNthCalledWith(2, outputProxyUpstreamRunner1.id);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
