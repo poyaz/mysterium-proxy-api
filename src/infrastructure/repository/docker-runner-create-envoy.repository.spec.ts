@@ -95,7 +95,7 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
     expect(repository.serviceType).toEqual(RunnerServiceEnum.ENVOY);
   });
 
-  describe(`Create myst-connect container`, () => {
+  describe(`Create envoy container`, () => {
     let inputRunner: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyDownstreamModel]>;
     let outputMystIdentityInvalid: defaultModelType<MystIdentityModel>;
     let outputMystIdentityValid: defaultModelType<MystIdentityModel>;
