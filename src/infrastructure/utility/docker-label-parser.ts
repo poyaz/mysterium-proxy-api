@@ -1,7 +1,7 @@
-import {ClassConstructor, Return, UniqueArray} from '@src-core/utility';
-import {RunnerLabelNamespace, RunnerObjectLabel} from '@src-core/model/runner.model';
+import {ClassConstructor, Return} from '@src-core/utility';
+import {RunnerLabelNamespace} from '@src-core/model/runner.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
-import {defaultModelType, defaultModelFactory} from '@src-core/model/defaultModel';
+import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {
   VpnProviderIpTypeEnum,
@@ -9,6 +9,7 @@ import {
   VpnProviderName,
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
+import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum, ProxyUpstreamModel} from '@src-core/model/proxy.model';
 
 export class DockerLabelParser<T> {
   private _models: Array<{ namespace: string, data: any }> = [];
@@ -28,6 +29,16 @@ export class DockerLabelParser<T> {
 
       if (labelData.$namespace === VpnProviderModel.name) {
         this._fillVpnProvider(labelData.$namespace, labelData);
+        continue;
+      }
+
+      if (labelData.$namespace === ProxyDownstreamModel.name) {
+        this._fillProxyDownstream(labelData.$namespace, labelData);
+        continue;
+      }
+
+      if (labelData.$namespace === ProxyUpstreamModel.name) {
+        this._fillProxyUpstream(labelData.$namespace, labelData);
         continue;
       }
 
@@ -198,6 +209,63 @@ export class DockerLabelParser<T> {
           providerIpType: VpnProviderIpTypeEnum.HOSTING,
           country: 'GB',
           isRegister: false,
+          insertDate: new Date(),
+        },
+        defaultProperties,
+      ),
+    });
+  }
+
+  private _fillProxyDownstream(namespace: string, data: ProxyDownstreamModel): void {
+    const defaultProperties: Array<keyof ProxyDownstreamModel> = ['refId', 'ip', 'mask', 'type', 'status'];
+    const fillObject: Pick<ProxyDownstreamModel, 'id'> = {
+      id: 'default-id',
+    };
+
+    if (<keyof ProxyDownstreamModel>'id' in data) {
+      fillObject.id = data.id;
+    } else {
+      defaultProperties.push('id');
+    }
+
+    this._models.push({
+      namespace: namespace,
+      data: defaultModelFactory<ProxyDownstreamModel>(
+        ProxyDownstreamModel,
+        {
+          ...fillObject,
+          refId: 'default-ref-id',
+          ip: 'default-ip',
+          mask: 32,
+          type: ProxyTypeEnum.MYST,
+          status: ProxyStatusEnum.DISABLE,
+        },
+        defaultProperties,
+      ),
+    });
+  }
+
+  private _fillProxyUpstream(namespace: string, data: ProxyUpstreamModel): void {
+    const defaultProperties: Array<keyof ProxyUpstreamModel> = ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'];
+    const fillObject: Pick<ProxyUpstreamModel, 'id'> = {
+      id: 'default-id',
+    };
+
+    if (<keyof ProxyUpstreamModel>'id' in data) {
+      fillObject.id = data.id;
+    } else {
+      defaultProperties.push('id');
+    }
+
+    this._models.push({
+      namespace: namespace,
+      data: defaultModelFactory<ProxyUpstreamModel>(
+        ProxyUpstreamModel,
+        {
+          ...fillObject,
+          listenAddr: 'default-addr',
+          listenPort: 3128,
+          proxyDownstream: [],
           insertDate: new Date(),
         },
         defaultProperties,

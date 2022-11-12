@@ -4,13 +4,14 @@ import {RunnerLabelNamespace} from '@src-core/model/runner.model';
 import {DefaultModel} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
+import {ProxyDownstreamModel, ProxyUpstreamModel} from '@src-core/model/proxy.model';
 
 describe('DockerLabelParser', () => {
   it('should be defined', () => {
     expect(new DockerLabelParser({$namespace: 'any'})).toBeDefined();
   });
 
-  describe(`Docker label parser for myst identity`, () => {
+  describe(`Docker label parser`, () => {
     let label1: RunnerLabelNamespace<{}>;
     let parser1: DockerLabelParser<{}>;
 
@@ -25,6 +26,12 @@ describe('DockerLabelParser', () => {
 
     let label5: RunnerLabelNamespace<VpnProviderModel>;
     let parser5: DockerLabelParser<VpnProviderModel>;
+
+    let label6: RunnerLabelNamespace<ProxyDownstreamModel>;
+    let parser6: DockerLabelParser<ProxyDownstreamModel>;
+
+    let label7: RunnerLabelNamespace<ProxyUpstreamModel>;
+    let parser7: DockerLabelParser<ProxyUpstreamModel>;
 
     beforeEach(() => {
       label1 = {
@@ -58,6 +65,18 @@ describe('DockerLabelParser', () => {
         userIdentity: 'userIdentity',
       };
       parser5 = new DockerLabelParser<VpnProviderModel>(label5);
+
+      label6 = {
+        $namespace: ProxyDownstreamModel.name,
+        id: 'proxy-downstream-id',
+      };
+      parser6 = new DockerLabelParser<ProxyDownstreamModel>(label6);
+
+      label7 = {
+        $namespace: ProxyUpstreamModel.name,
+        id: 'proxy-downstream-id',
+      };
+      parser7 = new DockerLabelParser<ProxyUpstreamModel>(label7);
     });
 
     it(`Should error parse label`, () => {
@@ -147,6 +166,44 @@ describe('DockerLabelParser', () => {
           getDefaultProperties: expect.anything(),
         }));
         expect((<DefaultModel<VpnProviderModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof VpnProviderModel>(['id', 'serviceType', 'providerName', 'providerIdentity', 'providerIpType', 'country', 'isRegister', 'insertDate']));
+      });
+    });
+
+    describe(`Get proxy downstream model`, () => {
+      it(`Should parse label and get class instance for proxy downstream with valid key value`, () => {
+        parser6.parseLabel();
+
+        const [error, result] = parser6.getClassInstance<ProxyDownstreamModel>(ProxyDownstreamModel);
+
+        expect(error).toBeNull();
+        expect(result).toBeInstanceOf(ProxyDownstreamModel);
+        expect(result).toMatchObject<Pick<ProxyDownstreamModel, 'id'>>({
+          id: label6.id,
+        });
+        expect(result).toEqual(expect.objectContaining({
+          isDefaultProperty: expect.anything(),
+          getDefaultProperties: expect.anything(),
+        }));
+        expect((<DefaultModel<ProxyDownstreamModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof ProxyDownstreamModel>(['refId', 'ip', 'mask', 'type', 'status']));
+      });
+    });
+
+    describe(`Get proxy upstream model`, () => {
+      it(`Should parse label and get class instance for proxy upstream with valid key value`, () => {
+        parser7.parseLabel();
+
+        const [error, result] = parser7.getClassInstance<ProxyUpstreamModel>(ProxyUpstreamModel);
+
+        expect(error).toBeNull();
+        expect(result).toBeInstanceOf(ProxyUpstreamModel);
+        expect(result).toMatchObject<Pick<ProxyUpstreamModel, 'id'>>({
+          id: label7.id,
+        });
+        expect(result).toEqual(expect.objectContaining({
+          isDefaultProperty: expect.anything(),
+          getDefaultProperties: expect.anything(),
+        }));
+        expect((<DefaultModel<ProxyUpstreamModel>><unknown>result).getDefaultProperties()).toEqual(expect.arrayContaining<keyof ProxyUpstreamModel>(['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate']));
       });
     });
   });
