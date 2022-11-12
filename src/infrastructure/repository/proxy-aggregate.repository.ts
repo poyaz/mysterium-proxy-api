@@ -180,7 +180,6 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
-        socketUri: vpnProviderData.runner.socketUri,
         ...(isCreateWithPort && {socketPort: model.listenPort}),
         label: [
           {

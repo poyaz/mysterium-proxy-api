@@ -1568,7 +1568,6 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
-        socketUri: outputMystRunner.socketUri,
         socketPort: inputProxyWithPort.listenPort,
         label: [
           {
@@ -1626,7 +1625,6 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
-        socketUri: outputMystRunner.socketUri,
         label: [
           {
             $namespace: MystIdentityModel.name,
@@ -1687,7 +1685,6 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
-        socketUri: outputMystRunner.socketUri,
         socketPort: inputProxyWithPort.listenPort,
         label: [
           {
@@ -1776,7 +1773,6 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
-        socketUri: outputMystRunner.socketUri,
         socketPort: inputProxyWithPort.listenPort,
         label: [
           {
