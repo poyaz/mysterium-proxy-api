@@ -39,6 +39,7 @@ describe('DockerRunnerRepository', () => {
   let dockerCreateStrategy: MockProxy<ICreateRunnerRepository>;
   let identifierMock: MockProxy<IIdentifier>;
   let mystDataVolume: string;
+  let envoyDefaultPort: number;
   let networkName: string;
   let realPath: string;
   let namespace: string;
@@ -51,6 +52,7 @@ describe('DockerRunnerRepository', () => {
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
 
     mystDataVolume = '/var/lib/mysterium-node/keystore/';
+    envoyDefaultPort = 10001;
     networkName = 'mysterium-proxy-api_main';
     realPath = '/real/path/';
     namespace = 'com.mysterium-proxy';
@@ -74,6 +76,7 @@ describe('DockerRunnerRepository', () => {
               dockerCreateStrategy,
               {
                 networkName,
+                defaultPort: {envoy: envoyDefaultPort},
                 baseVolumePath: {myst: mystDataVolume},
                 realPath,
               },

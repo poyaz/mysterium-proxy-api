@@ -22,6 +22,7 @@ import * as path from 'path';
 
 export type dockerContainerOption = {
   baseVolumePath: { myst: string },
+  defaultPort: { envoy: number },
   networkName: string,
   realPath: string,
 }
@@ -186,7 +187,7 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     const networkDependencyContainerList = [];
     for (const container of containerList) {
       const [, dependencyContainerId] = /^container:(.+)/.exec(container.HostConfig.NetworkMode) || [null, null];
-      if (dependencyContainerId) {
+      if (dependencyContainerId && networkDependencyContainerList.indexOf(dependencyContainerId) === -1) {
         networkDependencyContainerList.push(dependencyContainerId);
       }
     }
@@ -241,12 +242,12 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
       case RunnerServiceEnum.ENVOY:
         service = RunnerServiceEnum.ENVOY;
         socketType = RunnerSocketTypeEnum.HTTP;
-        socketPort = 10001;
+        socketPort = this._containerOption.defaultPort.envoy;
         break;
       case RunnerServiceEnum.SOCAT:
         service = RunnerServiceEnum.SOCAT;
         socketType = RunnerSocketTypeEnum.TCP;
-        socketPort = null;
+        socketPort = row.Ports[0]?.PublicPort;
         break;
       default:
         throw new FillDataRepositoryException<RunnerModel>(['service']);
