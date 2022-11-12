@@ -67,6 +67,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - nginx-conf-storage:/etc/nginx/conf.d/
       - nginx-entrypoint-storage:/docker-entrypoint.d/
+      - $PWD/storage/tmp:/tmp/share/
     networks:
       main:
         ipv4_address: 10.110.0.7
@@ -116,6 +117,16 @@ services:
     entrypoint: ""
     command: /bin/bash -c "sleep 1; exit"
 
+  build-envoy-image:
+    build:
+      context: ./docker/images/myst-connect
+      dockerfile: Dockerfile
+    image: envoy-service:v1.0
+    network_mode: "bridge"
+    restart: "no"
+    entrypoint: ""
+    command: /bin/bash -c "sleep 1; exit"
+
 volumes:
   postgres-storage: { }
   redis-storage: { }
@@ -131,6 +142,13 @@ volumes:
       type: none
       o: bind
       device: $PWD/storage/docker/volume/nginx-entrypoint
+  envoy-global-config-storage:
+    name: volume-mysterium-envoy-config
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: $PWD/storage/docker/volume/envoy-conf
 
 networks:
   main:

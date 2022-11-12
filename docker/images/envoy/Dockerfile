@@ -21,5 +21,7 @@ CMD ["wait4x", "-i", "5s", "-t", "60s", "http", "http://127.0.0.1:4050/connectio
 
 COPY docker-healcheck.sh /usr/local/bin/
 
+EXPOSE 10001/tcp
+
 HEALTHCHECK --interval=3s --timeout=2s \
-    CMD bash /usr/local/bin/docker-healcheck.sh || kill -SIGILL 1
+    CMD bash /usr/local/bin/docker-healcheck.sh
