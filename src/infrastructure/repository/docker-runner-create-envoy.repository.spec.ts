@@ -44,7 +44,7 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
 
-    imageName = 'mysterium-proxy-api-myst-connect';
+    imageName = 'mysterium-proxy-api-envoy';
     hostVolumeConfigName = 'host-envoy-config-volume-name';
     defaultPort = 10001;
     networkName = 'mysterium-proxy-api_main';
