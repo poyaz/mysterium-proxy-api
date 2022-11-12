@@ -25,6 +25,7 @@ import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/mod
 import {filterAndSortProxyUpstream} from '@src-infrastructure/utility/filterAndSortProxyUpstream';
 import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
+import {ExistException} from '@src-core/exception/exist.exception';
 
 jest.mock('@src-infrastructure/utility/filterAndSortProxyUpstream');
 
@@ -1012,72 +1013,13 @@ describe('ProxyAggregateRepository', () => {
     it(`Should error get proxy by id when get dependency runner info`, async () => {
       dockerRunnerRepository.getAll
         .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
-        .mockResolvedValueOnce([new UnknownException()])
-        .mockResolvedValueOnce([null, [], 0]);
-      mystProviderRepository.getById.mockResolvedValue([null, null]);
-      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-
-      const [error] = await repository.getById(inputId);
-
-      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(3);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.SOCAT,
-          },
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: ProxyUpstreamModel.name,
-              id: inputId,
-            },
-          },
-        ]),
-      );
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: VpnProviderModel.name,
-              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
-            },
-          },
-        ]),
-      );
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[2][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST,
-          },
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: MystIdentityModel.name,
-              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === MystIdentityModel.name).id,
-            },
-          },
-        ]),
-      );
-      expect(mystProviderRepository.getById).toHaveBeenCalled();
-      expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id);
-      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-      expect(error).toBeInstanceOf(UnknownException);
-    });
-
-    it(`Should error get proxy by id when get myst runner info`, async () => {
-      dockerRunnerRepository.getAll
-        .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
-        .mockResolvedValueOnce([null, [], 0])
         .mockResolvedValueOnce([new UnknownException()]);
       mystProviderRepository.getById.mockResolvedValue([null, null]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
 
       const [error] = await repository.getById(inputId);
 
-      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(3);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
           {
@@ -1100,21 +1042,6 @@ describe('ProxyAggregateRepository', () => {
             label: {
               $namespace: VpnProviderModel.name,
               id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
-            },
-          },
-        ]),
-      );
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[2][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST,
-          },
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: MystIdentityModel.name,
-              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === MystIdentityModel.name).id,
             },
           },
         ]),
@@ -1128,14 +1055,13 @@ describe('ProxyAggregateRepository', () => {
     it(`Should error get proxy by id when get vpn provider info`, async () => {
       dockerRunnerRepository.getAll
         .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
-        .mockResolvedValueOnce([null, [], 0])
         .mockResolvedValueOnce([null, [], 0]);
       mystProviderRepository.getById.mockResolvedValue([new UnknownException()]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
 
       const [error] = await repository.getById(inputId);
 
-      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(3);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
           {
@@ -1158,21 +1084,6 @@ describe('ProxyAggregateRepository', () => {
             label: {
               $namespace: VpnProviderModel.name,
               id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
-            },
-          },
-        ]),
-      );
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[2][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST,
-          },
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: MystIdentityModel.name,
-              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === MystIdentityModel.name).id,
             },
           },
         ]),
@@ -1186,14 +1097,13 @@ describe('ProxyAggregateRepository', () => {
     it(`Should error get proxy by id when get outgoing ip address`, async () => {
       dockerRunnerRepository.getAll
         .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
-        .mockResolvedValueOnce([null, [], 0])
         .mockResolvedValueOnce([null, [], 0]);
       mystProviderRepository.getById.mockResolvedValue([null, null]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.getById(inputId);
 
-      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(3);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
           {
@@ -1216,21 +1126,6 @@ describe('ProxyAggregateRepository', () => {
             label: {
               $namespace: VpnProviderModel.name,
               id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
-            },
-          },
-        ]),
-      );
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[2][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST,
-          },
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: MystIdentityModel.name,
-              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === MystIdentityModel.name).id,
             },
           },
         ]),
@@ -1244,14 +1139,13 @@ describe('ProxyAggregateRepository', () => {
     it(`Should successfully get proxy by id`, async () => {
       dockerRunnerRepository.getAll
         .mockResolvedValueOnce([null, [outputProxyUpstreamRunner1], 1])
-        .mockResolvedValueOnce([null, [outputMystConnectRunner1, outputProxyDownstreamRunner1, outputProxyUpstreamRunner1], 3])
-        .mockResolvedValueOnce([null, [outputMystRunner1], 1]);
+        .mockResolvedValueOnce([null, [outputMystConnectRunner1, outputProxyDownstreamRunner1, outputProxyUpstreamRunner1], 3]);
       mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider1]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
 
       const [error, result] = await repository.getById(inputId);
 
-      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(3);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
           {
@@ -1274,21 +1168,6 @@ describe('ProxyAggregateRepository', () => {
             label: {
               $namespace: VpnProviderModel.name,
               id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === VpnProviderModel.name).id,
-            },
-          },
-        ]),
-      );
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[2][0]).getConditionList()).toEqual(
-        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST,
-          },
-          {
-            $opr: 'eq',
-            label: {
-              $namespace: MystIdentityModel.name,
-              id: outputProxyUpstreamRunner1.label.find((v) => v.$namespace === MystIdentityModel.name).id,
             },
           },
         ]),
@@ -1531,12 +1410,9 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
           {
             $opr: 'eq',
             label: {
@@ -1560,12 +1436,9 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
           {
             $opr: 'eq',
             label: {
@@ -1578,7 +1451,7 @@ describe('ProxyAggregateRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should error create new proxy when get myst-connect runner`, async () => {
+    it(`Should error create new proxy when get runner dependency`, async () => {
       mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
       systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
       dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
@@ -1589,12 +1462,9 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
           {
             $opr: 'eq',
             label: {
@@ -1604,6 +1474,61 @@ describe('ProxyAggregateRepository', () => {
           },
         ]),
       );
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create new proxy when exist proxy upstream and downstream`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputProxyUpstreamRunnerWithPort, outputProxyDownstreamRunner], 2]);
+
+      const [error] = await repository.create(inputProxyWithPort);
+
+      expect(mystProviderRepository.getById).toHaveBeenCalled();
+      expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: inputProxyWithPort.proxyDownstream[0].refId,
+            },
+          },
+        ]),
+      );
+      expect(error).toBeInstanceOf(ExistException);
+    });
+
+    it(`Should error create new proxy when remove proxy downstream because proxy downstream exist but upstream not exists`, async () => {
+      mystProviderRepository.getById.mockResolvedValue([null, outputVpnProvider]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [outputProxyDownstreamRunner], 1]);
+      dockerRunnerRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.create(inputProxyWithPort);
+
+      expect(mystProviderRepository.getById).toHaveBeenCalled();
+      expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
+        expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
+          {
+            $opr: 'eq',
+            label: {
+              $namespace: VpnProviderModel.name,
+              id: inputProxyWithPort.proxyDownstream[0].refId,
+            },
+          },
+        ]),
+      );
+      expect(dockerRunnerRepository.remove).toHaveBeenCalled();
+      expect(dockerRunnerRepository.remove).toHaveBeenCalledWith(outputProxyDownstreamRunner.id);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
@@ -1620,12 +1545,9 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
           {
             $opr: 'eq',
             label: {
@@ -1646,6 +1568,7 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: outputMystRunner.socketUri,
         socketPort: inputProxyWithPort.listenPort,
         label: [
           {
@@ -1658,7 +1581,7 @@ describe('ProxyAggregateRepository', () => {
           },
           {
             $namespace: ProxyUpstreamModel.name,
-            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id,
           },
         ],
         status: expect.anything(),
@@ -1680,17 +1603,14 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithoutPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
           {
             $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
-          {
-            $opr: 'eq',
             label: {
               $namespace: VpnProviderModel.name,
-              id: inputProxyWithoutPort.proxyDownstream[0].refId,
+              id: inputProxyWithPort.proxyDownstream[0].refId,
             },
           },
         ]),
@@ -1706,6 +1626,7 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: outputMystRunner.socketUri,
         label: [
           {
             $namespace: MystIdentityModel.name,
@@ -1717,7 +1638,7 @@ describe('ProxyAggregateRepository', () => {
           },
           {
             $namespace: ProxyUpstreamModel.name,
-            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id,
           },
         ],
         status: expect.anything(),
@@ -1743,12 +1664,9 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
           {
             $opr: 'eq',
             label: {
@@ -1769,6 +1687,7 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: outputMystRunner.socketUri,
         socketPort: inputProxyWithPort.listenPort,
         label: [
           {
@@ -1781,7 +1700,7 @@ describe('ProxyAggregateRepository', () => {
           },
           {
             $namespace: ProxyUpstreamModel.name,
-            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id,
           },
         ],
         status: expect.anything(),
@@ -1808,7 +1727,7 @@ describe('ProxyAggregateRepository', () => {
           },
           {
             $namespace: ProxyDownstreamModel.name,
-            id: outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id
+            id: outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id,
           },
         ],
         status: expect.anything(),
@@ -1834,12 +1753,9 @@ describe('ProxyAggregateRepository', () => {
       expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputProxyWithPort.proxyDownstream[0].refId);
       expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getConditionList()).toEqual(
         expect.arrayContaining<FilterInstanceType<RunnerModel> & { $opr: FilterOperationType }>([
-          {
-            $opr: 'eq',
-            service: RunnerServiceEnum.MYST_CONNECT,
-          },
           {
             $opr: 'eq',
             label: {
@@ -1860,6 +1776,7 @@ describe('ProxyAggregateRepository', () => {
         service: RunnerServiceEnum.SOCAT,
         exec: RunnerExecEnum.DOCKER,
         socketType: RunnerSocketTypeEnum.TCP,
+        socketUri: outputMystRunner.socketUri,
         socketPort: inputProxyWithPort.listenPort,
         label: [
           {
@@ -1872,7 +1789,7 @@ describe('ProxyAggregateRepository', () => {
           },
           {
             $namespace: ProxyUpstreamModel.name,
-            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id
+            id: outputProxyUpstreamRunnerWithPort.label.find((v) => v.$namespace === ProxyUpstreamModel.name).id,
           },
         ],
         status: expect.anything(),
@@ -1899,7 +1816,7 @@ describe('ProxyAggregateRepository', () => {
           },
           {
             $namespace: ProxyDownstreamModel.name,
-            id: outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id
+            id: outputProxyDownstreamRunner.label.find((v) => v.$namespace === ProxyDownstreamModel.name).id,
           },
         ],
         status: expect.anything(),
@@ -1925,7 +1842,7 @@ describe('ProxyAggregateRepository', () => {
         ],
         runner: outputProxyUpstreamRunnerWithPort,
         insertDate: new Date(),
-      })
+      });
     });
   });
 });
