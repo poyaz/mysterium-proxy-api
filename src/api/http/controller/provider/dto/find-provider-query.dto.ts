@@ -121,12 +121,19 @@ export class FindProviderQueryDto extends OmitType(FilterInputDto, ['sorts'] as 
           isRegister: true,
         },
       },
-      'search with at least proxy assign on provider': {
+      'search with no proxy assign to provider': {
+        description: 'Get list of provider is register and no proxy assign to them',
+        value: {
+          isRegister: true,
+          proxyCount: 0,
+        },
+      },
+      'search with at least proxy assign to provider': {
         value: {
           proxyCount: 1,
         },
       },
-      'search with any number of proxy assign on provider': {
+      'search with any number of proxy assign to provider': {
         value: {
           proxyCount: 3,
         },
