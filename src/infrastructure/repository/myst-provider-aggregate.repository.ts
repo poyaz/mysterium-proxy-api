@@ -18,7 +18,8 @@ import {defaultModelFactory} from '@src-core/model/defaultModel';
 type mergeRunnerObjType = {
   [key: string]: {
     myst: RunnerModel<MystIdentityModel>,
-    mystConnect: RunnerModel<[MystIdentityModel, VpnProviderModel]>
+    mystConnect: RunnerModel<[MystIdentityModel, VpnProviderModel]>,
+    socat: Array<RunnerModel<[MystIdentityModel, VpnProviderModel]>>,
   }
 };
 
@@ -72,9 +73,8 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       return [null, null];
     }
 
-    const mystConnectRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
-    mystConnectRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST_CONNECT});
-    mystConnectRunnerFilter.addCondition({
+    const providerRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
+    providerRunnerFilter.addCondition({
       $opr: 'eq',
       label: {
         $namespace: VpnProviderModel.name,
@@ -82,14 +82,14 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       },
     });
     const [
-      mystConnectRunnerError,
-      mystConnectRunnerDataList,
-      mystConnectRunnerTotalCount,
-    ] = await this._dockerRunnerRepository.getAll<VpnProviderModel>(mystConnectRunnerFilter);
-    if (mystConnectRunnerError) {
-      return [mystConnectRunnerError];
+      providerRunnerError,
+      providerRunnerDataList,
+      providerRunnerTotalCount,
+    ] = await this._dockerRunnerRepository.getAll<VpnProviderModel>(providerRunnerFilter);
+    if (providerRunnerError) {
+      return [providerRunnerError];
     }
-    if (mystConnectRunnerTotalCount === 0) {
+    if (providerRunnerTotalCount === 0) {
       return [null, apiData];
     }
 
@@ -99,7 +99,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       $opr: 'eq',
       label: {
         $namespace: MystIdentityModel.name,
-        id: (<RunnerModel<[MystIdentityModel, VpnProviderModel]>><any>mystConnectRunnerDataList[0]).label.find((v) => v.$namespace === MystIdentityModel.name).id,
+        id: (<RunnerModel<[MystIdentityModel, VpnProviderModel]>><any>providerRunnerDataList[0]).label.find((v) => v.$namespace === MystIdentityModel.name).id,
       },
     });
     const [
@@ -115,7 +115,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     }
 
 
-    const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData([...mystConnectRunnerDataList, ...mystRunnerDataList]);
+    const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData([...providerRunnerDataList, ...mystRunnerDataList]);
     const result = MystProviderAggregateRepository._mergeData(apiData, runnerObj);
 
     return [null, result];
@@ -205,7 +205,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
   }
 
   private static _mergeRunnerObjData(runnerDataList: Array<RunnerModel>): mergeRunnerObjType {
-    const runnerObj = {};
+    const runnerObj: mergeRunnerObjType = {};
     const runnerMystObj = {};
 
     const mystRunnerList = runnerDataList.filter((v) => v.service === RunnerServiceEnum.MYST);
@@ -245,8 +245,25 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
 
       runnerObj[providerId] = {
         myst: identityRunner,
-        mystConnect: runner,
+        mystConnect: <RunnerModel<[MystIdentityModel, VpnProviderModel]>><unknown>runner,
+        socat: [],
       };
+    }
+
+    if (mystConnectRunnerList.length === 0) {
+      return;
+    }
+
+    const socatRunnerList = runnerDataList.filter((v) => v.service === RunnerServiceEnum.SOCAT);
+    for (const runner of socatRunnerList) {
+      const labelList: RunnerLabelNamespace<[MystIdentityModel, VpnProviderModel]> = <any>(!Array.isArray(runner.label) ? [runner.label] : runner.label);
+
+      const providerId = labelList.find((v) => v.$namespace === VpnProviderModel.name)?.id;
+      if (!providerId) {
+        continue;
+      }
+
+      runnerObj[providerId].socat.push(<RunnerModel<[MystIdentityModel, VpnProviderModel]>><unknown>runner);
     }
 
     return runnerObj;
@@ -265,6 +282,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     vpnData.isRegister = true;
     vpnData.userIdentity = runnerInfo.myst.label.identity;
     vpnData.runner = runnerInfo.myst;
+    vpnData.proxyCount = runnerInfo.socat.length;
 
     switch (runnerInfo.mystConnect.status) {
       case RunnerStatusEnum.CREATING:

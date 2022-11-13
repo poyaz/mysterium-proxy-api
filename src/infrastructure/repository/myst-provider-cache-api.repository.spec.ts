@@ -114,6 +114,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -125,6 +126,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -277,6 +279,7 @@ describe('MystProviderCacheApiRepository', () => {
         ip: '127.0.0.1',
         mask: 32,
         isRegister: outputVpnProviderData1.isRegister,
+        proxyCount: outputVpnProviderData1.proxyCount,
         insertDate: outputVpnProviderData1.insertDate,
       });
       expect(result[1]).toEqual(<VpnProviderModel>{
@@ -287,6 +290,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData2.providerIpType,
         country: outputVpnProviderData2.country,
         isRegister: outputVpnProviderData2.isRegister,
+        proxyCount: outputVpnProviderData2.proxyCount,
         insertDate: outputVpnProviderData2.insertDate,
       });
       expect(totalCount).toEqual(2);
@@ -336,6 +340,7 @@ describe('MystProviderCacheApiRepository', () => {
         ip: '127.0.0.1',
         mask: 32,
         isRegister: outputVpnProviderData1.isRegister,
+        proxyCount: outputVpnProviderData1.proxyCount,
         insertDate: outputVpnProviderData1.insertDate,
       });
       expect(result[1]).toEqual(<VpnProviderModel>{
@@ -346,6 +351,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData2.providerIpType,
         country: outputVpnProviderData2.country,
         isRegister: outputVpnProviderData2.isRegister,
+        proxyCount: outputVpnProviderData2.proxyCount,
         insertDate: outputVpnProviderData2.insertDate,
       });
       expect(totalCount).toEqual(2);
@@ -387,6 +393,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData1.providerIpType,
         country: outputVpnProviderData1.country,
         isRegister: outputVpnProviderData1.isRegister,
+        proxyCount: outputVpnProviderData1.proxyCount,
         insertDate: outputVpnProviderData1.insertDate,
       });
       expect(result[1]).toEqual(<VpnProviderModel>{
@@ -397,6 +404,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData2.providerIpType,
         country: outputVpnProviderData2.country,
         isRegister: outputVpnProviderData2.isRegister,
+        proxyCount: outputVpnProviderData2.proxyCount,
         insertDate: outputVpnProviderData2.insertDate,
       });
       expect(totalCount).toEqual(2);
@@ -439,6 +447,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -511,6 +520,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData.providerIpType,
         country: outputVpnProviderData.country,
         isRegister: outputVpnProviderData.isRegister,
+        proxyCount: outputVpnProviderData.proxyCount,
         insertDate: outputVpnProviderData.insertDate,
       });
     });
@@ -573,6 +583,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData.providerIpType,
         country: outputVpnProviderData.country,
         isRegister: outputVpnProviderData.isRegister,
+        proxyCount: outputVpnProviderData.proxyCount,
         insertDate: outputVpnProviderData.insertDate,
       });
     });
@@ -662,6 +673,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData.providerIpType,
         country: outputVpnProviderData.country,
         isRegister: outputVpnProviderData.isRegister,
+        proxyCount: outputVpnProviderData.proxyCount,
         insertDate: outputVpnProviderData.insertDate,
       });
     });
@@ -691,6 +703,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: outputVpnProviderData.providerIpType,
         country: outputVpnProviderData.country,
         isRegister: outputVpnProviderData.isRegister,
+        proxyCount: outputVpnProviderData.proxyCount,
         insertDate: outputVpnProviderData.insertDate,
       });
     });
@@ -722,6 +735,7 @@ describe('MystProviderCacheApiRepository', () => {
         ip: '127.0.0.1',
         mask: 32,
         isRegister: outputVpnProviderData.isRegister,
+        proxyCount: outputVpnProviderData.proxyCount,
         insertDate: outputVpnProviderData.insertDate,
       });
     });
@@ -760,6 +774,7 @@ describe('MystProviderCacheApiRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -774,6 +789,7 @@ describe('MystProviderCacheApiRepository', () => {
         country: 'GB',
         isRegister: true,
         providerStatus: VpnProviderStatusEnum.ONLINE,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -807,6 +823,7 @@ describe('MystProviderCacheApiRepository', () => {
         country: inputVpnProvider.country,
         isRegister: true,
         providerStatus: VpnProviderStatusEnum.ONLINE,
+        proxyCount: inputVpnProvider.proxyCount,
         insertDate: inputVpnProvider.insertDate,
       });
     });

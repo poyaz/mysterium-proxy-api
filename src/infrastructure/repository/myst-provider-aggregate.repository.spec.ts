@@ -86,6 +86,7 @@ describe('MystProviderAggregateRepository', () => {
     let outputVpnProviderData3: VpnProviderModel;
     let outputRunnerMystData1: RunnerModel<MystIdentityModel>;
     let outputRunnerMystConnectData1: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
+    let outputRunnerSocatData1: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
     let outputRunnerMystData2: RunnerModel<MystIdentityModel>;
     let outputRunnerMystConnectData2: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
     let outputRunnerMystNotMatchData3: RunnerModel<MystIdentityModel>;
@@ -126,6 +127,7 @@ describe('MystProviderAggregateRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       outputVpnProviderData2 = new VpnProviderModel({
@@ -136,6 +138,7 @@ describe('MystProviderAggregateRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       outputVpnProviderData3 = new VpnProviderModel({
@@ -146,6 +149,7 @@ describe('MystProviderAggregateRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -185,6 +189,26 @@ describe('MystProviderAggregateRepository', () => {
           id: outputVpnProviderData1.id,
           userIdentity: 'identity1',
           providerIdentity: outputVpnProviderData1.providerIdentity,
+        },
+      ];
+      outputRunnerSocatData1 = new RunnerModel<[MystIdentityModel, VpnProviderModel]>({
+        id: '55555555-5555-5555-5555-111111111111',
+        serial: 'socat runner serial',
+        name: 'socat runner name',
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputRunnerSocatData1.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: '11111111-1111-1111-1111-111111111111',
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProviderData1.id,
         },
       ];
 
@@ -276,6 +300,7 @@ describe('MystProviderAggregateRepository', () => {
       outputVpnProviderResultData1.runner = outputRunnerMystData1;
       outputVpnProviderResultData1.providerStatus = VpnProviderStatusEnum.ONLINE;
       outputVpnProviderResultData1.isRegister = true;
+      outputVpnProviderResultData1.proxyCount = 1;
       outputVpnProviderResultData2 = outputVpnProviderData2.clone();
       outputVpnProviderResultData2.userIdentity = outputRunnerMystData2.label.identity;
       outputVpnProviderResultData2.runner = outputRunnerMystData2;
@@ -381,12 +406,13 @@ describe('MystProviderAggregateRepository', () => {
         null, [
           outputRunnerMystData1,
           outputRunnerMystConnectData1,
+          outputRunnerSocatData1,
           outputRunnerMystData2,
           outputRunnerMystConnectData2,
           outputRunnerMystNotMatchData3,
           outputRunnerMystConnectNotMatchData3,
         ],
-        6,
+        7,
       ]);
       (<jest.Mock>filterAndSortVpnProvider).mockReturnValue([[outputVpnProviderResultData2], 3]);
 
@@ -428,12 +454,13 @@ describe('MystProviderAggregateRepository', () => {
         null, [
           outputRunnerMystData1,
           outputRunnerMystConnectData1,
+          outputRunnerSocatData1,
           outputRunnerMystData2,
           outputRunnerMystConnectData2,
           outputRunnerMystNotMatchData3,
           outputRunnerMystConnectNotMatchData3,
         ],
-        6,
+        7,
       ]);
       (<jest.Mock>filterAndSortVpnProvider).mockReturnValue([
         [outputVpnProviderResultData1, outputVpnProviderResultData2, outputVpnProviderResultData3],
@@ -464,6 +491,7 @@ describe('MystProviderAggregateRepository', () => {
         id: outputVpnProviderData1.id,
         runner: outputRunnerMystData1,
         isRegister: true,
+        proxyCount: 1,
       });
       expect(result[1]).toMatchObject(<VpnProviderModel>{
         id: outputVpnProviderData2.id,
@@ -487,12 +515,13 @@ describe('MystProviderAggregateRepository', () => {
         null, [
           outputRunnerMystData1,
           outputRunnerMystConnectData1,
+          outputRunnerSocatData1,
           outputRunnerMystData2,
           outputRunnerMystConnectData2,
           outputRunnerMystNotMatchData3,
           outputRunnerMystConnectNotMatchData3,
         ],
-        6,
+        7,
       ]);
       (<jest.Mock>filterAndSortVpnProvider).mockReturnValue([[outputVpnProviderResultData2], 2]);
 
@@ -535,6 +564,7 @@ describe('MystProviderAggregateRepository', () => {
     let outputVpnProviderData: VpnProviderModel;
     let outputRunnerMystData1: RunnerModel<MystIdentityModel>;
     let outputRunnerMystConnectData1: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
+    let outputRunnerSocatData1: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
 
     beforeEach(() => {
       inputRunnerModel = defaultModelFactory<RunnerModel>(
@@ -561,6 +591,7 @@ describe('MystProviderAggregateRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -602,6 +633,26 @@ describe('MystProviderAggregateRepository', () => {
           providerIdentity: outputVpnProviderData.providerIdentity,
         },
       ];
+      outputRunnerSocatData1 = new RunnerModel<[MystIdentityModel, VpnProviderModel]>({
+        id: '55555555-5555-5555-5555-111111111111',
+        serial: 'socat runner serial',
+        name: 'socat runner name',
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+      outputRunnerSocatData1.label = [
+        {
+          $namespace: MystIdentityModel.name,
+          id: '11111111-1111-1111-1111-111111111111',
+        },
+        {
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProviderData.id,
+        },
+      ];
     });
 
     it(`Should error get vpn info by id for aggregation when fail on get by id data from vpn repository`, async () => {
@@ -635,11 +686,7 @@ describe('MystProviderAggregateRepository', () => {
       expect(mystProviderApiRepository.getById).toHaveBeenCalled();
       expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(1);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(2);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
-        $opr: 'eq',
-        service: RunnerServiceEnum.MYST_CONNECT,
-      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
         $opr: 'eq',
         label: {
@@ -659,11 +706,7 @@ describe('MystProviderAggregateRepository', () => {
       expect(mystProviderApiRepository.getById).toHaveBeenCalled();
       expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(1);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(2);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
-        $opr: 'eq',
-        service: RunnerServiceEnum.MYST_CONNECT,
-      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
         $opr: 'eq',
         label: {
@@ -686,11 +729,7 @@ describe('MystProviderAggregateRepository', () => {
       expect(mystProviderApiRepository.getById).toHaveBeenCalled();
       expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(2);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
-        $opr: 'eq',
-        service: RunnerServiceEnum.MYST_CONNECT,
-      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
         $opr: 'eq',
         label: {
@@ -716,7 +755,7 @@ describe('MystProviderAggregateRepository', () => {
     it(`Should successfully get vpn info by id for aggregation and 'isRegister' true`, async () => {
       mystProviderApiRepository.getById.mockResolvedValue([null, outputVpnProviderData]);
       dockerRunnerRepository.getAll
-        .mockResolvedValueOnce([null, [outputRunnerMystConnectData1], 1])
+        .mockResolvedValueOnce([null, [outputRunnerMystConnectData1, outputRunnerSocatData1], 2])
         .mockResolvedValueOnce([null, [outputRunnerMystData1], 1]);
 
       const [error, result] = await repository.getById(inputRunnerModel, inputId);
@@ -724,11 +763,7 @@ describe('MystProviderAggregateRepository', () => {
       expect(mystProviderApiRepository.getById).toHaveBeenCalled();
       expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
       expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(2);
-      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
-        $opr: 'eq',
-        service: RunnerServiceEnum.MYST_CONNECT,
-      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
       expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
         $opr: 'eq',
         label: {
@@ -755,6 +790,7 @@ describe('MystProviderAggregateRepository', () => {
         providerStatus: VpnProviderStatusEnum.ONLINE,
         runner: outputRunnerMystData1,
         isRegister: true,
+        proxyCount: 1,
       });
     });
   });
@@ -793,6 +829,7 @@ describe('MystProviderAggregateRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -807,6 +844,7 @@ describe('MystProviderAggregateRepository', () => {
         country: 'GB',
         isRegister: true,
         providerStatus: VpnProviderStatusEnum.ONLINE,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -937,6 +975,7 @@ describe('MystProviderAggregateRepository', () => {
         runner: inputRunner,
         isRegister: true,
         providerStatus: VpnProviderStatusEnum.ONLINE,
+        proxyCount: 0,
         insertDate: inputVpnProvider.insertDate,
       });
     });
@@ -976,6 +1015,7 @@ describe('MystProviderAggregateRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.HOSTING,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 

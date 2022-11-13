@@ -376,6 +376,7 @@ describe('ProxyAggregateRepository', () => {
         country: 'GB',
         runner: outputMystRunner1,
         isRegister: true,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -938,6 +939,7 @@ describe('ProxyAggregateRepository', () => {
         country: 'GB',
         runner: outputMystRunner1,
         isRegister: true,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -1293,6 +1295,7 @@ describe('ProxyAggregateRepository', () => {
         country: 'GB',
         runner: outputMystRunner,
         isRegister: true,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 

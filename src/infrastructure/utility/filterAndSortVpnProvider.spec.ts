@@ -29,6 +29,7 @@ describe('filterAndSortVpnProvider', () => {
     inputFilterConditionModel.addCondition({$opr: 'eq', country: 'GB'});
     inputFilterConditionModel.addCondition({$opr: 'eq', providerIdentity: 'provider3'});
     inputFilterConditionModel.addCondition({$opr: 'eq', providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL});
+    inputFilterConditionModel.addCondition({$opr: 'eq', proxyCount: 1});
     inputFilterConditionModel.addCondition({$opr: 'eq', isRegister: true});
 
     inputFilterPaginationModel = new FilterModel<VpnProviderModel>({page: 2, limit: 1});
@@ -46,6 +47,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
       country: 'GB',
       isRegister: false,
+      proxyCount: 0,
       insertDate: new Date(),
     });
     vpnProviderData2 = new VpnProviderModel({
@@ -56,6 +58,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
       country: 'GB',
       isRegister: false,
+      proxyCount: 0,
       insertDate: new Date(),
     });
     vpnProviderData3 = new VpnProviderModel({
@@ -66,6 +69,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
       country: 'GB',
       isRegister: true,
+      proxyCount: 1,
       insertDate: new Date(),
     });
   });
@@ -88,6 +92,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: vpnProviderData3.providerIpType,
       country: vpnProviderData3.country,
       isRegister: vpnProviderData3.isRegister,
+      proxyCount: vpnProviderData3.proxyCount,
       insertDate: vpnProviderData3.insertDate,
     });
     expect(count).toEqual(1);
@@ -106,6 +111,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: vpnProviderData3.providerIpType,
       country: vpnProviderData3.country,
       isRegister: vpnProviderData3.isRegister,
+      proxyCount: vpnProviderData3.proxyCount,
       insertDate: vpnProviderData3.insertDate,
     });
     expect(count).toEqual(3);
@@ -124,6 +130,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: vpnProviderData2.providerIpType,
       country: vpnProviderData2.country,
       isRegister: vpnProviderData2.isRegister,
+      proxyCount: vpnProviderData2.proxyCount,
       insertDate: vpnProviderData2.insertDate,
     });
     expect(count).toEqual(3);
@@ -142,6 +149,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: vpnProviderData1.providerIpType,
       country: vpnProviderData1.country,
       isRegister: vpnProviderData1.isRegister,
+      proxyCount: vpnProviderData1.proxyCount,
       insertDate: vpnProviderData1.insertDate,
     });
     expect(result[1]).toMatchObject<Omit<VpnProviderModel, 'clone'>>({
@@ -152,6 +160,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: vpnProviderData2.providerIpType,
       country: vpnProviderData2.country,
       isRegister: vpnProviderData2.isRegister,
+      proxyCount: vpnProviderData2.proxyCount,
       insertDate: vpnProviderData2.insertDate,
     });
     expect(result[2]).toMatchObject<Omit<VpnProviderModel, 'clone'>>({
@@ -162,6 +171,7 @@ describe('filterAndSortVpnProvider', () => {
       providerIpType: vpnProviderData3.providerIpType,
       country: vpnProviderData3.country,
       isRegister: vpnProviderData3.isRegister,
+      proxyCount: vpnProviderData3.proxyCount,
       insertDate: vpnProviderData3.insertDate,
     });
     expect(count).toEqual(3);

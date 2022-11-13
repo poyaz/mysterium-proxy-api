@@ -25,6 +25,11 @@ export function filterAndSortVpnProvider(vpnProviderList: Array<VpnProviderModel
     if (getIsRegister) {
       dataList = dataList.filter((v) => v.isRegister === getIsRegister.isRegister);
     }
+
+    const getProxyCount = filterModel.getCondition('proxyCount');
+    if (getProxyCount) {
+      dataList = dataList.filter((v) => v.proxyCount === getProxyCount.proxyCount);
+    }
   }
 
   if (filterModel.getLengthOfSortBy() > 0) {

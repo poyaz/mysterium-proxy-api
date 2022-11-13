@@ -177,9 +177,10 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
           country: 'default-country',
           isRegister: false,
+          proxyCount: 0,
           insertDate: new Date(),
         },
-        ['id', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'],
+        ['id', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
       );
 
       outputVpnProviderValid = defaultModelFactory<VpnProviderModel>(
@@ -193,9 +194,10 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
           country: 'default-country',
           isRegister: false,
+          proxyCount: 0,
           insertDate: new Date(),
         },
-        ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'],
+        ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
       );
 
       outputEmptyContainerList = [];

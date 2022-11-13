@@ -258,6 +258,7 @@ describe('ProxyService', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       outputVpnProviderIsRegister = new VpnProviderModel({
@@ -272,6 +273,7 @@ describe('ProxyService', () => {
         country: 'GB',
         runner: outputRunnerMyst,
         isRegister: true,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 

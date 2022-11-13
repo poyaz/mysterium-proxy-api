@@ -131,7 +131,7 @@ export class MystProviderHttpController {
           allOf: [
             {
               title: ExceptionEnum.REPOSITORY_ERROR,
-              description: 'Fail to read data from downstream resource',
+              description: 'Fail to read data from proxyDownstream resource',
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),
@@ -149,7 +149,7 @@ export class MystProviderHttpController {
           allOf: [
             {
               title: ExceptionEnum.FILL_DATA_REPOSITORY_ERROR,
-              description: 'Can not fill data from downstream resource',
+              description: 'Can not fill data from proxyDownstream resource',
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),
@@ -235,7 +235,7 @@ export class MystProviderHttpController {
           allOf: [
             {
               title: ExceptionEnum.REPOSITORY_ERROR,
-              description: 'Fail to read data from downstream resource',
+              description: 'Fail to read data from proxyDownstream resource',
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),
@@ -338,7 +338,7 @@ export class MystProviderHttpController {
           allOf: [
             {
               title: ExceptionEnum.REPOSITORY_ERROR,
-              description: 'Fail to read data from downstream resource',
+              description: 'Fail to read data from proxyDownstream resource',
             },
             {
               $ref: getSchemaPath(DefaultExceptionDto),

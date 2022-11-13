@@ -285,6 +285,7 @@ export class MystProviderApiRepository implements IMystApiRepositoryInterface {
       quality: row['quality']['quality'],
       bandwidth: row['quality']['bandwidth'],
       latency: row['quality']['latency'],
+      proxyCount: 0,
       insertDate: new Date(),
     });
   }

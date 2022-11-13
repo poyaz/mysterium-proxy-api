@@ -170,7 +170,7 @@ export class DockerLabelParser<T> {
   }
 
   private _fillVpnProvider(namespace: string, data: VpnProviderModel): void {
-    const defaultProperties: Array<keyof VpnProviderModel> = ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'];
+    const defaultProperties: Array<keyof VpnProviderModel> = ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'];
     const fillObject: Pick<VpnProviderModel, 'id' | 'userIdentity' | 'providerIdentity'> = {
       id: 'default-id',
       userIdentity: 'default-userIdentity',
@@ -206,6 +206,7 @@ export class DockerLabelParser<T> {
           providerIpType: VpnProviderIpTypeEnum.HOSTING,
           country: 'GB',
           isRegister: false,
+          proxyCount: 0,
           insertDate: new Date(),
         },
         defaultProperties,

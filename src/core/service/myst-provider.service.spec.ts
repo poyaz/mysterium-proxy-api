@@ -107,6 +107,7 @@ describe('MystProviderService', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -178,6 +179,7 @@ describe('MystProviderService', () => {
         providerIpType: outputVpnModel1.providerIpType,
         country: outputVpnModel1.country,
         isRegister: outputVpnModel1.isRegister,
+        proxyCount: outputVpnModel1.proxyCount,
         insertDate: outputVpnModel1.insertDate,
       });
       expect(total).toEqual(1);
@@ -200,6 +202,7 @@ describe('MystProviderService', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -241,6 +244,7 @@ describe('MystProviderService', () => {
         providerIpType: outputVpnModel.providerIpType,
         country: outputVpnModel.country,
         isRegister: outputVpnModel.isRegister,
+        proxyCount: outputVpnModel.proxyCount,
         insertDate: outputVpnModel.insertDate,
       });
     });
@@ -267,6 +271,7 @@ describe('MystProviderService', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: true,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -279,6 +284,7 @@ describe('MystProviderService', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -644,6 +650,7 @@ describe('MystProviderService', () => {
         providerIpType: outputProviderRegisterModel.providerIpType,
         country: outputProviderRegisterModel.country,
         isRegister: outputProviderRegisterModel.isRegister,
+        proxyCount: outputProviderRegisterModel.proxyCount,
         insertDate: outputProviderRegisterModel.insertDate,
       });
     });
@@ -667,6 +674,7 @@ describe('MystProviderService', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -692,6 +700,7 @@ describe('MystProviderService', () => {
           status: RunnerStatusEnum.CREATING,
           insertDate: new Date(),
         }),
+        proxyCount: 1,
         insertDate: new Date(),
       });
 
@@ -717,6 +726,7 @@ describe('MystProviderService', () => {
           status: RunnerStatusEnum.RUNNING,
           insertDate: new Date(),
         }),
+        proxyCount: 1,
         insertDate: new Date(),
       });
     });

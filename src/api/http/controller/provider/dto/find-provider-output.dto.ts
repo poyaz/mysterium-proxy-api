@@ -118,4 +118,13 @@ export class FindProviderOutputDto {
     default: false,
   })
   isRegister: boolean;
+
+  @ApiProperty({
+    description: 'The total number of proxy initiated on provider',
+    type: Number,
+    required: false,
+    readOnly: true,
+    default: false,
+  })
+  proxyCount: number;
 }

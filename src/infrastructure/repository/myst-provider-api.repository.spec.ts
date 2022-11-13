@@ -5,14 +5,13 @@ import {MystProviderApiRepository} from './myst-provider-api.repository';
 import {
   VpnProviderIpTypeEnum,
   VpnProviderModel,
-  VpnProviderName, VpnProviderStatusEnum,
+  VpnProviderName,
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {FilterModel} from '@src-core/model/filter.model';
-import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {
   RunnerExecEnum,
   RunnerModel,
@@ -22,10 +21,8 @@ import {
 } from '@src-core/model/runner.model';
 import {defaultModelFactory} from '@src-core/model/defaultModel';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
-import {UnknownException} from '@src-core/exception/unknown.exception';
 import {ProviderIdentityInUseException} from '@src-core/exception/provider-identity-in-use.exception';
 import {Logger} from '@nestjs/common';
-import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
 
 jest.mock('axios');
@@ -384,6 +381,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData1.quality.quality,
         bandwidth: outputAxiosData1.quality.bandwidth,
         latency: outputAxiosData1.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -420,6 +418,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData2.quality.quality,
         bandwidth: outputAxiosData2.quality.bandwidth,
         latency: outputAxiosData2.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(totalCount).toEqual(2);
@@ -458,6 +457,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData1.quality.quality,
         bandwidth: outputAxiosData1.quality.bandwidth,
         latency: outputAxiosData1.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(result[1]).toEqual(<VpnProviderModel>{
@@ -471,6 +471,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData2.quality.quality,
         bandwidth: outputAxiosData2.quality.bandwidth,
         latency: outputAxiosData2.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(totalCount).toEqual(2);
@@ -508,6 +509,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData1.quality.quality,
         bandwidth: outputAxiosData1.quality.bandwidth,
         latency: outputAxiosData1.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(result[1]).toEqual(<VpnProviderModel>{
@@ -521,6 +523,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData2.quality.quality,
         bandwidth: outputAxiosData2.quality.bandwidth,
         latency: outputAxiosData2.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(result[2]).toEqual(<VpnProviderModel>{
@@ -534,6 +537,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData3.quality.quality,
         bandwidth: outputAxiosData3.quality.bandwidth,
         latency: outputAxiosData3.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(totalCount).toEqual(3);
@@ -572,6 +576,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData1.quality.quality,
         bandwidth: outputAxiosData1.quality.bandwidth,
         latency: outputAxiosData1.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(totalCount).toEqual(1);
@@ -610,6 +615,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData1.quality.quality,
         bandwidth: outputAxiosData1.quality.bandwidth,
         latency: outputAxiosData1.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
       expect(totalCount).toEqual(1);
@@ -797,6 +803,7 @@ describe('MystProviderApiRepository', () => {
         quality: outputAxiosData.quality.quality,
         bandwidth: outputAxiosData.quality.bandwidth,
         latency: outputAxiosData.quality.latency,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -837,6 +844,7 @@ describe('MystProviderApiRepository', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 

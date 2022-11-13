@@ -176,9 +176,10 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
           country: 'default-country',
           isRegister: false,
+          proxyCount: 0,
           insertDate: new Date(),
         },
-        ['id', 'userIdentity', 'providerIdentity', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'],
+        ['id', 'userIdentity', 'providerIdentity', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
       );
       outputVpnProviderValid = defaultModelFactory<VpnProviderModel>(
         VpnProviderModel,
@@ -191,9 +192,10 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
           country: 'default-country',
           isRegister: false,
+          proxyCount: 0,
           insertDate: new Date(),
         },
-        ['userIdentity', 'providerIdentity', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'insertDate'],
+        ['userIdentity', 'providerIdentity', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
       );
 
       outputProxyDownstreamInvalid = defaultModelFactory<ProxyDownstreamModel>(

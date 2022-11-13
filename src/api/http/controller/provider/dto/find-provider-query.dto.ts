@@ -1,5 +1,15 @@
 import {ApiProperty, OmitType, PartialType} from '@nestjs/swagger';
-import {IsBoolean, IsEnum, IsOptional, IsString, Matches, MaxLength, ValidateNested} from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches, Max,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import {instanceToPlain, Transform, Type} from 'class-transformer';
 import {FilterInputDto} from '@src-api/http/dto/filter-input.dto';
 import {VpnProviderIpTypeEnum, VpnProviderModel} from '@src-core/model/vpn-provider.model';
@@ -56,6 +66,22 @@ class FilterProviderInputDto {
   @IsBoolean()
   @Transform(({value}) => value === 'true' ? true : value === 'false' ? false : value)
   isRegister?: boolean;
+
+  @ApiProperty({
+    description: 'The total number of proxy initiated on provider',
+    type: Number,
+    minimum: 0,
+    maximum: 1000,
+    exclusiveMaximum: true,
+    exclusiveMinimum: true,
+    required: false,
+    example: 1,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(1000)
+  proxyCount?: number;
 }
 
 export class FindProviderQueryDto extends OmitType(FilterInputDto, ['sorts'] as const) {
@@ -94,6 +120,16 @@ export class FindProviderQueryDto extends OmitType(FilterInputDto, ['sorts'] as 
           isRegister: true,
         },
       },
+      'search with at least proxy assign on provider': {
+        value: {
+          proxyCount: 1,
+        },
+      },
+      'search with any number of proxy assign on provider': {
+        value: {
+          proxyCount: 3,
+        },
+      },
     },
   })
   filters?: FilterProviderInputDto;
@@ -114,6 +150,9 @@ export class FindProviderQueryDto extends OmitType(FilterInputDto, ['sorts'] as 
     }
     if (typeof dto.filters?.isRegister !== 'undefined') {
       filterModel.addCondition({$opr: 'eq', isRegister: data.filters.isRegister});
+    }
+    if (typeof dto.filters?.proxyCount !== 'undefined') {
+      filterModel.addCondition({$opr: 'eq', proxyCount: data.filters.proxyCount});
     }
 
     return filterModel;

@@ -73,6 +73,7 @@ describe('MystProviderHttpController', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -144,6 +145,7 @@ describe('MystProviderHttpController', () => {
         providerIpType: outputMystProviderModel1.providerIpType,
         country: outputMystProviderModel1.country,
         isRegister: outputMystProviderModel1.isRegister,
+        proxyCount: outputMystProviderModel1.proxyCount,
         insertDate: outputMystProviderModel1.insertDate,
       });
       expect(total).toEqual(1);
@@ -165,6 +167,7 @@ describe('MystProviderHttpController', () => {
         providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
         country: 'GB',
         isRegister: false,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
