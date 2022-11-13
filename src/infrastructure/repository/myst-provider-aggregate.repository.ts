@@ -219,6 +219,10 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     }
 
     const mystConnectRunnerList = runnerDataList.filter((v) => v.service === RunnerServiceEnum.MYST_CONNECT);
+    if (mystConnectRunnerList.length === 0) {
+      return runnerObj;
+    }
+
     for (const runner of mystConnectRunnerList) {
       const labelList: RunnerLabelNamespace<[MystIdentityModel, VpnProviderModel]> = <any>(!Array.isArray(runner.label) ? [runner.label] : runner.label);
       let identityRunner: RunnerModel<MystIdentityModel> | null | undefined;
@@ -248,10 +252,6 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
         mystConnect: <RunnerModel<[MystIdentityModel, VpnProviderModel]>><unknown>runner,
         socat: [],
       };
-    }
-
-    if (mystConnectRunnerList.length === 0) {
-      return;
     }
 
     const socatRunnerList = runnerDataList.filter((v) => v.service === RunnerServiceEnum.SOCAT);
