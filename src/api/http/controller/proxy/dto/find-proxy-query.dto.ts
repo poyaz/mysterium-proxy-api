@@ -50,9 +50,22 @@ export class FindProxyQueryDto extends OmitType(FilterInputDto, ['sorts'] as con
           listenPort: 3128,
         },
       },
-      'search with status': {
+      'search with ONLINE status': {
+        description: 'Get online list of proxy',
         value: {
           status: ProxyStatusEnum.ONLINE,
+        },
+      },
+      'search with OFFLINE status': {
+        description: 'Get offline list of proxy',
+        value: {
+          status: ProxyStatusEnum.OFFLINE,
+        },
+      },
+      'search with DISABLE status': {
+        description: 'Get disable list of proxy',
+        value: {
+          status: ProxyStatusEnum.DISABLE,
         },
       },
     },
