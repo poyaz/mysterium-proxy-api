@@ -440,7 +440,7 @@ import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.
       inject: [
         ConfigService,
         ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
-        ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.MYST_PROVIDER_AGGREGATE_REPOSITORY,
         ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
         ProviderTokenEnum.IDENTIFIER_UUID,
       ],
