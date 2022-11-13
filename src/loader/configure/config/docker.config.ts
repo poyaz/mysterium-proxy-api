@@ -17,6 +17,16 @@ export default registerAs('docker', (): DockerConfigInterface => {
       mystConnect: {
         image: process.env.DOCKER_MYST_CONNECT_IMAGE || 'myst-connect-service:v1.0',
       },
+      envoy: {
+        image: process.env.DOCKER_ENVOY_IMAGE || 'envoy-service:v1.0',
+        tcpPort: Number(process.env.DOCKER_ENVOY_TCP_PORT || 10001),
+        volumes: {
+          config: process.env.DOCKER_ENVOY_HOST_VOLUME_CONFIG_NAME || 'volume-mysterium-envoy-config',
+        },
+      },
+      socat: {
+        image: process.env.DOCKER_SOCAT_IMAGE || 'alpine/socat:latest',
+      }
     },
     networkName: process.env.DOCKER_PROJECT_NETWORK_NAME || 'network-mysterium-proxy-main',
     labelNamespace: process.env.DOCKER_LABEL_NAMESPACE || 'com.mysterium-proxy',

@@ -61,6 +61,14 @@ import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-iden
 import {MystProviderService} from '@src-core/service/myst-provider.service';
 import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
 import {DockerRunnerService} from '@src-core/service/docker-runner.service';
+import {ProxyService} from '@src-core/service/proxy.service';
+import {DockerRunnerCreateEnvoyRepository} from '@src-infrastructure/repository/docker-runner-create-envoy.repository';
+import {ProxyConfigInterface} from '@src-loader/configure/interface/proxy-config.interface';
+import {DockerRunnerCreateSocatRepository} from '@src-infrastructure/repository/docker-runner-create-socat.repository';
+import {ProxyAggregateRepository} from '@src-infrastructure/repository/proxy-aggregate.repository';
+import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
+import {IProxyRepositoryInterface} from '@src-core/interface/i-proxy-repository.interface';
+import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.interface';
 
 @Module({
   imports: [
@@ -172,6 +180,15 @@ import {DockerRunnerService} from '@src-core/service/docker-runner.service';
       ) => new MystProviderService(mystApiRepository, runnerService, mystIdentityService),
     },
     {
+      provide: ProviderTokenEnum.PROXY_SERVICE,
+      inject: [
+        ProviderTokenEnum.PROXY_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.MYST_PROVIDER_SERVICE,
+      ],
+      useFactory: (proxyRepository: IProxyRepositoryInterface, providerService: IProviderServiceInterface) =>
+        new ProxyService(proxyRepository, providerService),
+    },
+    {
       provide: ProviderTokenEnum.USER_SERVICE,
       inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
       useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
@@ -200,8 +217,37 @@ import {DockerRunnerService} from '@src-core/service/docker-runner.service';
               {
                 myst: DOCKER_CONFIG.containerInfo.myst.volumes.keystore,
               },
+            defaultPort: {envoy: DOCKER_CONFIG.containerInfo.envoy.tcpPort},
             networkName: DOCKER_CONFIG.networkName,
             realPath: DOCKER_CONFIG.realProjectPath,
+          },
+          DOCKER_CONFIG.labelNamespace,
+        );
+      },
+    },
+    {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_ENVOY_REPOSITORY,
+      inject: [
+        ConfigService,
+        DockerService,
+        ProviderTokenEnum.IDENTIFIER_UUID,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        docker: DockerService,
+        identity: IIdentifier,
+      ) => {
+        const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
+        const ENVOY_CONFIG = DOCKER_CONFIG.containerInfo.envoy;
+
+        return new DockerRunnerCreateEnvoyRepository(
+          docker.getInstance(),
+          identity,
+          {
+            imageName: ENVOY_CONFIG.image,
+            hostVolumeConfigName: ENVOY_CONFIG.volumes.config,
+            defaultPort: ENVOY_CONFIG.tcpPort,
+            networkName: DOCKER_CONFIG.networkName,
           },
           DOCKER_CONFIG.labelNamespace,
         );
@@ -267,10 +313,40 @@ import {DockerRunnerService} from '@src-core/service/docker-runner.service';
       },
     },
     {
+      provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY,
+      inject: [
+        ConfigService,
+        DockerService,
+        ProviderTokenEnum.IDENTIFIER_UUID,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        docker: DockerService,
+        identity: IIdentifier,
+      ) => {
+        const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
+        const PROXY_CONFIG = configService.get<ProxyConfigInterface>('proxy');
+
+        return new DockerRunnerCreateSocatRepository(
+          docker.getInstance(),
+          identity,
+          {
+            imageName: DOCKER_CONFIG.containerInfo.socat.image,
+            envoyDefaultPort: DOCKER_CONFIG.containerInfo.envoy.tcpPort,
+            networkName: DOCKER_CONFIG.networkName,
+          },
+          PROXY_CONFIG.startUpstreamPort,
+          DOCKER_CONFIG.labelNamespace,
+        );
+      },
+    },
+    {
       provide: ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY,
       inject: [
         ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_CREATE_ENVOY_REPOSITORY,
         ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY,
       ],
       useFactory: (...dockerRunnerCreateList: Array<ICreateRunnerRepository>) =>
         new DockerRunnerCreateStrategyRepository(dockerRunnerCreateList),
@@ -358,6 +434,33 @@ import {DockerRunnerService} from '@src-core/service/docker-runner.service';
         mystProviderApiRepository: IMystApiRepositoryInterface,
         logger: Logger,
       ) => new MystProviderCacheApiRepository(redis, mystProviderApiRepository, logger),
+    },
+    {
+      provide: ProviderTokenEnum.PROXY_AGGREGATE_REPOSITORY,
+      inject: [
+        ConfigService,
+        ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+        ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
+        ProviderTokenEnum.IDENTIFIER_UUID,
+      ],
+      useFactory: (
+        configService: ConfigService,
+        dockerRunnerRepository: IRunnerRepositoryInterface,
+        mystApiRepository: IMystApiRepositoryInterface,
+        systemInfoRepository: ISystemInfoRepositoryInterface,
+        identity: IIdentifier,
+      ) => {
+        const PROXY_CONFIG = configService.get<ProxyConfigInterface>('proxy');
+
+        return new ProxyAggregateRepository(
+          dockerRunnerRepository,
+          mystApiRepository,
+          systemInfoRepository,
+          identity,
+          PROXY_CONFIG.globalUpstreamAddress,
+        );
+      },
     },
     {
       provide: ProviderTokenEnum.USER_ADAPTER_REPOSITORY,

@@ -89,6 +89,12 @@ export enum ProviderTokenEnum {
   DOCKER_RUNNER_REPOSITORY = 'DOCKER_RUNNER_REPOSITORY',
   /**
    *
+   * {@link DockerRunnerCreateEnvoyRepository}
+   * @implements ICreateRunnerRepository
+   */
+  DOCKER_RUNNER_CREATE_ENVOY_REPOSITORY = 'DOCKER_RUNNER_CREATE_ENVOY_REPOSITORY',
+  /**
+   *
    * {@link DockerRunnerCreateMystRepository}
    * @implements ICreateRunnerRepository
    */
@@ -101,28 +107,16 @@ export enum ProviderTokenEnum {
   DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY = 'DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY',
   /**
    *
+   * {@link DockerRunnerCreateSocatRepository}
+   * @implements ICreateRunnerRepository
+   */
+  DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY = 'DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY',
+  /**
+   *
    * {@link DockerRunnerCreateStrategyRepository}
    * @implements ICreateRunnerRepository
    */
   DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY = 'DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY',
-  /**
-   *
-   * {@link MystProviderAggregateRepository}
-   * @implements IMystApiRepositoryInterface
-   */
-  MYST_PROVIDER_AGGREGATE_REPOSITORY = 'MYST_PROVIDER_AGGREGATE_REPOSITORY',
-  /**
-   *
-   * {@link MystProviderApiRepository}
-   * @implements IMystApiRepositoryInterface
-   */
-  MYST_PROVIDER_API_REPOSITORY = 'MYST_PROVIDER_API_REPOSITORY',
-  /**
-   *
-   * {@link MystProviderCacheApiRepository}
-   * @implements IMystApiRepositoryInterface
-   */
-  MYST_PROVIDER_CACHE_API_REPOSITORY = 'MYST_PROVIDER_CACHE_API_REPOSITORY',
   /**
    *
    * {@link MystIdentityAggregateRepository}
@@ -143,6 +137,25 @@ export enum ProviderTokenEnum {
   MYST_IDENTITY_PG_REPOSITORY = 'MYST_IDENTITY_PG_REPOSITORY',
   /**
    *
+   * {@link MystProviderAggregateRepository}
+   * @implements IMystApiRepositoryInterface
+   */
+  MYST_PROVIDER_AGGREGATE_REPOSITORY = 'MYST_PROVIDER_AGGREGATE_REPOSITORY',
+  /**
+   *
+   * {@link MystProviderApiRepository}
+   * @implements IMystApiRepositoryInterface
+   */
+  MYST_PROVIDER_API_REPOSITORY = 'MYST_PROVIDER_API_REPOSITORY',
+  /**
+   *
+   * {@link MystProviderCacheApiRepository}
+   * @implements IMystApiRepositoryInterface
+   */
+  MYST_PROVIDER_CACHE_API_REPOSITORY = 'MYST_PROVIDER_CACHE_API_REPOSITORY',
+  /**
+   *
+   * {@link ProxyAggregateRepository}
    * @implements IProxyRepositoryInterface
    */
   PROXY_AGGREGATE_REPOSITORY = 'PROXY_AGGREGATE_REPOSITORY',

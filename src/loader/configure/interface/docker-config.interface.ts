@@ -13,6 +13,16 @@ export interface DockerConfigInterface {
     readonly mystConnect: {
       readonly image: string,
     };
+    readonly envoy: {
+      readonly image: string,
+      readonly tcpPort: number,
+      readonly volumes: {
+        readonly config: string;
+      }
+    },
+    readonly socat: {
+      readonly image: string,
+    }
   };
   readonly networkName: string;
   readonly labelNamespace: string;
