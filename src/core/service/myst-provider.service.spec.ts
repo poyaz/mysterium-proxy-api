@@ -184,6 +184,68 @@ describe('MystProviderService', () => {
     });
   });
 
+  describe(`Get by id`, () => {
+    let inputId: string;
+    let outputVpnModel: VpnProviderModel;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+
+      outputVpnModel = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error get provider by id`, async () => {
+      mystApiRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toHaveBeenCalledWith(expect.anything(), inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error get provider by id if not found`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, null]);
+
+      const [error] = await service.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toHaveBeenCalledWith(expect.anything(), inputId);
+      expect(error).toBeInstanceOf(NotFoundException)
+    });
+
+    it(`Should successfully get provider by id`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputVpnModel]);
+
+      const [error, result] = await service.getById(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById).toHaveBeenCalledWith(expect.anything(), inputId);
+      expect(error).toBeNull();
+      expect(result).toEqual<Omit<VpnProviderModel, 'clone'>>({
+        id: outputVpnModel.id,
+        serviceType: outputVpnModel.serviceType,
+        providerName: outputVpnModel.providerName,
+        providerIdentity: outputVpnModel.providerIdentity,
+        providerStatus: outputVpnModel.providerStatus,
+        providerIpType: outputVpnModel.providerIpType,
+        country: outputVpnModel.country,
+        isRegister: outputVpnModel.isRegister,
+        insertDate: outputVpnModel.insertDate,
+      });
+    });
+  });
+
   describe(`Connect to vpn`, () => {
     let inputId: string;
     let outputProviderRegisterModel: VpnProviderModel;

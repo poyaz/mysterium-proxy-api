@@ -51,9 +51,16 @@ export class MystProviderService implements IProviderServiceInterface {
     return this._mystApiRepository.getAll(this._fakeRunner, filter);
   }
 
-  // @todo: complete thi section
   async getById(id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
-    return;
+    const [error, data] = await this._mystApiRepository.getById(this._fakeRunner, id);
+    if (error) {
+      return [error];
+    }
+    if (!data) {
+      return [new NotFoundException()];
+    }
+
+    return [null, data];
   }
 
   async up(id: string): Promise<AsyncReturn<Error, VpnProviderModel>> {
