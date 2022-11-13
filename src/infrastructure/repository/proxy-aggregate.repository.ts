@@ -439,7 +439,8 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
 
         if (mystIdentityIndex !== -1 && mystConnectIndex !== -1) {
           if (
-            runnerList[mystIdentityIndex].status === RunnerStatusEnum.RUNNING
+            runner.status === RunnerStatusEnum.RUNNING
+            && runnerList[mystIdentityIndex].status === RunnerStatusEnum.RUNNING
             && runnerList[mystConnectIndex].status === RunnerStatusEnum.RUNNING
           ) {
             proxyDownstreamModel.status = ProxyStatusEnum.ONLINE;
