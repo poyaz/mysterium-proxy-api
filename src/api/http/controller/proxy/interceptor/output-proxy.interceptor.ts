@@ -1,6 +1,7 @@
 import {CallHandler, ExecutionContext, Injectable, NestInterceptor} from '@nestjs/common';
 import {map, Observable} from 'rxjs';
 import {ProxyDownstreamModel, ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {FindProxyOutputDto} from '@src-api/http/controller/proxy/dto/find-proxy-output.dto';
 import {Return} from '@src-core/utility';
 
