@@ -1,7 +1,7 @@
 import {ApiProperty, OmitType} from '@nestjs/swagger';
 import {IsEnum, IsNumber, IsOptional, Max, Min, ValidateNested} from 'class-validator';
 import {FilterModel} from '@src-core/model/filter.model';
-import {instanceToPlain, Type} from 'class-transformer';
+import {instanceToPlain, Transform, Type} from 'class-transformer';
 import {FilterInputDto} from '@src-api/http/dto/filter-input.dto';
 import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum, ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import {defaultModelFactory} from '@src-core/model/defaultModel';
@@ -21,6 +21,7 @@ class FilterProxyInputDto {
   @IsNumber()
   @Min(1000)
   @Max(100000)
+  @Transform(({value}) => Number(value))
   listenPort?: number;
 
   @ApiProperty({
@@ -32,6 +33,7 @@ class FilterProxyInputDto {
   })
   @IsOptional()
   @IsEnum(ProxyStatusEnum)
+  @Transform(({value}) => Number(value))
   status?: ProxyStatusEnum;
 }
 

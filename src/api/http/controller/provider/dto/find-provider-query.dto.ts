@@ -81,6 +81,7 @@ class FilterProviderInputDto {
   @IsNumber()
   @Min(0)
   @Max(1000)
+  @Transform(({value}) => Number(value))
   proxyCount?: number;
 }
 
