@@ -22,7 +22,7 @@ export class OutputProxyInterceptor implements NestInterceptor {
           if (Array.isArray(data)) {
             result = data.map<FindProxyOutputDto>((v: ProxyUpstreamModel) => ({
               id: v.id,
-              identityId: (<any>v.proxyDownstream?.[0].runner?.label)?.id,
+              identityId: (<any>v.proxyDownstream?.[0].runner?.label || []).find((v) => v.$namespace === MystIdentityModel.name)?.id,
               providerId: v.proxyDownstream?.[0].refId,
               listenAddr: v.listenAddr,
               listenPort: v.listenPort,
