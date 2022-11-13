@@ -79,7 +79,7 @@ export class DockerRunnerCreateEnvoyRepository implements ICreateRunnerRepositor
           autoheal: 'true',
         },
         Env: [
-          `NODE_PROXY_PORT=${model.socketUri}`,
+          `NODE_PROXY_PORT=${model.socketPort}`,
         ],
         HostConfig: {
           Binds: [
