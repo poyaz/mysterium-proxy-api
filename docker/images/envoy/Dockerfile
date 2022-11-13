@@ -1,4 +1,4 @@
-FROM envoyproxy/envoy-alpine:v1.20.0
+FROM envoyproxy/envoy:v1.24.0
 
 ENV WAIT4X_VERSION v2.6.0
 
