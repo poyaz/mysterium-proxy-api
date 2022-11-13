@@ -3,6 +3,9 @@ FROM envoyproxy/envoy:v1.24.0
 ENV WAIT4X_VERSION v2.6.0
 
 RUN set -eux; \
+    apt-get update; \
+	  apt-get install -y --no-install-recommends ca-certificates wget; \
+	  rm -rf /var/lib/apt/lists/*; \
     \
     wget -O /tmp/wait4x-linux.tar.gz "https://github.com/atkrad/wait4x/releases/download/$WAIT4X_VERSION/wait4x-linux-amd64.tar.gz"; \
     mkdir -p /usr/src/wait4x-linux; \
