@@ -1,10 +1,16 @@
 import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
-import {RunnerModel, RunnerServiceEnum} from '@src-core/model/runner.model';
+import {
+  RunnerExecEnum,
+  RunnerModel,
+  RunnerServiceEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
+} from '@src-core/model/runner.model';
 import {AsyncReturn, Return} from '@src-core/utility';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
-import {ProxyDownstreamModel, ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import Docker = require('dockerode');
 import {DockerLabelParser} from '@src-infrastructure/utility/docker-label-parser';
 import {defaultModelType} from '@src-core/model/defaultModel';
@@ -13,6 +19,7 @@ import {NotRunningServiceException} from '@src-core/exception/not-running-servic
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {setTimeout} from 'timers/promises';
 import {UnknownException} from '@src-core/exception/unknown.exception';
+import {PortInUseException} from '@src-core/exception/port-in-use.exception';
 
 type SocatDockerContainerOption = {
   imageName: string,
@@ -20,22 +27,31 @@ type SocatDockerContainerOption = {
   networkName: string,
 }
 
+type CreateContainerOutput = {
+  id: string,
+  serial: string,
+  name: string,
+  port: number,
+}
+
 export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepository {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.SOCAT;
 
   private readonly _maxRetry: number = 3;
+  private readonly _socatPrivatePort: number = 1234;
   private readonly _namespace: string;
 
   constructor(
     private readonly _docker: Docker,
     private readonly _identity: IIdentifier,
-    private readonly _envoyContainerOption: SocatDockerContainerOption,
+    private readonly _socatContainerOption: SocatDockerContainerOption,
+    private readonly _startPortBinding: number,
     namespace: string,
   ) {
     this._namespace = namespace.replace(/^(.+)\.$/, '$1');
   }
 
-  async create<T = [MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>> {
+  async create<T = string>(model: RunnerModel<T>): Promise<AsyncReturn<Error, RunnerModel<T>>> {
     const dockerLabelParser = new DockerLabelParser(model.label);
     const [parseError] = dockerLabelParser.parseLabel();
     if (parseError) {
@@ -63,8 +79,42 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     }
 
     const containerLabel = dockerLabelParser.convertLabelToObject(this._namespace, []);
+    const createModel = <RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>model;
+    const [createError, createData] = await (model.socketPort
+        ? this._createContainer(createModel, containerLabel, mystContainerIpData, model.socketPort)
+        : this._createContainerWithoutPort(createModel, containerLabel, mystContainerIpData)
+    );
+    if (createError) {
+      return [createError];
+    }
 
-    return [null, null];
+    const result = new RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>({
+      id: createData.id,
+      serial: createData.serial,
+      name: createData.name,
+      service: RunnerServiceEnum.SOCAT,
+      exec: RunnerExecEnum.DOCKER,
+      socketType: RunnerSocketTypeEnum.TCP,
+      socketPort: createData.port,
+      status: RunnerStatusEnum.RUNNING,
+      insertDate: new Date(),
+    });
+    result.label = [
+      {
+        $namespace: MystIdentityModel.name,
+        id: mystModelData.id,
+      },
+      {
+        $namespace: VpnProviderModel.name,
+        id: vpnModelData.id,
+      },
+      {
+        $namespace: ProxyUpstreamModel.name,
+        id: proxyUpstreamModelData.id,
+      },
+    ];
+
+    return [null, <RunnerModel<T>><unknown>result];
   }
 
   private static _getMystIdentityModel(dockerLabelParser: DockerLabelParser<any>): Return<Error, MystIdentityModel> {
@@ -132,7 +182,7 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
         return [new NotRunningServiceException()];
       }
 
-      const ipAddress = containerList[0].NetworkSettings.Networks[this._envoyContainerOption.networkName].IPAddress;
+      const ipAddress = containerList[0].NetworkSettings.Networks[this._socatContainerOption.networkName].IPAddress;
 
       return [null, ipAddress];
     } catch (error) {
@@ -144,7 +194,7 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     model: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>,
     containerLabel,
     mystContainerIp,
-  ): Promise<AsyncReturn<Error, string>> {
+  ): Promise<AsyncReturn<Error, CreateContainerOutput>> {
     let result;
     let error;
 
@@ -158,11 +208,7 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
 
       const [createError, createModel] = await this._createContainer(model, containerLabel, mystContainerIp, bindPortData);
       if (createError) {
-        if (
-          createError instanceof RepositoryException
-          && 'json' in createError.additionalInfo
-          && createError.additionalInfo['json']['message'].match(/port is already allocated/)
-        ) {
+        if (createError instanceof PortInUseException) {
           const wait = Math.floor(Math.random() * 4) + 1;
           await setTimeout(wait * 1000, 'resolved');
 
@@ -189,7 +235,30 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
   }
 
   private async _getNextBindPort(): Promise<AsyncReturn<Error, number>> {
-    return [null, 0];
+    const filtersObj = {
+      label: [
+        `${this._namespace}.project=${RunnerServiceEnum.SOCAT}`,
+      ],
+    };
+
+    try {
+      const containerList = await this._docker.listContainers({
+        all: false,
+        filters: JSON.stringify(filtersObj),
+      });
+      if (containerList.length === 0) {
+        return [null, this._startPortBinding];
+      }
+
+      let lastPortInUse = this._startPortBinding;
+      for (const container of containerList) {
+        lastPortInUse = container.Ports.find((v) => v.PrivatePort === this._socatPrivatePort).PublicPort;
+      }
+
+      return [null, lastPortInUse + 1];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private async _createContainer(
@@ -197,7 +266,59 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     containerLabel,
     mystContainerIp,
     bindPort: number,
-  ): Promise<AsyncReturn<Error, string>> {
-    return [null, null];
+  ): Promise<AsyncReturn<Error, CreateContainerOutput>> {
+    const id = this._identity.generateId();
+    const name = model.name;
+
+    try {
+      const container = await this._docker.createContainer({
+        Image: this._socatContainerOption.imageName,
+        name,
+        Cmd: [`TCP-LISTEN:${this._socatPrivatePort},fork`, `TCP:${mystContainerIp}:${this._socatContainerOption.envoyDefaultPort}`],
+        Labels: {
+          [`${this._namespace}.id`]: id,
+          [`${this._namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${this._namespace}.create-by`]: 'api',
+          ...containerLabel,
+          autoheal: 'true',
+        },
+        HostConfig: {
+          Binds: [
+            `/etc/localtime:/etc/localtime:ro`,
+          ],
+          PortBindings: {
+            [`${this._socatPrivatePort}/tcp`]: {
+              HostPort: bindPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [this._socatContainerOption.networkName]: {},
+          },
+        },
+      });
+
+      await container.start();
+
+      const result: CreateContainerOutput = {
+        id,
+        serial: container.id,
+        name,
+        port: bindPort,
+      };
+
+      return [null, result];
+    } catch (error) {
+      if ('json' in error && error['json']['message'].match(/port is already allocated/)) {
+        return [new PortInUseException()];
+      }
+
+      return [new RepositoryException(error)];
+    }
   }
 }

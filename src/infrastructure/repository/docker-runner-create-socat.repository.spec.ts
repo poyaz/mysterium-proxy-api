@@ -10,8 +10,7 @@ import {
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
 import {Test, TestingModule} from '@nestjs/testing';
-import {DockerRunnerCreateEnvoyRepository} from '@src-infrastructure/repository/docker-runner-create-envoy.repository';
-import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum, ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {
   VpnProviderIpTypeEnum,
@@ -25,8 +24,12 @@ import {FillDataRepositoryException} from '@src-core/exception/fill-data-reposit
 import {DockerLabelParser} from '@src-infrastructure/utility/docker-label-parser';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
+import {PortInUseException} from '@src-core/exception/port-in-use.exception';
+import {setTimeout} from 'timers/promises';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 jest.mock('@src-infrastructure/utility/docker-label-parser');
+jest.mock('timers/promises');
 
 describe('DockerRunnerCreateSocatRepository', () => {
   let repository: DockerRunnerCreateSocatRepository;
@@ -35,6 +38,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
   let imageName: string;
   let envoyDefaultPort: number;
   let networkName: string;
+  let startPortBinding: number;
   let namespace: string;
 
   beforeEach(async () => {
@@ -46,6 +50,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
     imageName = 'mysterium-proxy-api-socat';
     envoyDefaultPort = 10001;
     networkName = 'mysterium-proxy-api_main';
+    startPortBinding = 8000;
     namespace = 'com.mysterium-proxy';
 
     const dockerProvider = 'docker-runner-repository';
@@ -73,6 +78,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
                 envoyDefaultPort,
                 networkName,
               },
+              startPortBinding,
               namespace,
             ),
         },
@@ -108,6 +114,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
     let outputProxyUpstreamValid: defaultModelType<ProxyUpstreamModel>;
     let outputEmptyContainerList: Array<Dockerode.ContainerInfo>;
     let outputExistContainerList: Array<Dockerode.ContainerInfo>;
+    let outputContainerBindPort1: Dockerode.ContainerInfo;
+    let outputContainerBindPort2: Dockerode.ContainerInfo;
+    let outputContainerBindPort3: Dockerode.ContainerInfo;
     let outputCreateContainer: { id: string, start: any };
 
     beforeEach(() => {
@@ -116,7 +125,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
         {
           id: 'default-id',
           serial: 'default-serial',
-          name: 'envoy',
+          name: 'socat',
           service: RunnerServiceEnum.SOCAT,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.TCP,
@@ -146,7 +155,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
         {
           id: 'default-id',
           serial: 'default-serial',
-          name: 'envoy',
+          name: 'socat',
           service: RunnerServiceEnum.SOCAT,
           exec: RunnerExecEnum.DOCKER,
           socketType: RunnerSocketTypeEnum.TCP,
@@ -286,6 +295,121 @@ describe('DockerRunnerCreateSocatRepository', () => {
           Mounts: [],
         },
       ];
+
+      outputContainerBindPort1 = {
+        Id: 'container-id2',
+        Names: [`/${RunnerServiceEnum.SOCAT}1`],
+        Image: 'image-name:image-tag',
+        ImageID: 'sha256:image-id',
+        Command: '/bin/sh',
+        Created: 1665472068,
+        Ports: [
+          {
+            IP: '0.0.0.0',
+            PrivatePort: 1234,
+            PublicPort: 8080,
+            Type: 'tcp',
+          },
+        ],
+        Labels: {
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+        },
+        State: 'running',
+        Status: 'Running',
+        HostConfig: {NetworkMode: 'bridge'},
+        NetworkSettings: {
+          Networks: {
+            [networkName]: {
+              NetworkID: '7ea29fc1412292a2d7bba362f9253545fecdfa8ce9a6e37dd10ba8bee7129812',
+              EndpointID: '2cdc4edb1ded3631c81f57966563e5c8525b81121bb3706a9a9a3ae102711f3f',
+              Gateway: '172.17.0.1',
+              IPAddress: '172.17.0.2',
+              IPPrefixLen: 16,
+              IPv6Gateway: '',
+              GlobalIPv6Address: '',
+              GlobalIPv6PrefixLen: 0,
+              MacAddress: '02:42:ac:11:00:02',
+            },
+          },
+        },
+        Mounts: [],
+      };
+      outputContainerBindPort2 = {
+        Id: 'container-id3',
+        Names: [`/${RunnerServiceEnum.SOCAT}2`],
+        Image: 'image-name:image-tag',
+        ImageID: 'sha256:image-id',
+        Command: '/bin/sh',
+        Created: 1665472068,
+        Ports: [
+          {
+            IP: '0.0.0.0',
+            PrivatePort: 1234,
+            PublicPort: 8081,
+            Type: 'tcp',
+          },
+        ],
+        Labels: {
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+        },
+        State: 'created',
+        Status: 'Created',
+        HostConfig: {NetworkMode: 'bridge'},
+        NetworkSettings: {
+          Networks: {
+            [networkName]: {
+              NetworkID: '7ea29fc1412292a2d7bba362f9253545fecdfa8ce9a6e37dd10ba8bee7129812',
+              EndpointID: '2cdc4edb1ded3631c81f57966563e5c8525b81121bb3706a9a9a3ae102711f3f',
+              Gateway: '172.17.0.1',
+              IPAddress: '172.17.0.3',
+              IPPrefixLen: 16,
+              IPv6Gateway: '',
+              GlobalIPv6Address: '',
+              GlobalIPv6PrefixLen: 0,
+              MacAddress: '02:42:ac:11:00:02',
+            },
+          },
+        },
+        Mounts: [],
+      };
+      outputContainerBindPort3 = {
+        Id: 'container-id4',
+        Names: [`/${RunnerServiceEnum.SOCAT}3`],
+        Image: 'image-name:image-tag',
+        ImageID: 'sha256:image-id',
+        Command: '/bin/sh',
+        Created: 1665472068,
+        Ports: [
+          {
+            IP: '0.0.0.0',
+            PrivatePort: 1234,
+            PublicPort: 8082,
+            Type: 'tcp',
+          },
+        ],
+        Labels: {
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+        },
+        State: 'exited',
+        Status: 'Exited',
+        HostConfig: {NetworkMode: 'bridge'},
+        NetworkSettings: {
+          Networks: {
+            [networkName]: {
+              NetworkID: '7ea29fc1412292a2d7bba362f9253545fecdfa8ce9a6e37dd10ba8bee7129812',
+              EndpointID: '2cdc4edb1ded3631c81f57966563e5c8525b81121bb3706a9a9a3ae102711f3f',
+              Gateway: '172.17.0.1',
+              IPAddress: '172.17.0.4',
+              IPPrefixLen: 16,
+              IPv6Gateway: '',
+              GlobalIPv6Address: '',
+              GlobalIPv6PrefixLen: 0,
+              MacAddress: '02:42:ac:11:00:02',
+            },
+          },
+        },
+        Mounts: [],
+      };
 
       outputCreateContainer = {id: 'container-id', start: jest.fn()};
     });
@@ -471,8 +595,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
           label: [
@@ -501,7 +625,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
-      docker.listContainers.mockResolvedValue(outputEmptyContainerList);
+      docker.listContainers.mockResolvedValueOnce(outputEmptyContainerList);
 
       const [error] = await repository.create(inputRunnerWithPort);
 
@@ -513,8 +637,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
           label: [
@@ -524,6 +648,92 @@ describe('DockerRunnerCreateSocatRepository', () => {
         }),
       }));
       expect(error).toBeInstanceOf(NotRunningServiceException);
+    });
+
+    it(`Should error create container when create socat container (Create socat with initiated port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
+      const executeError = new Error('Error on create container');
+      docker.createContainer.mockRejectedValue(executeError);
+
+      const [error] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.createContainer).toHaveBeenCalledTimes(1);
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: inputRunnerWithPort.socketPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
 
     it(`Should error create container when bind port is in use (Create socat with initiated port)`, async () => {
@@ -548,9 +758,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
-      docker.listContainers.mockResolvedValue(outputExistContainerList);
+      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
       const executeError = new Error('Error on create container');
-      executeError['statusCode'] = 403;
+      executeError['statusCode'] = 500;
       executeError['json'] = {message: `driver failed programming external connectivity on endpoint test (container-serial): Bind for 0.0.0.0:${inputRunnerWithPort.socketPort} failed: port is already allocated`};
       docker.createContainer.mockRejectedValue(executeError);
 
@@ -564,8 +774,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalled();
-      expect(docker.listContainers).toHaveBeenCalledWith(expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
           label: [
@@ -580,11 +790,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
         Image: imageName,
         name: RunnerServiceEnum.SOCAT,
-        Cmd: ['TCP-LISTEN:1234,fork', 'TCP:172.27.0.2:10001'],
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
         Labels: {
           autoheal: 'true',
           [`${namespace}.id`]: identifierMock.generateId(),
-          [`${namespace}.project`]: RunnerServiceEnum.ENVOY,
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
           [`${namespace}.create-by`]: 'api',
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
@@ -594,14 +804,898 @@ describe('DockerRunnerCreateSocatRepository', () => {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
           ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: inputRunnerWithPort.socketPort,
+            },
+          },
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
           },
         },
-        NetworkingConfig: {},
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
       }));
-      expect(error).toBeInstanceOf(NotRunningServiceException);
+      expect(error).toBeInstanceOf(PortInUseException);
+    });
+
+    it(`Should error create container when start socat container (Create socat with initiated port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
+      docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
+      const executeError = new Error('Error on start container');
+      outputCreateContainer.start.mockRejectedValue(executeError);
+
+      const [error] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.createContainer).toHaveBeenCalledTimes(1);
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: inputRunnerWithPort.socketPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(outputCreateContainer.start).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully create container (Create socat with initiated port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers.mockResolvedValueOnce(outputExistContainerList);
+      docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
+      outputCreateContainer.start.mockResolvedValue();
+
+      const [error, result] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(1);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.createContainer).toHaveBeenCalledTimes(1);
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: inputRunnerWithPort.socketPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(outputCreateContainer.start).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toMatchObject<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>>({
+        id: identifierMock.generateId(),
+        serial: outputCreateContainer.id,
+        name: RunnerServiceEnum.SOCAT,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: inputRunnerWithPort.socketPort,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystIdentityValid.id,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderValid.id,
+          },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamValid.id,
+          },
+        ],
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create container when select last bind port and increase port (Create socat without port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      const executeError = new Error('Error in get list of container');
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockRejectedValueOnce(executeError);
+
+      const [error] = await repository.create(inputRunnerWithoutPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully create container and select default start port if not found any bind port (Create socat without port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce(outputEmptyContainerList);
+      docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
+      outputCreateContainer.start.mockResolvedValue();
+
+      const [error, result] = await repository.create(inputRunnerWithoutPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenCalledTimes(1);
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: startPortBinding,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(error).toBeNull();
+      expect(result).toMatchObject<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>>({
+        id: identifierMock.generateId(),
+        serial: outputCreateContainer.id,
+        name: RunnerServiceEnum.SOCAT,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: startPortBinding,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystIdentityValid.id,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderValid.id,
+          },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamValid.id,
+          },
+        ],
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should successfully create container and select next port (Create socat without port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([outputContainerBindPort1, outputContainerBindPort2]);
+      docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
+      outputCreateContainer.start.mockResolvedValue();
+
+      const [error, result] = await repository.create(inputRunnerWithoutPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenCalledTimes(1);
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort3.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(error).toBeNull();
+      expect(result).toMatchObject<RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>>({
+        id: identifierMock.generateId(),
+        serial: outputCreateContainer.id,
+        name: RunnerServiceEnum.SOCAT,
+        service: RunnerServiceEnum.SOCAT,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.TCP,
+        socketPort: outputContainerBindPort3.Ports[0].PublicPort,
+        label: [
+          {
+            $namespace: MystIdentityModel.name,
+            id: outputMystIdentityValid.id,
+          },
+          {
+            $namespace: VpnProviderModel.name,
+            id: outputVpnProviderValid.id,
+          },
+          {
+            $namespace: ProxyUpstreamModel.name,
+            id: outputProxyUpstreamValid.id,
+          },
+        ],
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create container when trying to select next port but failed to bind (Create socat without port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([outputContainerBindPort1])
+        .mockResolvedValueOnce([outputContainerBindPort1])
+        .mockResolvedValueOnce([outputContainerBindPort1]);
+      const executeError = new Error('Error on create container');
+      executeError['statusCode'] = 500;
+      executeError['json'] = {message: `driver failed programming external connectivity on endpoint test (container-serial): Bind for 0.0.0.0:${inputRunnerWithPort.socketPort} failed: port is already allocated`};
+      docker.createContainer.mockRejectedValue(executeError);
+      (<jest.Mock>setTimeout).mockResolvedValue(null);
+
+      const [error] = await repository.create(inputRunnerWithoutPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(4);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.createContainer).toHaveBeenCalledTimes(3);
+      expect(setTimeout).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort2.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect((<jest.Mock>setTimeout).mock.calls[0][0]).toEqual(expect.any(Number));
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort2.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect((<jest.Mock>setTimeout).mock.calls[1][0]).toEqual(expect.any(Number));
+      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenNthCalledWith(3, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort2.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect((<jest.Mock>setTimeout).mock.calls[2][0]).toEqual(expect.any(Number));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error create container when trying to select next port but failed to create (Create socat without port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([outputContainerBindPort1])
+        .mockResolvedValueOnce([outputContainerBindPort1])
+        .mockResolvedValueOnce([outputContainerBindPort1]);
+      const executeBindError = new Error('Error on create container');
+      executeBindError['statusCode'] = 500;
+      executeBindError['json'] = {message: `driver failed programming external connectivity on endpoint test (container-serial): Bind for 0.0.0.0:${inputRunnerWithPort.socketPort} failed: port is already allocated`};
+      docker.createContainer.mockRejectedValueOnce(executeBindError);
+      docker.createContainer.mockRejectedValueOnce(executeBindError);
+      const executeError = new Error('Error on create container');
+      docker.createContainer.mockRejectedValueOnce(executeError);
+      (<jest.Mock>setTimeout).mockResolvedValue(null);
+
+      const [error] = await repository.create(inputRunnerWithoutPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(4);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.createContainer).toHaveBeenCalledTimes(3);
+      expect(setTimeout).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort2.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect((<jest.Mock>setTimeout).mock.calls[0][0]).toEqual(expect.any(Number));
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort2.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect((<jest.Mock>setTimeout).mock.calls[1][0]).toEqual(expect.any(Number));
+      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenNthCalledWith(3, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': {
+              HostPort: outputContainerBindPort2.Ports[0].PublicPort,
+            },
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
   });
 });
