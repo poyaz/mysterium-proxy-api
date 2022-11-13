@@ -1,9 +1,10 @@
-import {ApiProperty, OmitType, PartialType} from '@nestjs/swagger';
-import {IsEnum, IsNumber, IsOptional, IsString, Max, Min, ValidateNested} from 'class-validator';
-import {FilterModel, SortEnum} from '@src-core/model/filter.model';
-import {instanceToPlain, Transform, Type} from 'class-transformer';
+import {ApiProperty, OmitType} from '@nestjs/swagger';
+import {IsEnum, IsNumber, IsOptional, Max, Min, ValidateNested} from 'class-validator';
+import {FilterModel} from '@src-core/model/filter.model';
+import {instanceToPlain, Type} from 'class-transformer';
 import {FilterInputDto} from '@src-api/http/dto/filter-input.dto';
-import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum, ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {defaultModelFactory} from '@src-core/model/defaultModel';
 
 class FilterProxyInputDto {
   @ApiProperty({
@@ -21,6 +22,17 @@ class FilterProxyInputDto {
   @Min(1000)
   @Max(100000)
   listenPort?: number;
+
+  @ApiProperty({
+    description: 'The port of upstream proxy',
+    type: String,
+    enum: ProxyStatusEnum,
+    required: false,
+    example: ProxyStatusEnum.ONLINE,
+  })
+  @IsOptional()
+  @IsEnum(ProxyStatusEnum)
+  status?: ProxyStatusEnum;
 }
 
 export class FindProxyQueryDto extends OmitType(FilterInputDto, ['sorts'] as const) {
@@ -38,6 +50,11 @@ export class FindProxyQueryDto extends OmitType(FilterInputDto, ['sorts'] as con
           listenPort: 3128,
         },
       },
+      'search with status': {
+        value: {
+          status: ProxyStatusEnum.ONLINE,
+        },
+      },
     },
   })
   filters?: FilterProxyInputDto;
@@ -49,6 +66,21 @@ export class FindProxyQueryDto extends OmitType(FilterInputDto, ['sorts'] as con
 
     if (typeof dto.filters?.listenPort !== 'undefined') {
       filterModel.addCondition({$opr: 'eq', listenPort: data.filters.listenPort});
+    }
+    if (typeof dto.filters?.status !== 'undefined') {
+      const downstreamFilter = defaultModelFactory<ProxyDownstreamModel>(
+        ProxyDownstreamModel,
+        {
+          id: 'default-id',
+          refId: 'default-ref-id',
+          ip: 'default-ip',
+          mask: 32,
+          type: ProxyTypeEnum.MYST,
+          status: dto.filters.status,
+        },
+        ['id', 'refId', 'ip', 'mask', 'type'],
+      );
+      filterModel.addCondition({$opr: 'eq', proxyDownstream: [downstreamFilter]});
     }
 
     return filterModel;

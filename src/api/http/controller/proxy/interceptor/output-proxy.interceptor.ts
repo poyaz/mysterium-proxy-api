@@ -26,7 +26,7 @@ export class OutputProxyInterceptor implements NestInterceptor {
               providerId: v.proxyDownstream?.[0].refId,
               listenAddr: v.listenAddr,
               listenPort: v.listenPort,
-              outgoingIp: v.proxyDownstream?.[0].id,
+              outgoingIp: v.proxyDownstream?.[0].ip,
               status: v.proxyDownstream?.[0].status,
             }));
 
@@ -40,7 +40,7 @@ export class OutputProxyInterceptor implements NestInterceptor {
               providerId: data.proxyDownstream?.[0].refId,
               listenAddr: data.listenAddr,
               listenPort: data.listenPort,
-              outgoingIp: data.proxyDownstream?.[0].id,
+              outgoingIp: data.proxyDownstream?.[0].ip,
               status: data.proxyDownstream?.[0].status,
             };
 

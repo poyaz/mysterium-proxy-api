@@ -35,30 +35,33 @@ export class FindProxyOutputDto {
     type: String,
     required: false,
     readOnly: true,
+    nullable: true,
     format: 'uuid',
     example: '00000000-0000-0000-0000-000000000000',
   })
-  identityId: string;
+  identityId?: string;
 
   @ApiProperty({
     description: 'The identity of VPN provider',
     type: String,
     required: false,
     readOnly: true,
+    nullable: true,
     format: 'uuid',
     example: '00000000-0000-0000-0000-000000000000',
   })
-  providerId: string;
+  providerId?: string;
 
   @ApiProperty({
     description: 'The outgoing ip address of VPN',
     type: String,
     required: false,
     readOnly: true,
+    nullable: true,
     format: 'ipv4',
     example: '55.12.60.0',
   })
-  outgoingIp: string;
+  outgoingIp?: string;
 
   @ApiProperty({
     description: 'The status of proxy',
