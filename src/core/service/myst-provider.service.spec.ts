@@ -29,6 +29,7 @@ import {
 } from '@src-core/model/runner.model';
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
+import {ProxyProviderInUseException} from '@src-core/exception/proxy-provider-in-use.exception';
 
 describe('MystProviderService', () => {
   let service: MystProviderService;
@@ -224,7 +225,7 @@ describe('MystProviderService', () => {
 
       expect(mystApiRepository.getById).toHaveBeenCalled();
       expect(mystApiRepository.getById).toHaveBeenCalledWith(expect.anything(), inputId);
-      expect(error).toBeInstanceOf(NotFoundException)
+      expect(error).toBeInstanceOf(NotFoundException);
     });
 
     it(`Should successfully get provider by id`, async () => {
@@ -659,6 +660,7 @@ describe('MystProviderService', () => {
   describe(`Disconnect from vpn`, () => {
     let inputId: string;
     let outputProviderNotRegisterModel: VpnProviderModel;
+    let outputProviderRegisterWithProxyCount: VpnProviderModel;
     let outputProviderRegisterNotRunningModel: VpnProviderModel;
     let outputProviderRegisterRunningModel: VpnProviderModel;
 
@@ -675,6 +677,32 @@ describe('MystProviderService', () => {
         country: 'GB',
         isRegister: false,
         proxyCount: 0,
+        insertDate: new Date(),
+      });
+
+      outputProviderRegisterWithProxyCount = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: 'userIdentity1',
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerStatus: VpnProviderStatusEnum.ONLINE,
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: true,
+        runner: new RunnerModel<VpnProviderModel>({
+          id: identifierMock.generateId(),
+          serial: 'serial',
+          name: 'name',
+          service: RunnerServiceEnum.MYST,
+          exec: RunnerExecEnum.DOCKER,
+          socketType: RunnerSocketTypeEnum.HTTP,
+          socketUri: '10.10.10.1',
+          socketPort: 4449,
+          status: RunnerStatusEnum.RUNNING,
+          insertDate: new Date(),
+        }),
+        proxyCount: 1,
         insertDate: new Date(),
       });
 
@@ -700,7 +728,7 @@ describe('MystProviderService', () => {
           status: RunnerStatusEnum.CREATING,
           insertDate: new Date(),
         }),
-        proxyCount: 1,
+        proxyCount: 0,
         insertDate: new Date(),
       });
 
@@ -726,7 +754,7 @@ describe('MystProviderService', () => {
           status: RunnerStatusEnum.RUNNING,
           insertDate: new Date(),
         }),
-        proxyCount: 1,
+        proxyCount: 0,
         insertDate: new Date(),
       });
     });
@@ -762,6 +790,17 @@ describe('MystProviderService', () => {
       expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
       expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
       expect(error).toBeInstanceOf(ProviderIdentityNotConnectingException);
+    });
+
+    it(`Should error disconnect from vpn when the list of proxy run on provider`, async () => {
+      mystApiRepository.getById.mockResolvedValue([null, outputProviderRegisterWithProxyCount]);
+
+      const [error] = await service.down(inputId);
+
+      expect(mystApiRepository.getById).toHaveBeenCalled();
+      expect(mystApiRepository.getById.mock.calls[0][0]).toMatchObject(<DefaultModel<VpnProviderModel>>{IS_DEFAULT_MODEL: true});
+      expect(mystApiRepository.getById.mock.calls[0][1]).toEqual(inputId);
+      expect(error).toBeInstanceOf(ProxyProviderInUseException);
     });
 
     it(`Should error disconnect from vpn when myst runner is not running`, async () => {

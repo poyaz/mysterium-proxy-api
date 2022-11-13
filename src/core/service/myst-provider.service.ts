@@ -21,6 +21,7 @@ import {NotFoundMystIdentityException} from '@src-core/exception/not-found-myst-
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
 import {setTimeout} from 'timers/promises';
+import {ProxyProviderInUseException} from '@src-core/exception/proxy-provider-in-use.exception';
 
 @Injectable()
 export class MystProviderService implements IProviderServiceInterface {
@@ -123,6 +124,9 @@ export class MystProviderService implements IProviderServiceInterface {
     }
     if (!providerData.isRegister || (providerData.isRegister && !providerData.runner)) {
       return [new ProviderIdentityNotConnectingException()];
+    }
+    if (providerData.proxyCount > 0) {
+      return [new ProxyProviderInUseException()];
     }
     if (providerData.runner.status != RunnerStatusEnum.RUNNING) {
       return [new NotRunningServiceException()];
