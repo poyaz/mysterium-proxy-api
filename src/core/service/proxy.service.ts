@@ -7,6 +7,7 @@ import {IProxyRepositoryInterface} from '@src-core/interface/i-proxy-repository.
 import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.interface';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
+import {TooManyProxyRegisteredException} from '@src-core/exception/too-many-proxy-registered.exception';
 
 @Injectable()
 export class ProxyService implements IProxyServiceInterface {
@@ -31,6 +32,9 @@ export class ProxyService implements IProxyServiceInterface {
     }
     if (!vpnProviderData.isRegister) {
       return [new ProviderIdentityNotConnectingException()];
+    }
+    if (vpnProviderData.proxyCount > 0) {
+      return [new TooManyProxyRegisteredException()];
     }
 
     return this._proxyRepository.create(model);

@@ -24,6 +24,7 @@ import {defaultModelFactory} from '@src-core/model/defaultModel';
 import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.interface';
 import {NotFoundException} from '@src-core/exception/not-found.exception';
 import {ProviderIdentityNotConnectingException} from '@src-core/exception/provider-identity-not-connecting.exception';
+import {TooManyProxyRegisteredException} from '@src-core/exception/too-many-proxy-registered.exception';
 
 describe('ProxyService', () => {
   let service: ProxyService;
@@ -200,6 +201,7 @@ describe('ProxyService', () => {
     let inputProxyWithPort: ProxyUpstreamModel;
     let outputRunnerMyst: RunnerModel<MystIdentityModel>;
     let outputVpnProviderIsNotRegistered: VpnProviderModel;
+    let outputVpnProviderWithProxyCount: VpnProviderModel;
     let outputVpnProviderIsRegister: VpnProviderModel;
     let outputRunnerDownstreamModel: RunnerModel<[MystIdentityModel, VpnProviderModel]>;
     let outputDownstreamProxyModel: ProxyDownstreamModel;
@@ -259,6 +261,21 @@ describe('ProxyService', () => {
         country: 'GB',
         isRegister: false,
         proxyCount: 0,
+        insertDate: new Date(),
+      });
+      outputVpnProviderWithProxyCount = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        userIdentity: outputRunnerMyst.label.identity,
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'provider-identity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        ip: '25.14.65.1',
+        mask: 32,
+        country: 'GB',
+        runner: outputRunnerMyst,
+        isRegister: true,
+        proxyCount: 1,
         insertDate: new Date(),
       });
       outputVpnProviderIsRegister = new VpnProviderModel({
@@ -371,6 +388,16 @@ describe('ProxyService', () => {
       expect(providerService.getById).toHaveBeenCalled();
       expect(providerService.getById).toHaveBeenCalledWith(inputProxyWithPort.proxyDownstream[0].refId);
       expect(error).toBeInstanceOf(ProviderIdentityNotConnectingException);
+    });
+
+    it(`Should error create new proxy when too many proxy is registered`, async () => {
+      providerService.getById.mockResolvedValue([null, outputVpnProviderWithProxyCount]);
+
+      const [error] = await service.create(inputProxyWithPort);
+
+      expect(providerService.getById).toHaveBeenCalled();
+      expect(providerService.getById).toHaveBeenCalledWith(inputProxyWithPort.proxyDownstream[0].refId);
+      expect(error).toBeInstanceOf(TooManyProxyRegisteredException);
     });
 
     it(`Should error create new proxy`, async () => {
