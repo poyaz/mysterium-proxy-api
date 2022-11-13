@@ -119,7 +119,7 @@ services:
 
   build-envoy-image:
     build:
-      context: ./docker/images/myst-connect
+      context: ./docker/images/envoy
       dockerfile: Dockerfile
     image: envoy-service:v1.0
     network_mode: "bridge"
