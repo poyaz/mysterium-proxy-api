@@ -282,6 +282,9 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
           ...containerLabel,
           autoheal: 'true',
         },
+        ExposedPorts: {
+          [`${this._socatPrivatePort}/tcp`]: {},
+        },
         HostConfig: {
           Binds: [
             `/etc/localtime:/etc/localtime:ro`,
