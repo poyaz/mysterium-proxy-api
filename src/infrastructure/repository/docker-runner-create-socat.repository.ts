@@ -287,7 +287,7 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
             `/etc/localtime:/etc/localtime:ro`,
           ],
           PortBindings: {
-            [`${this._socatPrivatePort}/tcp`]: [{HostPort: bindPort}],
+            [`${this._socatPrivatePort}/tcp`]: [{HostPort: bindPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {

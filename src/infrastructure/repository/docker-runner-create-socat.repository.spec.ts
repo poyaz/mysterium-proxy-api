@@ -719,7 +719,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort}],
+            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -805,7 +805,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort}],
+            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -889,7 +889,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort}],
+            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -974,7 +974,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort}],
+            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1154,7 +1154,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: startPortBinding}],
+            '1234/tcp': [{HostPort: startPortBinding.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1272,7 +1272,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort3.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort3.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1396,7 +1396,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1436,7 +1436,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1476,7 +1476,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1579,7 +1579,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1619,7 +1619,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
@@ -1659,7 +1659,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
             `/etc/localtime:/etc/localtime:ro`,
           ]),
           PortBindings: {
-            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort}],
+            '1234/tcp': [{HostPort: outputContainerBindPort2.Ports[0].PublicPort.toString()}],
           },
           NetworkMode: 'bridge',
           RestartPolicy: {
