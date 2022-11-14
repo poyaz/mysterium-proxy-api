@@ -1,9 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
-  HttpCode,
-  HttpStatus,
   Inject,
   Param,
   Post,
@@ -13,7 +10,7 @@ import {
 import {
   ApiBadRequestResponse, ApiBearerAuth,
   ApiBody,
-  ApiCreatedResponse, ApiExtraModels, ApiForbiddenResponse, ApiNoContentResponse, ApiNotFoundResponse,
+  ApiCreatedResponse, ApiExtraModels, ApiForbiddenResponse, ApiNotFoundResponse,
   ApiOperation,
   ApiParam, ApiTags, ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
@@ -33,7 +30,7 @@ import {FindProxyQueryDto} from '@src-api/http/controller/proxy/dto/find-proxy-q
 import {UnauthorizedExceptionDto} from '@src-api/http/dto/unauthorized-exception.dto';
 import {ForbiddenExceptionDto} from '@src-api/http/dto/forbidden-exception.dto';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
-import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interface';
+import {IProviderProxyInterface} from '@src-core/interface/i-provider-proxy.interface';
 
 @Controller({
   path: 'provider/myst',
@@ -55,7 +52,7 @@ import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interf
 export class MystProviderProxyHttpController {
   constructor(
     @Inject(ProviderTokenEnum.MYST_PROVIDER_PROXY_SERVICE_DEFAULT)
-    private readonly _vpnProviderProxyService: IProxyServiceInterface,
+    private readonly _vpnProviderProxyService: IProviderProxyInterface,
   ) {
   }
 

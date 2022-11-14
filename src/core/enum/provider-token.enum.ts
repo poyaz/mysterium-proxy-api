@@ -33,10 +33,16 @@ export enum ProviderTokenEnum {
   USER_SERVICE_DEFAULT = 'USER_SERVICE',
   /**
    *
-   * {@link }
+   * {@link MystProviderService}
    * @implements IProviderServiceInterface
    */
   MYST_PROVIDER_SERVICE_DEFAULT = 'MYST_PROVIDER_SERVICE',
+  /**
+   *
+   * {@link MystProviderProxyService}
+   * @implements IProviderProxyInterface
+   */
+  MYST_PROVIDER_PROXY_SERVICE_DEFAULT = 'MYST_PROVIDER_PROXY_SERVICE',
 
   /**
    *
@@ -68,6 +74,12 @@ export enum ProviderTokenEnum {
    * @implements IProviderServiceInterface
    */
   MYST_PROVIDER_SERVICE = 'MYST_PROVIDER_SERVICE',
+  /**
+   *
+   * {@link MystProviderProxyService}
+   * @implements IProviderProxyInterface
+   */
+  MYST_PROVIDER_PROXY_SERVICE = 'MYST_PROVIDER_PROXY_SERVICE',
   /**
    *
    * {@link ProxyService}

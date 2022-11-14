@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MystProviderProxyHttpController } from './myst-provider-proxy-http.controller';
 import {mock, MockProxy} from 'jest-mock-extended';
-import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interface';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
-import {CreateProxyInputDto} from '@src-api/http/controller/proxy/dto/create-proxy-input.dto';
 import {
   RunnerExecEnum,
   RunnerModel,
@@ -18,14 +16,15 @@ import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum, ProxyUpstreamModel
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {DefaultModel} from '@src-core/model/defaultModel';
 import {CreateProxyWithConnectInputDto} from '@src-api/http/controller/proxy/myst/dto/create-proxy-with-connect-input.dto';
+import {IProviderProxyInterface} from '@src-core/interface/i-provider-proxy.interface';
 
 describe('MystProviderProxyHttpController', () => {
   let controller: MystProviderProxyHttpController;
-  let vpnProviderProxyService: MockProxy<IProxyServiceInterface>;
+  let vpnProviderProxyService: MockProxy<IProviderProxyInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
-    vpnProviderProxyService = mock<IProxyServiceInterface>();
+    vpnProviderProxyService = mock<IProviderProxyInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
