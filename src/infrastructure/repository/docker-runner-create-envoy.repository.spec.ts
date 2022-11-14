@@ -561,7 +561,7 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           [`${namespace}.proxy-downstream-model.id`]: outputProxyDownstreamValid.id,
         },
         Env: expect.arrayContaining([
-          `NODE_PROXY_PORT=${inputRunner.socketUri}`,
+          `NODE_PROXY_PORT=${inputRunner.socketPort}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -642,7 +642,7 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           [`${namespace}.proxy-downstream-model.id`]: outputProxyDownstreamValid.id,
         },
         Env: expect.arrayContaining([
-          `NODE_PROXY_PORT=${inputRunner.socketUri}`,
+          `NODE_PROXY_PORT=${inputRunner.socketPort}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -723,7 +723,7 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           [`${namespace}.proxy-downstream-model.id`]: outputProxyDownstreamValid.id,
         },
         Env: expect.arrayContaining([
-          `NODE_PROXY_PORT=${inputRunner.socketUri}`,
+          `NODE_PROXY_PORT=${inputRunner.socketPort}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
