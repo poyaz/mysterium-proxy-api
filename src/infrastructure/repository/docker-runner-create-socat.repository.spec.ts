@@ -714,6 +714,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -800,6 +803,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -883,6 +889,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
         },
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -968,6 +977,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
         },
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1149,6 +1161,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -1266,6 +1281,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
         },
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1391,6 +1409,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -1431,6 +1452,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -1470,6 +1494,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
         },
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -1574,6 +1601,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -1614,6 +1644,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
         HostConfig: {
           Binds: expect.arrayContaining([
             `/etc/localtime:/etc/localtime:ro`,
@@ -1653,6 +1686,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
         },
         HostConfig: {
           Binds: expect.arrayContaining([
