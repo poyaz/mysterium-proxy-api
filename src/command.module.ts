@@ -40,27 +40,27 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
     {
       provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
-      useFactory: () => () => ({}),
+      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE_DEFAULT,
-      useFactory: () => () => ({}),
+      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
-      useFactory: () => () => ({}),
+      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE_DEFAULT,
-      useFactory: () => () => ({}),
+      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.MYST_PROVIDER_PROXY_SERVICE_DEFAULT,
-      useFactory: () => () => ({}),
+      useFactory: () => ({}),
     },
     {
       provide: ProviderTokenEnum.PROXY_SERVICE_DEFAULT,
-      useFactory: () => () => ({}),
+      useFactory: () => ({}),
     },
   ],
   exports: [],

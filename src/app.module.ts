@@ -69,6 +69,8 @@ import {ProxyAggregateRepository} from '@src-infrastructure/repository/proxy-agg
 import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
 import {IProxyRepositoryInterface} from '@src-core/interface/i-proxy-repository.interface';
 import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.interface';
+import {MystProviderProxyService} from '@src-core/service/myst-provider-proxy.service';
+import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interface';
 
 @Module({
   imports: [
@@ -178,6 +180,15 @@ import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.
         runnerService: IRunnerServiceInterface,
         mystIdentityService: IMystIdentityServiceInterface,
       ) => new MystProviderService(mystApiRepository, runnerService, mystIdentityService),
+    },
+    {
+      provide: ProviderTokenEnum.MYST_PROVIDER_PROXY_SERVICE,
+      inject: [
+        ProviderTokenEnum.MYST_PROVIDER_SERVICE,
+        ProviderTokenEnum.PROXY_SERVICE,
+      ],
+      useFactory: (vpnProviderService: IProviderServiceInterface, proxyService: IProxyServiceInterface) =>
+        new MystProviderProxyService(vpnProviderService, proxyService),
     },
     {
       provide: ProviderTokenEnum.PROXY_SERVICE,
