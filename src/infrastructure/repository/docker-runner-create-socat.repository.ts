@@ -85,6 +85,21 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
         : this._createContainerWithoutPort(createModel, containerLabel, mystContainerIpData)
     );
     if (createError) {
+      if (
+        createError instanceof RepositoryException
+        && 'isContainerCreated' in createError.additionalInfo
+        && createError.additionalInfo['isContainerCreated'] === true) {
+        await this._removeCreatedContainerById(createError.additionalInfo['containerId']);
+      }
+
+      if (
+        createError instanceof RepositoryException
+        && 'json' in createError.additionalInfo
+        && createError.additionalInfo['json']['message'].match(/port is already allocated/)
+      ) {
+        return [new PortInUseException()];
+      }
+
       return [createError];
     }
 
@@ -195,12 +210,14 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     containerLabel,
     mystContainerIp,
   ): Promise<AsyncReturn<Error, CreateContainerOutput>> {
+    const totalTryList = new Array(this._maxRetry).fill(null);
+    const portInUseList = [];
+    let lastPortInUseContainerId;
     let result;
     let error;
 
-    const totalTryList = new Array(this._maxRetry).fill(null);
     for await (const tryCount of totalTryList) {
-      const [bindPortError, bindPortData] = await this._getNextBindPort();
+      const [bindPortError, bindPortData] = await this._getNextBindPort(portInUseList);
       if (bindPortError) {
         error = bindPortError;
         break;
@@ -208,7 +225,15 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
 
       const [createError, createModel] = await this._createContainer(model, containerLabel, mystContainerIp, bindPortData);
       if (createError) {
-        if (createError instanceof PortInUseException) {
+        if (
+          createError instanceof RepositoryException
+          && 'json' in createError.additionalInfo
+          && createError.additionalInfo['json']['message'].match(/port is already allocated/)
+        ) {
+          if ('containerId' in createError.additionalInfo) {
+            lastPortInUseContainerId = createError.additionalInfo['containerId'];
+          }
+
           const wait = Math.floor(Math.random() * 4) + 1;
           await setTimeout(wait * 1000, 'resolved');
 
@@ -227,6 +252,10 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
       return [null, result];
     }
 
+    if (lastPortInUseContainerId) {
+      await this._removeCreatedContainerById(lastPortInUseContainerId);
+    }
+
     if (error) {
       return [error];
     }
@@ -234,28 +263,59 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     return [new UnknownException()];
   }
 
-  private async _getNextBindPort(): Promise<AsyncReturn<Error, number>> {
+  private async _getNextBindPort(portInUseList: Array<number>): Promise<AsyncReturn<Error, number>> {
     const filtersObj = {
       label: [
         `${this._namespace}.project=${RunnerServiceEnum.SOCAT}`,
+        `${this._namespace}.publish-port`,
       ],
     };
 
     try {
       const containerList = await this._docker.listContainers({
-        all: false,
+        all: true,
         filters: JSON.stringify(filtersObj),
       });
       if (containerList.length === 0) {
         return [null, this._startPortBinding];
       }
 
-      let lastPortInUse = this._startPortBinding;
       for (const container of containerList) {
-        lastPortInUse = container.Ports.find((v) => v.PrivatePort === this._socatPrivatePort).PublicPort;
+        portInUseList.push(Number(container.Labels[`${this._namespace}.publish-port`]));
       }
 
-      return [null, lastPortInUse + 1];
+      portInUseList.sort();
+
+      let previousPort = portInUseList[0];
+      let nextPort;
+
+      if (this._startPortBinding < previousPort) {
+        return [null, this._startPortBinding];
+      }
+
+      for (let i = 0; i < portInUseList.length; i++) {
+        const diff = portInUseList[i] - previousPort;
+        if (diff === 0) {
+          previousPort = portInUseList[i];
+          nextPort = portInUseList[i + 1];
+        }
+        if (diff > 1) {
+          nextPort = previousPort + diff - 1;
+          break;
+        }
+
+        previousPort = portInUseList[i];
+        nextPort = portInUseList[i + 1];
+      }
+
+      if (!nextPort) {
+        return [null, previousPort + 1];
+      }
+      if (nextPort === portInUseList.at(-1)) {
+        return [null, nextPort + 1];
+      }
+
+      return [null, nextPort];
     } catch (error) {
       return [new RepositoryException(error)];
     }
@@ -270,6 +330,12 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     const id = this._identity.generateId();
     const name = model.name;
 
+    const [removeFailedContainerError] = await this._removeFailedContainerByName(name);
+    if (removeFailedContainerError) {
+      return [removeFailedContainerError];
+    }
+
+    const containerInfo = {isCreated: false, containerId: null};
     try {
       const container = await this._docker.createContainer({
         Image: this._socatContainerOption.imageName,
@@ -279,6 +345,7 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
           [`${this._namespace}.id`]: id,
           [`${this._namespace}.project`]: RunnerServiceEnum.SOCAT,
           [`${this._namespace}.create-by`]: 'api',
+          [`${this._namespace}.publish-port`]: bindPort.toString(),
           ...containerLabel,
           autoheal: 'true',
         },
@@ -304,6 +371,9 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
         },
       });
 
+      containerInfo.containerId = container.id;
+      containerInfo.isCreated = true;
+
       await container.start();
 
       const result: CreateContainerOutput = {
@@ -315,10 +385,53 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
 
       return [null, result];
     } catch (error) {
-      if ('json' in error && error['json']['message'].match(/port is already allocated/)) {
-        return [new PortInUseException()];
+      error['containerId'] = containerInfo.containerId;
+      error['isContainerCreated'] = containerInfo.isCreated;
+
+      return [new RepositoryException(error)];
+    }
+  }
+
+  private async _removeFailedContainerByName(name: string): Promise<AsyncReturn<Error, null>> {
+    const filtersObj = {
+      name: [name],
+      status: ['created'],
+      label: [
+        `${this._namespace}.project=${RunnerServiceEnum.SOCAT}`,
+        `${this._namespace}.publish-port`,
+      ],
+    };
+
+    try {
+      const containerList = await this._docker.listContainers({
+        all: true,
+        filters: JSON.stringify(filtersObj),
+      });
+      if (containerList.length === 0) {
+        return [null, null];
       }
 
+      const container = await this._docker.getContainer(containerList[0].Id);
+      const info = await container.inspect();
+
+      if (info.State.ExitCode === 128 && info.State.Error.match(/port is already allocated/)) {
+        await container.remove({v: true, force: true});
+      }
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
+  }
+
+  private async _removeCreatedContainerById(serialId: string): Promise<AsyncReturn<Error, null>> {
+    try {
+      const container = await this._docker.getContainer(serialId);
+
+      await container.remove({v: true, force: true});
+
+      return [null, null];
+    } catch (error) {
       return [new RepositoryException(error)];
     }
   }
