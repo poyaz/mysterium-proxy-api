@@ -485,387 +485,387 @@ describe('ProxyAggregateRepository', () => {
       });
     });
 
-    // it(`Should error get all proxy when get all runner info`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
-    //   mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //
-    //   const [error] = await repository.getAll(inputFilterWithoutFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(error).toBeInstanceOf(UnknownException);
-    // });
-    //
-    // it(`Should error get all proxy when get all vpn provider`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   mystProviderRepository.getAll.mockResolvedValue([new UnknownException()]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //
-    //   const [error] = await repository.getAll(inputFilterWithoutFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(error).toBeInstanceOf(UnknownException);
-    // });
-    //
-    // it(`Should error get all proxy when get outgoing ip`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([new UnknownException()]);
-    //
-    //   const [error] = await repository.getAll(inputFilterWithoutFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(error).toBeInstanceOf(UnknownException);
-    // });
-    //
-    // it(`Should error get all proxy with refId filter`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([
-    //     null,
-    //     [
-    //       outputMystRunner1,
-    //       outputMystConnectRunner1,
-    //       outputProxyDownstreamRunner1,
-    //       outputProxyUpstreamRunner1,
-    //       outputMystRunner2,
-    //       outputProxyDownstreamRunner2,
-    //       outputProxyUpstreamRunner2,
-    //       outputProxyDownstreamRunner3,
-    //       outputProxyUpstreamRunner3,
-    //       outputProxyUpstreamRunner4,
-    //     ],
-    //     10,
-    //   ]);
-    //   mystProviderRepository.getById.mockResolvedValue([new UnknownException()]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //
-    //   const [error] = await repository.getAll(inputFilterWithRefIdFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getById).toHaveBeenCalled();
-    //   expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputFilterWithRefIdFilter.getCondition('proxyDownstream').proxyDownstream[0].refId);
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(error).toBeInstanceOf(UnknownException);
-    // });
-    //
-    // it(`Should successfully get all proxy and return empty records`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //
-    //   const [error, result, total] = await repository.getAll(inputFilterWithoutFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(error).toBeNull();
-    //   expect(result).toHaveLength(0);
-    //   expect(total).toEqual(0);
-    // });
-    //
-    // it(`Should successfully get all proxy and return empty records if not found socat runner`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([
-    //     null,
-    //     [
-    //       outputMystRunner1,
-    //       outputMystConnectRunner1,
-    //       outputProxyDownstreamRunner1,
-    //       outputMystRunner2,
-    //       outputProxyDownstreamRunner2,
-    //       outputProxyDownstreamRunner3,
-    //     ],
-    //     6,
-    //   ]);
-    //   mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //
-    //   const [error, result, total] = await repository.getAll(inputFilterWithoutFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(error).toBeNull();
-    //   expect(result).toHaveLength(0);
-    //   expect(total).toEqual(0);
-    // });
-    //
-    // it(`Should successfully get all proxy without filter`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([
-    //     null,
-    //     [
-    //       outputMystRunner1,
-    //       outputMystConnectRunner1,
-    //       outputProxyDownstreamRunner1,
-    //       outputProxyUpstreamRunner1,
-    //       outputMystRunner2,
-    //       outputProxyDownstreamRunner2,
-    //       outputProxyUpstreamRunner2,
-    //       outputProxyDownstreamRunner3,
-    //       outputProxyUpstreamRunner3,
-    //       outputProxyUpstreamRunner4,
-    //     ],
-    //     10,
-    //   ]);
-    //   mystProviderRepository.getAll.mockResolvedValue([null, [outputVpnProvider1], 1]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //   (<jest.Mock>filterAndSortProxyUpstream).mockReturnValue([
-    //     [outputProxyUpstream1, outputProxyUpstream2, outputProxyUpstream3, outputProxyUpstream4],
-    //     4,
-    //   ]);
-    //
-    //   const [error, result, total] = await repository.getAll(inputFilterWithoutFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(filterAndSortProxyUpstream).toHaveBeenCalled();
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0]).toHaveLength(4);
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][0]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream1.id,
-    //     listenAddr: outputProxyUpstream1.listenAddr,
-    //     listenPort: outputProxyUpstream1.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: [],
-    //         id: outputProxyUpstream1.proxyDownstream[0].id,
-    //         refId: outputProxyUpstream1.proxyDownstream[0].refId,
-    //         ip: outputProxyUpstream1.proxyDownstream[0].ip,
-    //         mask: outputProxyUpstream1.proxyDownstream[0].mask,
-    //         type: outputProxyUpstream1.proxyDownstream[0].type,
-    //         runner: outputProxyUpstream1.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream1.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream1.runner,
-    //     insertDate: outputProxyUpstream1.insertDate,
-    //   });
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][1]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream2.id,
-    //     listenAddr: outputProxyUpstream2.listenAddr,
-    //     listenPort: outputProxyUpstream2.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: ['ip', 'mask'],
-    //         id: outputProxyUpstream2.proxyDownstream[0].id,
-    //         refId: outputProxyUpstream2.proxyDownstream[0].refId,
-    //         ip: expect.any(String),
-    //         mask: expect.any(Number),
-    //         type: outputProxyUpstream2.proxyDownstream[0].type,
-    //         runner: outputProxyUpstream2.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream2.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream2.runner,
-    //     insertDate: outputProxyUpstream2.insertDate,
-    //   });
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][2]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream3.id,
-    //     listenAddr: outputProxyUpstream3.listenAddr,
-    //     listenPort: outputProxyUpstream3.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: ['ip', 'mask'],
-    //         id: outputProxyUpstream3.proxyDownstream[0].id,
-    //         refId: outputProxyUpstream3.proxyDownstream[0].refId,
-    //         ip: expect.any(String),
-    //         mask: expect.any(Number),
-    //         type: outputProxyUpstream3.proxyDownstream[0].type,
-    //         runner: outputProxyUpstream3.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream3.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream3.runner,
-    //     insertDate: outputProxyUpstream3.insertDate,
-    //   });
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][3]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream4.id,
-    //     listenAddr: outputProxyUpstream4.listenAddr,
-    //     listenPort: outputProxyUpstream4.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: ['id', 'refId', 'ip', 'mask', 'type'],
-    //         id: expect.any(String),
-    //         refId: expect.any(String),
-    //         ip: expect.any(String),
-    //         mask: expect.any(Number),
-    //         type: expect.anything(),
-    //         runner: outputProxyUpstream4.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream4.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream4.runner,
-    //     insertDate: outputProxyUpstream4.insertDate,
-    //   });
-    //   expect(error).toBeNull();
-    //   expect(result).toHaveLength(4);
-    //   expect(total).toEqual(4);
-    // });
-    //
-    // it(`Should successfully get all proxy with filter`, async () => {
-    //   dockerRunnerRepository.getAll.mockResolvedValue([
-    //     null,
-    //     [
-    //       outputMystRunner1,
-    //       outputMystConnectRunner1,
-    //       outputProxyDownstreamRunner1,
-    //       outputProxyUpstreamRunner1,
-    //       outputMystRunner2,
-    //       outputProxyDownstreamRunner2,
-    //       outputProxyUpstreamRunner2,
-    //       outputProxyDownstreamRunner3,
-    //       outputProxyUpstreamRunner3,
-    //       outputProxyUpstreamRunner4,
-    //     ],
-    //     10,
-    //   ]);
-    //   mystProviderRepository.getAll.mockResolvedValue([null, [outputVpnProvider1], 1]);
-    //   systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
-    //   (<jest.Mock>filterAndSortProxyUpstream).mockReturnValue([[outputProxyUpstream1], 1]);
-    //
-    //   const [error, result, total] = await repository.getAll(inputFilterWithFilter);
-    //
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
-    //   expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
-    //   expect(mystProviderRepository.getAll).toHaveBeenCalled();
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
-    //   expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
-    //     $opr: 'eq',
-    //     isRegister: true,
-    //   });
-    //   expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
-    //   expect(filterAndSortProxyUpstream).toHaveBeenCalled();
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0]).toHaveLength(4);
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][0]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream1.id,
-    //     listenAddr: outputProxyUpstream1.listenAddr,
-    //     listenPort: outputProxyUpstream1.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: [],
-    //         id: outputProxyUpstream1.proxyDownstream[0].id,
-    //         refId: outputProxyUpstream1.proxyDownstream[0].refId,
-    //         ip: outputProxyUpstream1.proxyDownstream[0].ip,
-    //         mask: outputProxyUpstream1.proxyDownstream[0].mask,
-    //         type: outputProxyUpstream1.proxyDownstream[0].type,
-    //         runner: outputProxyUpstream1.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream1.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream1.runner,
-    //     insertDate: outputProxyUpstream1.insertDate,
-    //   });
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][1]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream2.id,
-    //     listenAddr: outputProxyUpstream2.listenAddr,
-    //     listenPort: outputProxyUpstream2.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: ['ip', 'mask'],
-    //         id: outputProxyUpstream2.proxyDownstream[0].id,
-    //         refId: outputProxyUpstream2.proxyDownstream[0].refId,
-    //         ip: expect.any(String),
-    //         mask: expect.any(Number),
-    //         type: outputProxyUpstream2.proxyDownstream[0].type,
-    //         runner: outputProxyUpstream2.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream2.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream2.runner,
-    //     insertDate: outputProxyUpstream2.insertDate,
-    //   });
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][2]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream3.id,
-    //     listenAddr: outputProxyUpstream3.listenAddr,
-    //     listenPort: outputProxyUpstream3.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: ['ip', 'mask'],
-    //         id: outputProxyUpstream3.proxyDownstream[0].id,
-    //         refId: outputProxyUpstream3.proxyDownstream[0].refId,
-    //         ip: expect.any(String),
-    //         mask: expect.any(Number),
-    //         type: outputProxyUpstream3.proxyDownstream[0].type,
-    //         runner: outputProxyUpstream3.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream3.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream3.runner,
-    //     insertDate: outputProxyUpstream3.insertDate,
-    //   });
-    //   expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][3]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
-    //     id: outputProxyUpstream4.id,
-    //     listenAddr: outputProxyUpstream4.listenAddr,
-    //     listenPort: outputProxyUpstream4.listenPort,
-    //     proxyDownstream: [
-    //       <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
-    //         IS_DEFAULT_MODEL: true,
-    //         _defaultProperties: ['id', 'refId', 'ip', 'mask', 'type'],
-    //         id: expect.any(String),
-    //         refId: expect.any(String),
-    //         ip: expect.any(String),
-    //         mask: expect.any(Number),
-    //         type: expect.anything(),
-    //         runner: outputProxyUpstream4.proxyDownstream[0].runner,
-    //         status: outputProxyUpstream4.proxyDownstream[0].status,
-    //       },
-    //     ],
-    //     runner: outputProxyUpstream4.runner,
-    //     insertDate: outputProxyUpstream4.insertDate,
-    //   });
-    //   expect((<FilterModel<ProxyUpstreamModel>>(<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][1]).getCondition('listenPort')).toEqual(inputFilterWithFilter.getCondition('listenPort'));
-    //   expect(error).toBeNull();
-    //   expect(result).toHaveLength(1);
-    //   expect(total).toEqual(1);
-    // });
+    it(`Should error get all proxy when get all runner info`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+      mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+
+      const [error] = await repository.getAll(inputFilterWithoutFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error get all proxy when get all vpn provider`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystProviderRepository.getAll.mockResolvedValue([new UnknownException()]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+
+      const [error] = await repository.getAll(inputFilterWithoutFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error get all proxy when get outgoing ip`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getAll(inputFilterWithoutFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error get all proxy with refId filter`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunner1,
+          outputMystConnectRunner1,
+          outputProxyDownstreamRunner1,
+          outputProxyUpstreamRunner1,
+          outputMystRunner2,
+          outputProxyDownstreamRunner2,
+          outputProxyUpstreamRunner2,
+          outputProxyDownstreamRunner3,
+          outputProxyUpstreamRunner3,
+          outputProxyUpstreamRunner4,
+        ],
+        10,
+      ]);
+      mystProviderRepository.getById.mockResolvedValue([new UnknownException()]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+
+      const [error] = await repository.getAll(inputFilterWithRefIdFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getById).toHaveBeenCalled();
+      expect(mystProviderRepository.getById).toHaveBeenCalledWith(expect.anything(), inputFilterWithRefIdFilter.getCondition('proxyDownstream').proxyDownstream[0].refId);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get all proxy and return empty records`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+
+      const [error, result, total] = await repository.getAll(inputFilterWithoutFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+      expect(total).toEqual(0);
+    });
+
+    it(`Should successfully get all proxy and return empty records if not found socat runner`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunner1,
+          outputMystConnectRunner1,
+          outputProxyDownstreamRunner1,
+          outputMystRunner2,
+          outputProxyDownstreamRunner2,
+          outputProxyDownstreamRunner3,
+        ],
+        6,
+      ]);
+      mystProviderRepository.getAll.mockResolvedValue([null, [], 0]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+
+      const [error, result, total] = await repository.getAll(inputFilterWithoutFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toHaveLength(0);
+      expect(total).toEqual(0);
+    });
+
+    it(`Should successfully get all proxy without filter`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunner1,
+          outputMystConnectRunner1,
+          outputProxyDownstreamRunner1,
+          outputProxyUpstreamRunner1,
+          outputMystRunner2,
+          outputProxyDownstreamRunner2,
+          outputProxyUpstreamRunner2,
+          outputProxyDownstreamRunner3,
+          outputProxyUpstreamRunner3,
+          outputProxyUpstreamRunner4,
+        ],
+        10,
+      ]);
+      mystProviderRepository.getAll.mockResolvedValue([null, [outputVpnProvider1], 1]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      (<jest.Mock>filterAndSortProxyUpstream).mockReturnValue([
+        [outputProxyUpstream1, outputProxyUpstream2, outputProxyUpstream3, outputProxyUpstream4],
+        4,
+      ]);
+
+      const [error, result, total] = await repository.getAll(inputFilterWithoutFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(filterAndSortProxyUpstream).toHaveBeenCalled();
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0]).toHaveLength(4);
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][0]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream1.id,
+        listenAddr: outputProxyUpstream1.listenAddr,
+        listenPort: outputProxyUpstream1.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: [],
+            id: outputProxyUpstream1.proxyDownstream[0].id,
+            refId: outputProxyUpstream1.proxyDownstream[0].refId,
+            ip: outputProxyUpstream1.proxyDownstream[0].ip,
+            mask: outputProxyUpstream1.proxyDownstream[0].mask,
+            type: outputProxyUpstream1.proxyDownstream[0].type,
+            runner: outputProxyUpstream1.proxyDownstream[0].runner,
+            status: outputProxyUpstream1.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream1.runner,
+        insertDate: outputProxyUpstream1.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][1]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream2.id,
+        listenAddr: outputProxyUpstream2.listenAddr,
+        listenPort: outputProxyUpstream2.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: ['ip', 'mask'],
+            id: outputProxyUpstream2.proxyDownstream[0].id,
+            refId: outputProxyUpstream2.proxyDownstream[0].refId,
+            ip: expect.any(String),
+            mask: expect.any(Number),
+            type: outputProxyUpstream2.proxyDownstream[0].type,
+            runner: outputProxyUpstream2.proxyDownstream[0].runner,
+            status: outputProxyUpstream2.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream2.runner,
+        insertDate: outputProxyUpstream2.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][2]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream3.id,
+        listenAddr: outputProxyUpstream3.listenAddr,
+        listenPort: outputProxyUpstream3.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: ['ip', 'mask'],
+            id: outputProxyUpstream3.proxyDownstream[0].id,
+            refId: outputProxyUpstream3.proxyDownstream[0].refId,
+            ip: expect.any(String),
+            mask: expect.any(Number),
+            type: outputProxyUpstream3.proxyDownstream[0].type,
+            runner: outputProxyUpstream3.proxyDownstream[0].runner,
+            status: outputProxyUpstream3.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream3.runner,
+        insertDate: outputProxyUpstream3.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][3]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream4.id,
+        listenAddr: outputProxyUpstream4.listenAddr,
+        listenPort: outputProxyUpstream4.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: ['id', 'refId', 'ip', 'mask', 'type'],
+            id: expect.any(String),
+            refId: expect.any(String),
+            ip: expect.any(String),
+            mask: expect.any(Number),
+            type: expect.anything(),
+            runner: outputProxyUpstream4.proxyDownstream[0].runner,
+            status: outputProxyUpstream4.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream4.runner,
+        insertDate: outputProxyUpstream4.insertDate,
+      });
+      expect(error).toBeNull();
+      expect(result).toHaveLength(4);
+      expect(total).toEqual(4);
+    });
+
+    it(`Should successfully get all proxy with filter`, async () => {
+      dockerRunnerRepository.getAll.mockResolvedValue([
+        null,
+        [
+          outputMystRunner1,
+          outputMystConnectRunner1,
+          outputProxyDownstreamRunner1,
+          outputProxyUpstreamRunner1,
+          outputMystRunner2,
+          outputProxyDownstreamRunner2,
+          outputProxyUpstreamRunner2,
+          outputProxyDownstreamRunner3,
+          outputProxyUpstreamRunner3,
+          outputProxyUpstreamRunner4,
+        ],
+        10,
+      ]);
+      mystProviderRepository.getAll.mockResolvedValue([null, [outputVpnProvider1], 1]);
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outgoingIpAddress]);
+      (<jest.Mock>filterAndSortProxyUpstream).mockReturnValue([[outputProxyUpstream1], 1]);
+
+      const [error, result, total] = await repository.getAll(inputFilterWithFilter);
+
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalled();
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledWith(new FilterModel({skipPagination: true}));
+      expect(mystProviderRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).skipPagination).toEqual(true);
+      expect((<FilterModel<VpnProviderModel>>mystProviderRepository.getAll.mock.calls[0][1]).getCondition('isRegister')).toEqual({
+        $opr: 'eq',
+        isRegister: true,
+      });
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(filterAndSortProxyUpstream).toHaveBeenCalled();
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0]).toHaveLength(4);
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][0]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream1.id,
+        listenAddr: outputProxyUpstream1.listenAddr,
+        listenPort: outputProxyUpstream1.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: [],
+            id: outputProxyUpstream1.proxyDownstream[0].id,
+            refId: outputProxyUpstream1.proxyDownstream[0].refId,
+            ip: outputProxyUpstream1.proxyDownstream[0].ip,
+            mask: outputProxyUpstream1.proxyDownstream[0].mask,
+            type: outputProxyUpstream1.proxyDownstream[0].type,
+            runner: outputProxyUpstream1.proxyDownstream[0].runner,
+            status: outputProxyUpstream1.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream1.runner,
+        insertDate: outputProxyUpstream1.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][1]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream2.id,
+        listenAddr: outputProxyUpstream2.listenAddr,
+        listenPort: outputProxyUpstream2.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: ['ip', 'mask'],
+            id: outputProxyUpstream2.proxyDownstream[0].id,
+            refId: outputProxyUpstream2.proxyDownstream[0].refId,
+            ip: expect.any(String),
+            mask: expect.any(Number),
+            type: outputProxyUpstream2.proxyDownstream[0].type,
+            runner: outputProxyUpstream2.proxyDownstream[0].runner,
+            status: outputProxyUpstream2.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream2.runner,
+        insertDate: outputProxyUpstream2.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][2]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream3.id,
+        listenAddr: outputProxyUpstream3.listenAddr,
+        listenPort: outputProxyUpstream3.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: ['ip', 'mask'],
+            id: outputProxyUpstream3.proxyDownstream[0].id,
+            refId: outputProxyUpstream3.proxyDownstream[0].refId,
+            ip: expect.any(String),
+            mask: expect.any(Number),
+            type: outputProxyUpstream3.proxyDownstream[0].type,
+            runner: outputProxyUpstream3.proxyDownstream[0].runner,
+            status: outputProxyUpstream3.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream3.runner,
+        insertDate: outputProxyUpstream3.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][0][3]).toEqual<Omit<ProxyUpstreamModel, 'clone'>>({
+        id: outputProxyUpstream4.id,
+        listenAddr: outputProxyUpstream4.listenAddr,
+        listenPort: outputProxyUpstream4.listenPort,
+        proxyDownstream: [
+          <ProxyDownstreamModel & Pick<DefaultModel<ProxyDownstreamModel>, 'IS_DEFAULT_MODEL'> & { _defaultProperties: Array<keyof ProxyDownstreamModel> }>{
+            IS_DEFAULT_MODEL: true,
+            _defaultProperties: ['id', 'refId', 'ip', 'mask', 'type'],
+            id: expect.any(String),
+            refId: expect.any(String),
+            ip: expect.any(String),
+            mask: expect.any(Number),
+            type: expect.anything(),
+            runner: outputProxyUpstream4.proxyDownstream[0].runner,
+            status: outputProxyUpstream4.proxyDownstream[0].status,
+          },
+        ],
+        runner: outputProxyUpstream4.runner,
+        insertDate: outputProxyUpstream4.insertDate,
+      });
+      expect((<FilterModel<ProxyUpstreamModel>>(<jest.Mock>filterAndSortProxyUpstream).mock.calls[0][1]).getCondition('listenPort')).toEqual(inputFilterWithFilter.getCondition('listenPort'));
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect(total).toEqual(1);
+    });
 
     it(`Should successfully get all proxy with refId filter`, async () => {
       dockerRunnerRepository.getAll.mockResolvedValue([
