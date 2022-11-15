@@ -1,6 +1,6 @@
 import {
   Body,
-  Controller,
+  Controller, Delete, HttpCode, HttpStatus,
   Inject,
   Param,
   Post,
@@ -10,7 +10,7 @@ import {
 import {
   ApiBadRequestResponse, ApiBearerAuth,
   ApiBody,
-  ApiCreatedResponse, ApiExtraModels, ApiForbiddenResponse, ApiNotFoundResponse,
+  ApiCreatedResponse, ApiExtraModels, ApiForbiddenResponse, ApiNoContentResponse, ApiNotFoundResponse,
   ApiOperation,
   ApiParam, ApiTags, ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
@@ -225,5 +225,106 @@ export class MystProviderProxyHttpController {
   })
   async create(@Param('providerId') providerId: string, @Body() createProxyDto: CreateProxyWithConnectInputDto) {
     return this._vpnProviderProxyService.create(CreateProxyWithConnectInputDto.toModel(providerId, createProxyDto));
+  }
+
+  @Delete(':providerId/proxy')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    description: 'Disconnect to myst vpn provider and remove all proxy',
+    operationId: 'Disconnect myst provider and remove proxy',
+  })
+  @ApiParam({name: 'providerId', type: String, example: '00000000-0000-0000-0000-000000000000'})
+  @ApiNoContentResponse({
+    description: 'The myst vpn has been successfully disconnected.',
+  })
+  @ApiNotFoundResponse({
+    description: 'The provider id not found.',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(NotFoundExceptionDto)},
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+    schema: {
+      anyOf: [
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNKNOWN_ERROR,
+              description: 'Unknown error happened',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from proxy resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.PROVIDER_IDENTITY_NOT_CONNECTING,
+              description: 'The provider identity is not connect',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.PROVIDER_IDENTITY_NOT_CONNECTING,
+                },
+              },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.NOT_RUNNING_SERVICE,
+              description: 'Can not found running myst identity service',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  })
+  async remove(@Param('providerId') providerId: string) {
+    return this._vpnProviderProxyService.down(providerId);
   }
 }

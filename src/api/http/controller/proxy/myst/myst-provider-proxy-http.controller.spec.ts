@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { MystProviderProxyHttpController } from './myst-provider-proxy-http.controller';
+import {Test, TestingModule} from '@nestjs/testing';
+import {MystProviderProxyHttpController} from './myst-provider-proxy-http.controller';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
@@ -180,6 +180,35 @@ describe('MystProviderProxyHttpController', () => {
       );
       expect(error).toBeNull();
       expect(result).toEqual(outputProxyUpstreamModel);
+    });
+  });
+
+  describe(`Disconnect vpn provider and remove new proxy`, () => {
+    let inputId: string;
+
+    beforeEach(() => {
+      inputId = identifierMock.generateId();
+    });
+
+    it(`Should error disconnect vpn provider and remove new proxy`, async () => {
+      vpnProviderProxyService.down.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.remove(inputId);
+
+      expect(vpnProviderProxyService.down).toHaveBeenCalled();
+      expect(vpnProviderProxyService.down).toHaveBeenCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully disconnect vpn provider and remove new proxy`, async () => {
+      vpnProviderProxyService.down.mockResolvedValue([null, null]);
+
+      const [error, result] = await controller.remove(inputId);
+
+      expect(vpnProviderProxyService.down).toHaveBeenCalled();
+      expect(vpnProviderProxyService.down).toHaveBeenCalledWith(inputId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });
