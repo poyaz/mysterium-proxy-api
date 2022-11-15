@@ -13,7 +13,7 @@ import {
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
-import {DefaultModel, defaultModelFactory} from '@src-core/model/defaultModel';
+import {DefaultModel, defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {filterAndSortProxyUpstream} from '@src-infrastructure/utility/filterAndSortProxyUpstream';
@@ -37,6 +37,19 @@ type DependencyRunnerAndOutgoingIpInfoOutput = {
   vpnProviderData: VpnProviderModel,
   proxyAddrData: string
 };
+
+type GetAllFilter = {
+  runnerTotal: number,
+  runnerList: Array<RunnerModel>,
+  vpnProviderList: Array<VpnProviderModel>,
+  proxyAddrData: string,
+}
+
+type PromiseGetAllFilter = [
+  AsyncReturn<Error, Array<RunnerModel>>,
+  AsyncReturn<Error, string>,
+    AsyncReturn<Error, Array<VpnProviderModel>> | AsyncReturn<Error, VpnProviderModel | null>,
+]
 
 @Injectable()
 export class ProxyAggregateRepository implements IProxyRepositoryInterface {
@@ -65,25 +78,17 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
   }
 
   async getAll(filter?: FilterModel<ProxyUpstreamModel>): Promise<AsyncReturn<Error, Array<ProxyUpstreamModel>>> {
-    const vpnProviderFilter = new FilterModel<VpnProviderModel>({skipPagination: true});
-    vpnProviderFilter.addCondition({$opr: 'eq', isRegister: true});
+    const dataFilter: FilterModel<ProxyUpstreamModel> = !filter ? new FilterModel<ProxyUpstreamModel>() : <any>filter;
 
-    const [
-      [runnerError, runnerList, runnerTotal],
-      [vpnProviderError, vpnProviderList],
-      [proxyAddrError, proxyAddrData],
-    ] = await Promise.all([
-      this._runnerRepository.getAll(new FilterModel({skipPagination: true})),
-      this._mystProviderRepository.getAll(this.FAKE_RUNNER, vpnProviderFilter),
-      this._getOutgoingAddr(),
-    ]);
-    const error = runnerError || vpnProviderError || proxyAddrError;
-    if (error) {
-      return [error];
+    const [getAllError, getAllData] = await this._getAllWithFilter(dataFilter);
+    if (getAllError) {
+      return [getAllError];
     }
-    if (runnerTotal === 0) {
+    if (getAllData.runnerTotal === 0) {
       return [null, [], 0];
     }
+
+    const {runnerList, vpnProviderList, proxyAddrData} = getAllData;
 
     const proxyUpstreamRunnerList = runnerList.filter((v) => v.service === RunnerServiceEnum.SOCAT);
     if (proxyUpstreamRunnerList.length === 0) {
@@ -99,7 +104,6 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
       proxyAddrData,
     ));
 
-    const dataFilter: FilterModel<ProxyUpstreamModel> = !filter ? new FilterModel<ProxyUpstreamModel>() : <any>filter;
     const [result, totalCount] = filterAndSortProxyUpstream(proxyUpstreamCombineList, dataFilter);
 
     return [null, result, totalCount];
@@ -288,6 +292,62 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
     }
 
     return this._runnerRepository.remove(proxyUpstreamData.id);
+  }
+
+  private async _getAllWithFilter(filter: FilterModel<ProxyUpstreamModel>): Promise<AsyncReturn<Error, GetAllFilter>> {
+    const tasks = [];
+    let isUseRefIdFilter = false;
+
+    const runnerFilter = new FilterModel({skipPagination: true});
+    tasks.push(this._runnerRepository.getAll(runnerFilter));
+
+    tasks.push(this._getOutgoingAddr());
+
+    const getProxyDownstream = filter.getCondition('proxyDownstream');
+    if (getProxyDownstream && getProxyDownstream.proxyDownstream.length === 1) {
+      const proxyDownstreamModelFilter = <defaultModelType<ProxyDownstreamModel>><unknown>getProxyDownstream.proxyDownstream[0];
+
+      if (
+        !proxyDownstreamModelFilter.IS_DEFAULT_MODEL
+        || (proxyDownstreamModelFilter.IS_DEFAULT_MODEL && !proxyDownstreamModelFilter.isDefaultProperty('refId'))
+      ) {
+        isUseRefIdFilter = true;
+        tasks.push(this._mystProviderRepository.getById(this.FAKE_RUNNER, proxyDownstreamModelFilter.refId));
+      }
+    }
+
+    if (!isUseRefIdFilter) {
+      const vpnProviderFilter = new FilterModel<VpnProviderModel>({skipPagination: true});
+      vpnProviderFilter.addCondition({$opr: 'eq', isRegister: true});
+
+      tasks.push(this._mystProviderRepository.getAll(this.FAKE_RUNNER, vpnProviderFilter));
+    }
+
+    const [
+      [runnerError, runnerList, runnerTotal],
+      [proxyAddrError, proxyAddrData],
+      [vpnProviderError, vpnProviderData],
+    ]: PromiseGetAllFilter = <any>await Promise.all(tasks);
+    const error = runnerError || vpnProviderError || proxyAddrError;
+    if (error) {
+      return [error];
+    }
+    if (runnerTotal === 0) {
+      return [null, {runnerTotal: runnerTotal, runnerList: [], vpnProviderList: [], proxyAddrData: ''}];
+    }
+
+    let vpnProviderList: Array<VpnProviderModel> = [];
+    if (isUseRefIdFilter && !Array.isArray(vpnProviderData)) {
+      if (!vpnProviderData || (vpnProviderData && !vpnProviderData.isRegister)) {
+        return [null, {runnerTotal: runnerTotal, runnerList, vpnProviderList: [], proxyAddrData}];
+      }
+
+      return [null, {runnerTotal: runnerTotal, runnerList, vpnProviderList: [vpnProviderData], proxyAddrData}];
+    } else if (Array.isArray(vpnProviderData)) {
+      vpnProviderList = vpnProviderData;
+    }
+
+    return [null, {runnerTotal: runnerTotal, runnerList, vpnProviderList, proxyAddrData}];
   }
 
   private async _getOutgoingAddr(): Promise<AsyncReturn<Error, string>> {

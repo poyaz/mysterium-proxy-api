@@ -18,6 +18,29 @@ export function filterAndSortProxyUpstream(proxyUpstreamList: Array<ProxyUpstrea
 
       if (
         !proxyDownstreamModelFilter.IS_DEFAULT_MODEL
+        || (proxyDownstreamModelFilter.IS_DEFAULT_MODEL && !proxyDownstreamModelFilter.isDefaultProperty('refId'))
+      ) {
+        const refId = proxyDownstreamModelFilter.refId;
+
+        const tmpDataList = [];
+
+        for (const data of dataList) {
+          if (data.proxyDownstream.length === 0) {
+            break;
+          }
+
+          for (const proxyDownStreamData of data.proxyDownstream) {
+            if (proxyDownStreamData.refId === refId) {
+              tmpDataList.push(data);
+            }
+          }
+        }
+
+        dataList = tmpDataList;
+      }
+
+      if (
+        !proxyDownstreamModelFilter.IS_DEFAULT_MODEL
         || (proxyDownstreamModelFilter.IS_DEFAULT_MODEL && !proxyDownstreamModelFilter.isDefaultProperty('status'))
       ) {
         const status = proxyDownstreamModelFilter.status;
