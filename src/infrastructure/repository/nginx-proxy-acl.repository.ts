@@ -1,5 +1,5 @@
 import {ProxyAclMode, ProxyAclModel, ProxyAclType} from '@src-core/model/proxyAclModel';
-import {AsyncReturn} from '@src-core/utility';
+import {AsyncReturn, Return} from '@src-core/utility';
 import {FilterModel} from '@src-core/model/filter.model';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repository.interface';
@@ -8,8 +8,9 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {InvalidAclFileException} from '@src-core/exception/invalid-acl-file.exception';
 import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
-import {ProxyDownstreamModel, ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import {UsersModel} from '@src-core/model/users.model';
+import {ExistException} from '@src-core/exception/exist.exception';
 
 type FetchReturn = { next: boolean, capture: boolean };
 
@@ -87,8 +88,40 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     }
   }
 
-  create(model: ProxyAclModel): Promise<AsyncReturn<Error, ProxyAclModel>> {
-    return Promise.resolve(undefined);
+  async create(model: ProxyAclModel): Promise<AsyncReturn<Error, ProxyAclModel>> {
+    const filterModel = new FilterModel<ProxyAclModel>();
+    if (model.user) {
+      filterModel.addCondition({
+        $opr: 'eq',
+        user: defaultModelFactory<UsersModel>(
+          UsersModel,
+          {
+            id: model.user.id,
+            username: 'default-username',
+            password: 'default-password',
+            insertDate: new Date(),
+          },
+          ['username', 'password', 'insertDate'],
+        ),
+      });
+    }
+    const [aclError, aclDataList] = await this.getAll(filterModel);
+    if (aclError) {
+      return [aclError];
+    }
+
+    const [error] = NginxProxyAclRepository._checkAclExist(aclDataList, model.proxies);
+    if (error) {
+      return [error];
+    }
+
+    try {
+      const aclData = await fsAsync.readFile(this._aclFile, 'utf8');
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
@@ -335,5 +368,49 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     }
 
     return proxyAclList;
+  }
+
+  private static _checkAclExist(aclList: Array<ProxyAclModel>, proxyList: Array<ProxyUpstreamModel>): Return<Error, null> {
+    const [allAccessError] = NginxProxyAclRepository._checkAllAccessExist(aclList);
+    if (allAccessError) {
+      return [allAccessError];
+    }
+
+    const [userAccessError] = NginxProxyAclRepository._checkUserAccessExist(aclList, proxyList);
+    if (userAccessError) {
+      return [userAccessError];
+    }
+
+    return [null, null];
+  }
+
+  private static _checkAllAccessExist(aclList: Array<ProxyAclModel>): Return<Error, null> {
+    const allAccessFind = aclList.find((v) => v.mode === ProxyAclMode.ALL && !v.user);
+    if (allAccessFind) {
+      return [new ExistException()];
+    }
+
+    return [null, null];
+  }
+
+  private static _checkUserAccessExist(aclList: Array<ProxyAclModel>, proxyList: Array<ProxyUpstreamModel>): Return<Error, null> {
+    const userAllAccessFind = aclList.find((v) => v.mode === ProxyAclMode.ALL && v.user);
+    if (userAllAccessFind) {
+      return [new ExistException()];
+    }
+
+    const userPortAccessList = aclList
+      .filter((v) => v.mode === ProxyAclMode.CUSTOM && v.user)
+      .map((v) => v.proxies)
+      .flat();
+    for (const proxy of proxyList) {
+      for (const userPortAccessProxy of userPortAccessList) {
+        if (proxy.listenPort === userPortAccessProxy.listenPort) {
+          return [new ExistException()];
+        }
+      }
+    }
+
+    return [null, null];
   }
 }
