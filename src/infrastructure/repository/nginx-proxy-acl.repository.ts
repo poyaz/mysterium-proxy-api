@@ -110,10 +110,94 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       return [error];
     }
 
+    const proxyAclModel = defaultModelFactory<ProxyAclModel>(
+      ProxyAclModel,
+      {
+        id: this._identifier.generateId(),
+        mode: model.mode,
+        type: model.type,
+        proxies: [],
+        insertDate: new Date(),
+      },
+      ['proxies'],
+    );
+    if (model.user) {
+      proxyAclModel.user = model.user;
+    }
+
+    const appendAclData = [];
+    switch (true) {
+      case model.mode === ProxyAclMode.ALL && !model.user:
+        appendAclData.push(
+          [
+            '',
+            `    ### id: ${proxyAclModel.id}`,
+            `    ### userId: -`,
+            `    ### date: ${proxyAclModel.insertDate.getTime()}`,
+            `    ~.+:[0-9]+ 200;`,
+          ].join('\n'),
+        );
+        break;
+      case  model.mode === ProxyAclMode.ALL && typeof model.user !== 'undefined':
+        appendAclData.push(
+          [
+            '',
+            `    ### id: ${proxyAclModel.id}`,
+            `    ### userId: ${model.user.id}`,
+            `    ### date: ${proxyAclModel.insertDate.getTime()}`,
+            `    ~${model.user.username}:[0-9]+ 200;`,
+          ].join('\n'),
+        );
+        break;
+      case model.mode === ProxyAclMode.CUSTOM && typeof model.user !== 'undefined' && model.proxies.length === 1:
+        appendAclData.push(
+          [
+            '',
+            `    ### id: ${proxyAclModel.id}`,
+            `    ### userId: ${model.user.id}`,
+            `    ### date: ${proxyAclModel.insertDate.getTime()}`,
+            `    ${model.user.username}:${model.proxies[0].listenPort} 200;`,
+          ].join('\n'),
+        );
+        proxyAclModel.proxies = model.proxies;
+        break;
+      case model.mode === ProxyAclMode.CUSTOM && typeof model.user !== 'undefined' && model.proxies.length > 1:
+        appendAclData.push(
+          [
+            '',
+            `    ### id: ${proxyAclModel.id}`,
+            `    ### userId: ${model.user.id}`,
+            `    ### date: ${proxyAclModel.insertDate.getTime()}`,
+            `    ~${model.user.username}:(${model.proxies.map((v) => v.listenPort).join('|')}) 200;`,
+          ].join('\n'),
+        );
+        proxyAclModel.proxies = model.proxies;
+        break;
+    }
+    if (appendAclData.length === 0) {
+      return [new FillDataRepositoryException<ProxyAclModel>(['proxies'])];
+    }
+
     try {
       const aclData = await fsAsync.readFile(this._aclFile, 'utf8');
+      const aclRowsList = aclData.split(/\n/);
 
-      return [null, null];
+      let rows = [];
+      for (let i = 0; i < aclRowsList.length; i++) {
+        const row = aclRowsList[i];
+        if (row.match(/^}/)) {
+          break;
+        }
+
+        rows.push(row);
+      }
+
+      rows.push(appendAclData);
+      rows.push('}\n');
+
+      await fsAsync.writeFile(this._aclFile, rows.join('\n'), 'utf8');
+
+      return [null, proxyAclModel];
     } catch (error) {
       return [new RepositoryException(error)];
     }
