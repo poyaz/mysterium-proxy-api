@@ -124,7 +124,7 @@ export class FindProviderOutputDto {
     type: Number,
     required: false,
     readOnly: true,
-    default: false,
+    default: 0,
   })
   proxyCount: number;
 }
