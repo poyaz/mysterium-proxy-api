@@ -64,6 +64,16 @@ export class FindProxyOutputDto {
   outgoingIp?: string;
 
   @ApiProperty({
+    description: 'The outgoing country of VPN',
+    type: String,
+    required: false,
+    readOnly: true,
+    nullable: true,
+    example: 'GB',
+  })
+  outgoingCountry?: string;
+
+  @ApiProperty({
     description: 'The status of proxy',
     type: String,
     enum: ProxyStatusEnum,

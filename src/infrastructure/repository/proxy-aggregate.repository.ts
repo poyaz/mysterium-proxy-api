@@ -472,10 +472,11 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
         refId: 'default-ref-id',
         ip: 'default-ip',
         mask: 32,
+        country: 'default-country',
         type: ProxyTypeEnum.MYST,
         status: ProxyStatusEnum.DISABLE,
       },
-      ['id', 'refId', 'ip', 'mask', 'type'],
+      ['id', 'refId', 'ip', 'mask', 'country', 'type'],
     );
 
     if (vpnProviderId in runnerMap.provider) {
@@ -492,6 +493,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
           const vpnProviderIndex = runnerMap.provider[vpnProviderId].vpnProvider;
           proxyDownstreamModel.ip = vpnProviderList[vpnProviderIndex].ip;
           proxyDownstreamModel.mask = vpnProviderList[vpnProviderIndex].mask;
+          proxyDownstreamModel.country = vpnProviderList[vpnProviderIndex].country;
         }
 
         const mystIdentityIndex = runnerMap.myst[mystIdentityId];

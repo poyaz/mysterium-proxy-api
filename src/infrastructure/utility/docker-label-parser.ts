@@ -215,7 +215,7 @@ export class DockerLabelParser<T> {
   }
 
   private _fillProxyDownstream(namespace: string, data: ProxyDownstreamModel): void {
-    const defaultProperties: Array<keyof ProxyDownstreamModel> = ['refId', 'ip', 'mask', 'type', 'status'];
+    const defaultProperties: Array<keyof ProxyDownstreamModel> = ['refId', 'ip', 'mask', 'country', 'type', 'status'];
     const fillObject: Pick<ProxyDownstreamModel, 'id'> = {
       id: 'default-id',
     };
@@ -235,6 +235,7 @@ export class DockerLabelParser<T> {
           refId: 'default-ref-id',
           ip: 'default-ip',
           mask: 32,
+          country: 'default-country',
           type: ProxyTypeEnum.MYST,
           status: ProxyStatusEnum.DISABLE,
         },

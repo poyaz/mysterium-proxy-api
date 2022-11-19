@@ -98,6 +98,7 @@ describe('MystProviderProxyHttpController', () => {
         refId: '77777777-7777-7777-7777-777777777777',
         ip: '25.14.65.1',
         mask: 32,
+        country: 'GB',
         type: ProxyTypeEnum.MYST,
         runner: outputRunnerDownstreamModel,
         status: ProxyStatusEnum.ONLINE,

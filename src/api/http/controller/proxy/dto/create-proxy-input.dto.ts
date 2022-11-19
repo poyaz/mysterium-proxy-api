@@ -46,10 +46,11 @@ export class CreateProxyInputDto {
           refId: dto.providerId,
           ip: 'default-ip',
           mask: 32,
+          country: 'default-country',
           type: ProxyTypeEnum.MYST,
           status: ProxyStatusEnum.OFFLINE,
         },
-        ['id', 'ip', 'mask', 'status'],
+        ['id', 'ip', 'mask', 'country', 'status'],
       ),
     ];
 

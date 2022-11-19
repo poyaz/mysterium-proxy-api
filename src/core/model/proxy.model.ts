@@ -17,6 +17,7 @@ export class ProxyDownstreamModel {
   refId: string;
   ip: string;
   mask: number;
+  country: string;
   type: ProxyTypeEnum;
   runner?: RunnerModel<any>;
   status: ProxyStatusEnum;

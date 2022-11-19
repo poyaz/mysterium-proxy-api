@@ -36,10 +36,11 @@ export class MystProviderProxyService implements IProviderProxyInterface {
             refId: id,
             ip: 'default-ip',
             mask: 32,
+            country: 'default-country',
             type: ProxyTypeEnum.MYST,
             status: ProxyStatusEnum.DISABLE,
           },
-          ['id', 'ip', 'mask', 'type', 'status'],
+          ['id', 'ip', 'mask', 'country', 'type', 'status'],
         ),
       ],
     });

@@ -90,10 +90,11 @@ export class FindProxyQueryDto extends OmitType(FilterInputDto, ['sorts'] as con
           refId: 'default-ref-id',
           ip: 'default-ip',
           mask: 32,
+          country: 'default-country',
           type: ProxyTypeEnum.MYST,
           status: dto.filters.status,
         },
-        ['id', 'refId', 'ip', 'mask', 'type'],
+        ['id', 'refId', 'ip', 'mask', 'country', 'type'],
       );
       filterModel.addCondition({$opr: 'eq', proxyDownstream: [downstreamFilter]});
     }
