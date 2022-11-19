@@ -1137,4 +1137,163 @@ describe('NginxProxyAclRepository', () => {
       ));
     });
   });
+
+  describe(`Remove acl`, () => {
+    let inputId: string;
+
+    let outputFileNoPolicy: string;
+    let outputFileOtherPolicy: string;
+    let outputFileAllPolicy: string;
+
+    let expectDataFileOverwrite: string;
+
+    beforeEach(() => {
+      inputId = '22222222-2222-2222-2222-222222222222';
+
+      outputFileNoPolicy = [
+        '',
+        'map $remote_user:$http_x_node_proxy_port $access_status {',
+        '    default 403;',
+        '}',
+        '',
+      ].join('\n');
+
+      outputFileAllPolicy = [
+        '',
+        'map $remote_user:$http_x_node_proxy_port $access_status {',
+        '    default 403;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-111111111111`,
+        `    ### userId: -`,
+        `    ### date: ${Date.now()}`,
+        '    ~.+:[0-9]+ 200;',
+        '}',
+        '',
+      ].join('\n');
+
+      outputFileOtherPolicy = [
+        '',
+        'map $remote_user:$http_x_node_proxy_port $access_status {',
+        '    default 403;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-111111111111`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    user1:4000 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-222222222222`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    ~user1:(6000|7000) 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-333333333333`,
+        `    ### userId: 00000000-0000-0000-0000-555555555555`,
+        `    ### date: ${Date.now()}`,
+        '    ~user2:[0-9]+ 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-444444444444`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    user1:5000 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-555555555555`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    ~user1:[0-9]+ 200;',
+        '}',
+        '',
+      ].join('\n');
+
+      expectDataFileOverwrite = [
+        '',
+        'map $remote_user:$http_x_node_proxy_port $access_status {',
+        '    default 403;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-111111111111`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    user1:4000 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-333333333333`,
+        `    ### userId: 00000000-0000-0000-0000-555555555555`,
+        `    ### date: ${Date.now()}`,
+        '    ~user2:[0-9]+ 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-444444444444`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    user1:5000 200;',
+        '',
+        `    ### id: 22222222-2222-2222-2222-555555555555`,
+        `    ### userId: 00000000-0000-0000-0000-333333333333`,
+        `    ### date: ${Date.now()}`,
+        '    ~user1:[0-9]+ 200;',
+        '}',
+        '',
+      ].join('\n');
+    });
+
+    it(`Should error remove acl when read file`, async () => {
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.readFile).mockRejectedValue(fileError);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(fsAsync.readFile).toHaveBeenCalled();
+      expect(fsAsync.readFile).toHaveBeenCalledWith(aclPath, 'utf8');
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully remove acl (When not found any acl)`, async () => {
+      (<jest.Mock>fsAsync.readFile).mockResolvedValue(outputFileNoPolicy);
+
+      const [error, result] = await repository.remove(inputId);
+
+      expect(fsAsync.readFile).toHaveBeenCalled();
+      expect(fsAsync.readFile).toHaveBeenCalledWith(aclPath, 'utf8');
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully remove acl (When id not found)`, async () => {
+      (<jest.Mock>fsAsync.readFile).mockResolvedValue(outputFileAllPolicy);
+
+      const [error, result] = await repository.remove(inputId);
+
+      expect(fsAsync.readFile).toHaveBeenCalled();
+      expect(fsAsync.readFile).toHaveBeenCalledWith(aclPath, 'utf8');
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should error remove acl when write remove rows acl from file and overwrite it`, async () => {
+      (<jest.Mock>fsAsync.readFile).mockResolvedValue(outputFileOtherPolicy);
+      const fileError = new Error('File error');
+      (<jest.Mock>fsAsync.writeFile).mockRejectedValue(fileError);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(fsAsync.readFile).toHaveBeenCalled();
+      expect(fsAsync.readFile).toHaveBeenCalledWith(aclPath, 'utf8');
+      expect(fsAsync.writeFile).toHaveBeenCalled();
+      expect(fsAsync.writeFile).toHaveBeenCalledWith(aclPath, expectDataFileOverwrite, 'utf8');
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((error as RepositoryException).additionalInfo).toEqual(fileError);
+    });
+
+    it(`Should successfully remove acl`, async () => {
+      (<jest.Mock>fsAsync.readFile).mockResolvedValue(outputFileOtherPolicy);
+      (<jest.Mock>fsAsync.writeFile).mockResolvedValue(null);
+
+      const [error, result] = await repository.remove(inputId);
+
+      expect(fsAsync.readFile).toHaveBeenCalled();
+      expect(fsAsync.readFile).toHaveBeenCalledWith(aclPath, 'utf8');
+      expect(fsAsync.writeFile).toHaveBeenCalled();
+      expect(fsAsync.writeFile).toHaveBeenCalledWith(aclPath, expectDataFileOverwrite, 'utf8');
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });

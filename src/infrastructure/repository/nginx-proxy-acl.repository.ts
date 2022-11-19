@@ -27,7 +27,8 @@ type AclFileInfo = {
   startLine: number,
   endLine: number,
   defaultLine: number,
-  data: Array<AclRowData>,
+  aclList: Array<AclRowData>,
+  rows: Array<string>,
 }
 
 type UserIdAclData = { id: string, rowType: AclRowType, isAccessToAllPort: boolean, portList?: Array<number>, insertDate: Date };
@@ -65,16 +66,16 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       }
     }
 
-    const [parseError, parseRowList] = await this._parseFile(conditionFilter);
+    const [parseError, parseRowData] = await this._parseFile(conditionFilter);
     if (parseError) {
       return [parseError];
     }
-    if (parseRowList.data.length === 0) {
+    if (parseRowData.aclList.length === 0) {
       return [null, [], 0];
     }
 
     try {
-      const parseAclData = NginxProxyAclRepository._convertAclToMApObject(parseRowList.data);
+      const parseAclData = NginxProxyAclRepository._convertAclToMApObject(parseRowData.aclList);
       const result = NginxProxyAclRepository._fillModelList(parseAclData);
 
       return [null, result, result.length];
@@ -203,8 +204,29 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     }
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    const [parseError, parseRowData] = await this._parseFile({});
+    if (parseError) {
+      return [parseError];
+    }
+    if (parseRowData.aclList.length === 0) {
+      return [null, null];
+    }
+
+    const find = parseRowData.aclList.find((v) => v.id === id);
+    if (!find) {
+      return [null, null];
+    }
+
+    const overwriteRows = parseRowData.rows.filter((v, i) => find.lines.indexOf(i + 1) === -1 && !(v === '' && i === find.lines.at(-1)));
+
+    try {
+      await fsAsync.writeFile(this._aclFile, overwriteRows.join('\n'), 'utf8');
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private async _parseFile(conditionFilter: ConditionFilter): Promise<Return<Error, AclFileInfo>> {
@@ -217,12 +239,13 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
 
     const rows = data.split(/\n/);
     const totalLine = rows.length;
-    const rowsRevers = rows.reverse();
+    const rowsRevers = [...rows].reverse();
     const aclInfoFile: AclFileInfo = {
       startLine: -1,
       endLine: -1,
       defaultLine: -1,
-      data: [],
+      aclList: [],
+      rows,
     };
     const tmpAclList: Array<Pick<AclRowData, 'row' | 'skip' | 'lines'> & Partial<Omit<AclRowData, 'row' | 'skip' | 'lines'>>> = [];
 
@@ -295,7 +318,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     }
 
     tmpAclList.map((v) => v.lines.sort());
-    aclInfoFile.data = <Array<AclRowData>><unknown>tmpAclList.filter((v) => !v.skip);
+    aclInfoFile.aclList = <Array<AclRowData>><unknown>tmpAclList.filter((v) => !v.skip);
 
     return [null, aclInfoFile];
   }
