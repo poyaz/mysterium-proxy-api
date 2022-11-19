@@ -309,7 +309,7 @@ export class UsersHttpController {
   }
 
   @Patch(':userId')
-  @Roles(UserRoleEnum.USER)
+  @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
   @ApiOperation({description: 'Change password of user', operationId: 'Change password of user'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
