@@ -21,7 +21,14 @@ enum AclRowType {
   MATCH = 'match',
 }
 
-type AclRowData = { id: string, userId: string, date: string, row: string };
+type AclRowData = { id: string, userId: string, date: string, row: string, skip: boolean, lines: Array<number> };
+
+type AclFileInfo = {
+  startLine: number,
+  endLine: number,
+  defaultLine: number,
+  data: Array<AclRowData>,
+}
 
 type UserIdAclData = { id: string, rowType: AclRowType, isAccessToAllPort: boolean, portList?: Array<number>, insertDate: Date };
 
@@ -58,32 +65,20 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       }
     }
 
+    const [parseError, parseRowList] = await this._parseFile(conditionFilter);
+    if (parseError) {
+      return [parseError];
+    }
+    if (parseRowList.data.length === 0) {
+      return [null, [], 0];
+    }
+
     try {
-      const data = await fsAsync.readFile(this._aclFile, 'utf8');
-
-      const rows = data.split(/\n/).filter((v) => v !== '');
-      if (!(
-        rows.at(0).match(/^map\s+\$remote_user:\$http_x_node_proxy_port\s+\$access_status\s+{/)
-        && rows.at(-1).match(/^}/)
-        && data.match(/^\s+default\s+403;/m)
-      )) {
-        return [new InvalidAclFileException()];
-      }
-
-      const parseRowList = NginxProxyAclRepository._parseFile(rows.slice(1, -1), conditionFilter);
-      if (parseRowList.length === 0) {
-        return [null, [], 0];
-      }
-
-      const parseAclData = NginxProxyAclRepository._parseAcl(parseRowList);
+      const parseAclData = NginxProxyAclRepository._convertAclToMApObject(parseRowList.data);
       const result = NginxProxyAclRepository._fillModelList(parseAclData);
 
       return [null, result, result.length];
     } catch (error) {
-      if (error instanceof FillDataRepositoryException) {
-        return [error];
-      }
-
       return [new RepositoryException(error)];
     }
   }
@@ -128,21 +123,51 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     return Promise.resolve(undefined);
   }
 
-  private static _parseFile(rows: Array<string>, conditionFilter: ConditionFilter): Array<AclRowData> {
+  private async _parseFile(conditionFilter: ConditionFilter): Promise<Return<Error, AclFileInfo>> {
+    let data;
+    try {
+      data = await fsAsync.readFile(this._aclFile, 'utf8');
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
+
+    const rows = data.split(/\n/);
+    const totalLine = rows.length;
     const rowsRevers = rows.reverse();
-    const tmpAclList: Array<Partial<AclRowData>> = [];
+    const aclInfoFile: AclFileInfo = {
+      startLine: -1,
+      endLine: -1,
+      defaultLine: -1,
+      data: [],
+    };
+    const tmpAclList: Array<Pick<AclRowData, 'row' | 'skip' | 'lines'> & Partial<Omit<AclRowData, 'row' | 'skip' | 'lines'>>> = [];
+
     const totalStep = 4;
     let step = 1;
     let aclCounter = -1;
+    for (let i = 0; i < rowsRevers.length; i++) {
+      let row = rowsRevers[i];
+      let lineNumber = totalLine - i;
 
-    for (const row of rowsRevers) {
+      if (!row) {
+        continue;
+      }
+      if (row.match(/^map\s+\$remote_user:\$http_x_node_proxy_port\s+\$access_status\s+{/)) {
+        aclInfoFile.startLine = lineNumber;
+        continue;
+      }
+      if (row.match(/^}/)) {
+        aclInfoFile.endLine = lineNumber;
+        continue;
+      }
       if (row.match(/^\s+default\s+403;/)) {
+        aclInfoFile.defaultLine = lineNumber;
         continue;
       }
 
       const aclMatch = row.match(/^\s+(.+)\s+200;$\s*$/);
       if (aclMatch && aclMatch[1]) {
-        tmpAclList.push({row: aclMatch[1]});
+        tmpAclList.push({row: aclMatch[1], skip: false, lines: [lineNumber]});
         aclCounter++;
         step = 2;
         continue;
@@ -153,13 +178,15 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
 
         const fetchId = NginxProxyAclRepository._fetchRowId(row, tmpAclList[aclCounter]);
         if (fetchId.next && fetchId.capture) {
+          tmpAclList[aclCounter].lines.push(lineNumber);
           continue;
         }
 
         const fetchUserId = NginxProxyAclRepository._fetchRowUserId(row, tmpAclList[aclCounter], conditionFilter.userId);
         if (fetchUserId.next) {
+          tmpAclList[aclCounter].lines.push(lineNumber);
           if (!fetchUserId.capture) {
-            step = 1;
+            tmpAclList[aclCounter].skip = true;
           }
 
           continue;
@@ -167,6 +194,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
 
         const fetchDate = NginxProxyAclRepository._fetchRowDate(row, tmpAclList[aclCounter]);
         if (fetchDate.next && fetchDate.capture) {
+          tmpAclList[aclCounter].lines.push(lineNumber);
           continue;
         }
       }
@@ -174,7 +202,18 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       step = 1;
     }
 
-    return <Array<AclRowData>><unknown>tmpAclList.filter((v) => v.id && v.userId && v.date && v.row);
+    if (aclInfoFile.startLine === -1 || aclInfoFile.endLine === -1 || aclInfoFile.defaultLine === -1) {
+      return [new InvalidAclFileException()];
+    }
+    const validAclList = tmpAclList.filter((v) => v.id && v.userId && v.date && v.row);
+    if (validAclList.length !== tmpAclList.length) {
+      return [new InvalidAclFileException()];
+    }
+
+    tmpAclList.map((v) => v.lines.sort());
+    aclInfoFile.data = <Array<AclRowData>><unknown>tmpAclList.filter((v) => !v.skip);
+
+    return [null, aclInfoFile];
   }
 
   private static _fetchRowId(row, aclRowObj: Partial<AclRowData>): FetchReturn {
@@ -193,17 +232,19 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     if (!userIdMatch) {
       return {next: false, capture: false};
     }
+
+    aclRowObj.userId = userIdMatch[1];
+
+    let capture = true;
     if (!(
       userIdMatch[1] === NginxProxyAclRepository._ALL_USERS_KEY
       || !userIdFilter
       || (userIdFilter && userIdFilter === userIdMatch[1])
     )) {
-      return {next: true, capture: false};
+      capture = false;
     }
 
-    aclRowObj.userId = userIdMatch[1];
-
-    return {next: true, capture: true};
+    return {next: true, capture};
   }
 
   private static _fetchRowDate(row, aclRowObj: Partial<AclRowData>): FetchReturn {
@@ -217,7 +258,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
     return {next: true, capture: true};
   }
 
-  private static _parseAcl(aclList: Array<AclRowData>): AclObj {
+  private static _convertAclToMApObject(aclList: Array<AclRowData>): AclObj {
     const aclObj: AclObj = {
       isAll: false,
       userObj: {},
