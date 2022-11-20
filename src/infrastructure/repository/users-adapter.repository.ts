@@ -128,8 +128,9 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
       return [updateDbError];
     }
 
-    if (userData) {
-      const [updateFileError] = await this._usersHtpasswdFileRepository.update(userData.username, userData.password);
+    const newPassword = (<UpdateModel<UsersModel>><unknown>model).getModel().password;
+    if (userData && typeof newPassword !== 'undefined') {
+      const [updateFileError] = await this._usersHtpasswdFileRepository.update(userData.username, newPassword);
       if (updateFileError) {
         return [updateFileError];
       }
