@@ -1,6 +1,7 @@
 import {Injectable, CanActivate, ExecutionContext} from '@nestjs/common';
 import {Reflector} from '@nestjs/core';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -13,9 +14,11 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
-    const roles = this.reflector.get<UserRoleEnum[]>('roles', context.getHandler());
+    const classRoles = this.reflector.get<UserRoleEnum[]>('roles', context.getClass());
+    const handlerRoles = this.reflector.get<UserRoleEnum[]>('roles', context.getHandler());
+    const roles = classRoles || handlerRoles;
     if (!roles) {
-      return true;
+      throw new UnknownException();
     }
 
     const request = context.switchToHttp().getRequest();
