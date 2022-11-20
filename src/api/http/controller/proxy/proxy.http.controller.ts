@@ -52,6 +52,7 @@ import {OutputProxyInterceptor} from '@src-api/http/controller/proxy/interceptor
   version: '1',
 })
 @UseGuards(RoleGuard)
+@Roles(UserRoleEnum.ADMIN)
 @UseInterceptors(OutputProxyInterceptor)
 @ApiTags('proxy')
 @ApiBearerAuth()
@@ -72,7 +73,6 @@ export class ProxyHttpController {
   }
 
   @Get()
-  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({description: 'Get list of all proxy', operationId: 'Get all proxy'})
   @ApiQuery({
     name: 'filters',
@@ -170,7 +170,6 @@ export class ProxyHttpController {
   }
 
   @Post()
-  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({description: 'Register new proxy', operationId: 'Add new proxy'})
   @ApiBody({
     type: CreateProxyInputDto,

@@ -31,12 +31,15 @@ import {UnauthorizedExceptionDto} from '@src-api/http/dto/unauthorized-exception
 import {ForbiddenExceptionDto} from '@src-api/http/dto/forbidden-exception.dto';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {IProviderProxyInterface} from '@src-core/interface/i-provider-proxy.interface';
+import {Roles} from '@src-api/http/decorator/roles.decorator';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 
 @Controller({
   path: 'provider/myst',
   version: '1',
 })
 @UseGuards(RoleGuard)
+@Roles(UserRoleEnum.ADMIN)
 @UseInterceptors(OutputProxyInterceptor)
 @ApiTags('provider')
 @ApiBearerAuth()
