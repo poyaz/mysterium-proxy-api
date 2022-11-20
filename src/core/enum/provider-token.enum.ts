@@ -58,12 +58,6 @@ export enum ProviderTokenEnum {
   DOCKER_RUNNER_SERVICE = 'DOCKER_RUNNER_SERVICE',
   /**
    *
-   * {@link MystService}
-   * @implements IProviderServiceInterface
-   */
-  MYST_SERVICE = 'MYST_SERVICE',
-  /**
-   *
    * {@link MystIdentityService}
    * @implements IMystIdentityServiceInterface
    */
