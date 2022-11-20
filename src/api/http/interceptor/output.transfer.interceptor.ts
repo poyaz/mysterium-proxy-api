@@ -39,6 +39,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
               error = 'Not Found';
               break;
             case ExceptionEnum.AUTHENTICATE_ERROR:
+            case ExceptionEnum.PASSWORD_MISMATCH:
               statusCode = HttpStatus.UNAUTHORIZED;
               error = 'Unauthorized';
               break;
@@ -52,7 +53,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
           }
 
           throw new HttpException({
-            status: statusCode,
+            statusCode: statusCode,
             message: err.message,
             action: err.name,
             error,
