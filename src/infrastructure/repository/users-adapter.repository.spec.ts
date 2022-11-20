@@ -738,7 +738,10 @@ describe('UsersAdapterRepository', () => {
     let outputUsersModel: UsersModel;
 
     beforeEach(() => {
-      inputUpdateModel = new UpdateModel<UsersModel>(identifierMock.generateId(), {isEnable: true});
+      inputUpdateModel = new UpdateModel<UsersModel>(identifierMock.generateId(), {
+        password: 'new-password',
+        isEnable: true,
+      });
 
       outputRunnerModel1 = new RunnerModel({
         id: identifierMock.generateId(),
@@ -829,7 +832,7 @@ describe('UsersAdapterRepository', () => {
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
-      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, inputUpdateModel.getModel().password);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
@@ -850,7 +853,7 @@ describe('UsersAdapterRepository', () => {
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
-      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, inputUpdateModel.getModel().password);
       expect(error).toBeNull();
     });
 
@@ -872,7 +875,7 @@ describe('UsersAdapterRepository', () => {
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
-      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, inputUpdateModel.getModel().password);
       expect(runnerRepository.reload).toHaveBeenCalled();
       expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
@@ -896,7 +899,7 @@ describe('UsersAdapterRepository', () => {
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
-      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, inputUpdateModel.getModel().password);
       expect(runnerRepository.reload).toHaveBeenCalled();
       expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();

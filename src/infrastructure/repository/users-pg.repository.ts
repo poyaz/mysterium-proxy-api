@@ -127,7 +127,7 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
 
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
     const updateModel = <UpdateModel<UsersModel>><any>model;
-    const updateUserModel = <UsersModel>updateModel;
+    const updateUserModel = <UsersModel>updateModel.getModel();
 
     try {
       const row = await this._db.findOneBy({id: updateModel.id});
