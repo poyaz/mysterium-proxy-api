@@ -478,12 +478,14 @@ import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interf
       inject: [
         ProviderTokenEnum.USER_PG_REPOSITORY,
         ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
       ],
       useFactory: (
         userPgRepository: IGenericRepositoryInterface<UsersModel>,
         usersHtpasswdFileRepository: IUsersHtpasswdFileInterface,
+        dockerRunnerRepository: IRunnerRepositoryInterface,
       ) =>
-        new UsersAdapterRepository(userPgRepository, usersHtpasswdFileRepository),
+        new UsersAdapterRepository(userPgRepository, usersHtpasswdFileRepository, dockerRunnerRepository),
     },
     {
       provide: ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
