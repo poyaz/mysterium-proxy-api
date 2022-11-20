@@ -68,6 +68,10 @@ services:
       - nginx-conf-storage:/etc/nginx/conf.d/
       - nginx-entrypoint-storage:/docker-entrypoint.d/
       - $PWD/storage/tmp:/tmp/share/
+    labels:
+      - com.mysterium-proxy.create-by=compose
+      - com.mysterium-proxy.id=71cbb970-6196-4977-bdf3-5d4c15845c44
+      - com.mysterium-proxy.project=nginx
     networks:
       main:
         ipv4_address: 10.110.0.7

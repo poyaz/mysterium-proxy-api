@@ -11,6 +11,7 @@ export enum RunnerSocketTypeEnum {
 }
 
 export enum RunnerServiceEnum {
+  NGINX = 'nginx',
   MYST_CONNECT = 'myst-connect',
   ENVOY = 'envoy',
   SOCAT = 'socat',

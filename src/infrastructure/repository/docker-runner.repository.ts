@@ -16,9 +16,9 @@ import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import Dockerode, {NetworkInfo} from 'dockerode';
-import Docker = require('dockerode');
 import {filterAndSortRunner} from '@src-infrastructure/utility/filterAndSortRunner';
 import * as path from 'path';
+import Docker = require('dockerode');
 
 export type dockerContainerOption = {
   baseVolumePath: { myst: string },
@@ -229,6 +229,11 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     let status: RunnerStatusEnum;
 
     switch (row.Labels[`${this._namespace}.project`]) {
+      case RunnerServiceEnum.NGINX:
+        service = RunnerServiceEnum.NGINX;
+        socketType = RunnerSocketTypeEnum.HTTP;
+        socketPort = 80;
+        break;
       case RunnerServiceEnum.MYST:
         service = RunnerServiceEnum.MYST;
         socketType = RunnerSocketTypeEnum.HTTP;

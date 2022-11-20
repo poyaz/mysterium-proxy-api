@@ -11,16 +11,26 @@ import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {FilterModel} from '@src-core/model/filter.model';
 import {ExistException} from '@src-core/exception/exist.exception';
 import {UpdateModel} from '@src-core/model/update.model';
+import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
+import {
+  RunnerExecEnum,
+  RunnerModel,
+  RunnerServiceEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
+} from '@src-core/model/runner.model';
 
 describe('UsersAdapterRepository', () => {
   let repository: UsersAdapterRepository;
   let usersPgRepository: MockProxy<IGenericRepositoryInterface<UsersModel>>;
-  let usersSquidFileRepository: MockProxy<IUsersHtpasswdFileInterface>;
+  let usersHtpasswdFileRepository: MockProxy<IUsersHtpasswdFileInterface>;
+  let runnerRepository: MockProxy<IRunnerRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
     usersPgRepository = mock<IGenericRepositoryInterface<UsersModel>>();
-    usersSquidFileRepository = mock<IUsersHtpasswdFileInterface>();
+    usersHtpasswdFileRepository = mock<IUsersHtpasswdFileInterface>();
+    runnerRepository = mock<IRunnerRepositoryInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
@@ -33,13 +43,24 @@ describe('UsersAdapterRepository', () => {
         },
         {
           provide: ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
-          useValue: usersSquidFileRepository,
+          useValue: usersHtpasswdFileRepository,
+        },
+        {
+          provide: ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+          useValue: runnerRepository,
         },
         {
           provide: UsersAdapterRepository,
-          inject: [ProviderTokenEnum.USER_PG_REPOSITORY, ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY],
-          useFactory: (usersPgRepository: IGenericRepositoryInterface<UsersModel>, usersSquidFileRepository: IUsersHtpasswdFileInterface) =>
-            new UsersAdapterRepository(usersPgRepository, usersSquidFileRepository),
+          inject: [
+            ProviderTokenEnum.USER_PG_REPOSITORY,
+            ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
+            ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+          ],
+          useFactory: (
+            usersPgRepository: IGenericRepositoryInterface<UsersModel>,
+            usersSquidFileRepository: IUsersHtpasswdFileInterface,
+            runnerRepository: IRunnerRepositoryInterface,
+          ) => new UsersAdapterRepository(usersPgRepository, usersSquidFileRepository, runnerRepository),
         },
       ],
     }).compile();
@@ -60,6 +81,7 @@ describe('UsersAdapterRepository', () => {
     let inputUsersModel: UsersModel;
     let matchFindUserFilter: FilterModel<UsersModel>;
     let outputUsersModel: UsersModel;
+    let outputRunnerModel1: RunnerModel;
     let matchUpdateUser: UpdateModel<UsersModel>;
 
     beforeEach(() => {
@@ -84,12 +106,25 @@ describe('UsersAdapterRepository', () => {
         insertDate: new Date(),
       });
 
+      outputRunnerModel1 = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'nginx-serial',
+        name: 'nginx-name',
+        service: RunnerServiceEnum.NGINX,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketPort: 80,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+
       matchUpdateUser = new UpdateModel<UsersModel>(identifierMock.generateId(), outputUsersModel.clone());
     });
 
     it(`Should error add new user when check user exist on database`, async () => {
       usersPgRepository.getAll.mockResolvedValue([new UnknownException()]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await repository.add(inputUsersModel);
 
@@ -97,12 +132,18 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should error add new user when check user exist on squid`, async () => {
+    it(`Should error add new user when check user exist on htpasswd`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([new UnknownException()]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([new UnknownException()]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await repository.add(inputUsersModel);
 
@@ -110,14 +151,41 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add new user when check user exist on get runner info`, async () => {
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.add(inputUsersModel);
+
+      expect(usersPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
+        matchFindUserFilter.getCondition('username'),
+      );
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should error add new user when user exist on system`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, true]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, true]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
 
       const [error] = await repository.add(inputUsersModel);
 
@@ -125,14 +193,20 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(error).toBeInstanceOf(ExistException);
     });
 
     it(`Should error add new user when can't create on database`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.add.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputUsersModel);
@@ -141,8 +215,13 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.add).toHaveBeenCalled();
       expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
       expect(error).toBeInstanceOf(UnknownException);
@@ -150,9 +229,10 @@ describe('UsersAdapterRepository', () => {
 
     it(`Should error add new user when can't create on squid`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.add.mockResolvedValue([null, outputUsersModel]);
-      usersSquidFileRepository.add.mockResolvedValue([new UnknownException()]);
+      usersHtpasswdFileRepository.add.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputUsersModel);
 
@@ -160,20 +240,26 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.add).toHaveBeenCalled();
       expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
-      expect(usersSquidFileRepository.add).toHaveBeenCalled();
-      expect(usersSquidFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(usersHtpasswdFileRepository.add).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should successfully add new user`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.add.mockResolvedValue([null, outputUsersModel]);
-      usersSquidFileRepository.add.mockResolvedValue([null]);
+      usersHtpasswdFileRepository.add.mockResolvedValue([null]);
 
       const [error, result] = await repository.add(inputUsersModel);
 
@@ -181,19 +267,25 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.add).toHaveBeenCalled();
       expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
-      expect(usersSquidFileRepository.add).toHaveBeenCalled();
-      expect(usersSquidFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(usersHtpasswdFileRepository.add).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
       expect(error).toBeNull();
       expect(result).toEqual(outputUsersModel);
     });
 
     it(`Should error add new user when update user if user exist on database but not exist on squid`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 1]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.update.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.add(inputUsersModel);
@@ -202,8 +294,13 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersPgRepository.update).toBeCalledWith(matchUpdateUser);
       expect(error).toBeInstanceOf(UnknownException);
@@ -211,9 +308,10 @@ describe('UsersAdapterRepository', () => {
 
     it(`Should successfully add new user when update user if user exist on database but not exist on squid`, async () => {
       usersPgRepository.getAll.mockResolvedValue([null, [outputUsersModel], 1]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.update.mockResolvedValue([null]);
-      usersSquidFileRepository.add.mockResolvedValue([null]);
+      usersHtpasswdFileRepository.add.mockResolvedValue([null]);
 
       const [error, result] = await repository.add(inputUsersModel);
 
@@ -221,19 +319,25 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersPgRepository.update).toBeCalledWith(matchUpdateUser);
-      expect(usersSquidFileRepository.add).toHaveBeenCalled();
-      expect(usersSquidFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(usersHtpasswdFileRepository.add).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
       expect(error).toBeNull();
       expect(result).toEqual(outputUsersModel);
     });
 
     it(`Should error add new user when duplicate record on database and can't update user on database`, async () => {
       usersPgRepository.getAll.mockResolvedValueOnce([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.add.mockResolvedValue([new ExistException()]);
       usersPgRepository.getAll.mockResolvedValueOnce([new UnknownException()]);
 
@@ -243,8 +347,13 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.add).toHaveBeenCalled();
       expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[1][0]).getCondition('username')).toMatchObject(
@@ -255,7 +364,8 @@ describe('UsersAdapterRepository', () => {
 
     it(`Should error add new user when duplicate record on database and can't update user on database`, async () => {
       usersPgRepository.getAll.mockResolvedValueOnce([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.add.mockResolvedValue([new ExistException()]);
       usersPgRepository.getAll.mockResolvedValueOnce([null, [outputUsersModel], 1]);
       usersPgRepository.update.mockResolvedValue([new UnknownException()]);
@@ -266,8 +376,13 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.add).toHaveBeenCalled();
       expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[1][0]).getCondition('username')).toMatchObject(
@@ -280,11 +395,12 @@ describe('UsersAdapterRepository', () => {
 
     it(`Should successfully add new user when duplicate record on database and user not exist on squid`, async () => {
       usersPgRepository.getAll.mockResolvedValueOnce([null, [], 0]);
-      usersSquidFileRepository.isUserExist.mockResolvedValue([null, false]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.add.mockResolvedValue([new ExistException()]);
       usersPgRepository.getAll.mockResolvedValueOnce([null, [outputUsersModel], 1]);
       usersPgRepository.update.mockResolvedValue([null]);
-      usersSquidFileRepository.add.mockResolvedValue([null]);
+      usersHtpasswdFileRepository.add.mockResolvedValue([null]);
 
       const [error, result] = await repository.add(inputUsersModel);
 
@@ -292,8 +408,13 @@ describe('UsersAdapterRepository', () => {
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
         matchFindUserFilter.getCondition('username'),
       );
-      expect(usersSquidFileRepository.isUserExist).toHaveBeenCalled();
-      expect(usersSquidFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.add).toHaveBeenCalled();
       expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
       expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[1][0]).getCondition('username')).toMatchObject(
@@ -301,8 +422,70 @@ describe('UsersAdapterRepository', () => {
       );
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(usersPgRepository.update).toBeCalledWith(matchUpdateUser);
-      expect(usersSquidFileRepository.add).toHaveBeenCalled();
-      expect(usersSquidFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(usersHtpasswdFileRepository.add).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(error).toBeNull();
+      expect(result).toEqual(outputUsersModel);
+    });
+
+    it(`Should successfully add new user and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.add.mockResolvedValue([null, outputUsersModel]);
+      usersHtpasswdFileRepository.add.mockResolvedValue([null]);
+      runnerRepository.reload.mockResolvedValue([new UnknownException()]);
+
+      const [error, result] = await repository.add(inputUsersModel);
+
+      expect(usersPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
+        matchFindUserFilter.getCondition('username'),
+      );
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.add).toHaveBeenCalled();
+      expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
+      expect(usersHtpasswdFileRepository.add).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
+      expect(error).toBeNull();
+      expect(result).toEqual(outputUsersModel);
+    });
+
+    it(`Should successfully add new user and reload runner if exist`, async () => {
+      usersPgRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersHtpasswdFileRepository.isUserExist.mockResolvedValue([null, false]);
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.add.mockResolvedValue([null, outputUsersModel]);
+      usersHtpasswdFileRepository.add.mockResolvedValue([null]);
+      runnerRepository.reload.mockResolvedValue([null]);
+
+      const [error, result] = await repository.add(inputUsersModel);
+
+      expect(usersPgRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<UsersModel>>usersPgRepository.getAll.mock.calls[0][0]).getCondition('username')).toMatchObject(
+        matchFindUserFilter.getCondition('username'),
+      );
+      expect(usersHtpasswdFileRepository.isUserExist).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.isUserExist).toBeCalledWith(inputUsersModel.username);
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.add).toHaveBeenCalled();
+      expect(usersPgRepository.add).toBeCalledWith(inputUsersModel);
+      expect(usersHtpasswdFileRepository.add).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.add).toBeCalledWith(inputUsersModel.username, inputUsersModel.password);
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
       expect(result).toEqual(outputUsersModel);
     });
@@ -382,52 +565,200 @@ describe('UsersAdapterRepository', () => {
 
   describe(`Remove by id`, () => {
     let inputId: string;
+    let outputRunnerModel1: RunnerModel;
 
     beforeEach(() => {
       inputId = identifierMock.generateId();
+
+      outputRunnerModel1 = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'nginx-serial',
+        name: 'nginx-name',
+        service: RunnerServiceEnum.NGINX,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketPort: 80,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error remove by id when get runner info`, async () => {
+      runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should error remove by id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.remove.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.remove(inputId);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.remove).toHaveBeenCalled();
       expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should remove get by id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.remove.mockResolvedValue([null]);
 
       const [error] = await repository.remove(inputId);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+
+    it(`Should remove get by id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.remove.mockResolvedValue([null]);
+      runnerRepository.reload.mockResolvedValue([null]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
+      expect(error).toBeNull();
+    });
+
+    it(`Should remove get by id and reload runner if exist`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.remove.mockResolvedValue([null]);
+      runnerRepository.reload.mockResolvedValue([null]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
     });
   });
 
   describe(`Update user`, () => {
     let inputUpdateModel: UpdateModel<UsersModel>;
+    let outputRunnerModel1: RunnerModel;
 
     beforeEach(() => {
       inputUpdateModel = new UpdateModel<UsersModel>(identifierMock.generateId(), {isEnable: true});
+
+      outputRunnerModel1 = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'nginx-serial',
+        name: 'nginx-name',
+        service: RunnerServiceEnum.NGINX,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketPort: 80,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
     });
 
-    it(`Should error remove by id`, async () => {
+    it(`Should error update by id when get runner info`, async () => {
+      runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update by id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.update.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.update(inputUpdateModel);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.update).toHaveBeenCalled();
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should remove get by id`, async () => {
+    it(`Should update get by id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
       usersPgRepository.update.mockResolvedValue([null]);
 
       const [error] = await repository.update(inputUpdateModel);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(error).toBeNull();
+    });
+
+    it(`Should update get by id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.update.mockResolvedValue([null]);
+      runnerRepository.reload.mockResolvedValue([null]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
+      expect(error).toBeNull();
+    });
+
+    it(`Should update get by id and reload runner if exist`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.update.mockResolvedValue([null]);
+      runnerRepository.reload.mockResolvedValue([null]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
     });
   });

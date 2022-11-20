@@ -6,32 +6,37 @@ import {AsyncReturn} from '@src-core/utility';
 import {FilterModel} from '@src-core/model/filter.model';
 import {ExistException} from '@src-core/exception/exist.exception';
 import {UpdateModel} from '@src-core/model/update.model';
+import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
+import {RunnerModel, RunnerServiceEnum} from '@src-core/model/runner.model';
 
 @Injectable()
 export class UsersAdapterRepository implements IGenericRepositoryInterface<UsersModel> {
   constructor(
     private readonly _usersPgRepository: IGenericRepositoryInterface<UsersModel>,
-    private readonly _usersSquidFileRepository: IUsersHtpasswdFileInterface) {
+    private readonly _usersHtpasswdFileRepository: IUsersHtpasswdFileInterface,
+    private readonly _runnerRepository: IRunnerRepositoryInterface,
+  ) {
   }
 
   async add(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {
-    const filterFindUser = new FilterModel<UsersModel>();
-    filterFindUser.addCondition({username: model.username, $opr: 'eq'});
+    const findUserFilter = new FilterModel<UsersModel>();
+    findUserFilter.addCondition({username: model.username, $opr: 'eq'});
+
 
     const [
       [fetchError, fetchDataList],
       [checkProxyExistError, checkProxyExistData],
+      [runnerError, runnerId],
     ] = await Promise.all([
-      this._usersPgRepository.getAll<FilterModel<UsersModel>>(filterFindUser),
-      this._usersSquidFileRepository.isUserExist(model.username),
+      this._usersPgRepository.getAll<FilterModel<UsersModel>>(findUserFilter),
+      this._usersHtpasswdFileRepository.isUserExist(model.username),
+      this._getRunner(),
     ]);
+    const error = fetchError || checkProxyExistError || runnerError;
+    if (error) {
+      return [error];
+    }
 
-    if (fetchError) {
-      return [fetchError];
-    }
-    if (checkProxyExistError) {
-      return [checkProxyExistError];
-    }
     if (fetchDataList.length > 0 && checkProxyExistData) {
       return [new ExistException()];
     }
@@ -54,9 +59,13 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
       output = addData;
     }
 
-    const [addProxyError] = await this._usersSquidFileRepository.add(model.username, model.password);
+    const [addProxyError] = await this._usersHtpasswdFileRepository.add(model.username, model.password);
     if (addProxyError) {
       return [addProxyError];
+    }
+
+    if (runnerId) {
+      await this._runnerRepository.reload(runnerId);
     }
 
     return [null, output];
@@ -71,11 +80,39 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return this._usersPgRepository.remove(id);
+    const [runnerError, runnerId] = await this._getRunner();
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    const [error, result] = await this._usersPgRepository.remove(id);
+    if (error) {
+      return [error];
+    }
+
+    if (runnerId) {
+      await this._runnerRepository.reload(runnerId);
+    }
+
+    return [null, result];
   }
 
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
-    return this._usersPgRepository.update(model);
+    const [runnerError, runnerId] = await this._getRunner();
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    const [error, result] = await this._usersPgRepository.update(model);
+    if (error) {
+      return [error];
+    }
+
+    if (runnerId) {
+      await this._runnerRepository.reload(runnerId);
+    }
+
+    return [null, result];
   }
 
   private async _upsertUser(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {
@@ -103,5 +140,21 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     }
 
     return [null, fetchDataList[0]];
+  }
+
+  private async _getRunner(): Promise<AsyncReturn<Error, string | null>> {
+    const runnerFilter = new FilterModel<RunnerModel>();
+    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.NGINX});
+
+    const [runnerError, runnerList] = await this._runnerRepository.getAll(runnerFilter);
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    if (runnerList.length !== 1) {
+      return [null, null];
+    }
+
+    return [null, runnerList[0].id];
   }
 }
