@@ -285,6 +285,7 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
     } else {
       socketUri = null;
     }
+    const convertLabel = DockerLabelParser.convertObjectToLabel(this._namespace, row.Labels);
 
     return new RunnerModel<T>({
       id: row.Labels[`${this._namespace}.id`],
@@ -295,7 +296,7 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
       socketType,
       socketUri,
       socketPort,
-      label: DockerLabelParser.convertObjectToLabel(this._namespace, row.Labels),
+      ...(convertLabel && {label: convertLabel}),
       volumes: row.Mounts.map((v) => {
         let source = v.Source;
         if (v.Type === 'volume') {
