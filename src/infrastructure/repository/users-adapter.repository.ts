@@ -22,7 +22,6 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     const findUserFilter = new FilterModel<UsersModel>();
     findUserFilter.addCondition({username: model.username, $opr: 'eq'});
 
-
     const [
       [fetchError, fetchDataList],
       [checkProxyExistError, checkProxyExistData],
@@ -80,39 +79,67 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
-    const [runnerError, runnerId] = await this._getRunner();
-    if (runnerError) {
-      return [runnerError];
-    }
-
-    const [error, result] = await this._usersPgRepository.remove(id);
+    const [
+      [runnerError, runnerId],
+      [userError, userData],
+    ] = await Promise.all([
+      this._getRunner(),
+      this._usersPgRepository.getById(id),
+    ]);
+    const error = runnerError || userError;
     if (error) {
       return [error];
+    }
+
+    const [removeDbError, removeResult] = await this._usersPgRepository.remove(id);
+    if (removeDbError) {
+      return [removeDbError];
+    }
+
+    if (userData) {
+      const [removeFileError] = await this._usersHtpasswdFileRepository.remove(userData.username);
+      if (removeFileError) {
+        return [removeFileError];
+      }
     }
 
     if (runnerId) {
       await this._runnerRepository.reload(runnerId);
     }
 
-    return [null, result];
+    return [null, removeResult];
   }
 
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
-    const [runnerError, runnerId] = await this._getRunner();
-    if (runnerError) {
-      return [runnerError];
-    }
-
-    const [error, result] = await this._usersPgRepository.update(model);
+    const [
+      [runnerError, runnerId],
+      [userError, userData],
+    ] = await Promise.all([
+      this._getRunner(),
+      this._usersPgRepository.getById((<UpdateModel<UsersModel>><unknown>model).id),
+    ]);
+    const error = runnerError || userError;
     if (error) {
       return [error];
+    }
+
+    const [updateDbError, updateResult] = await this._usersPgRepository.update(model);
+    if (updateDbError) {
+      return [updateDbError];
+    }
+
+    if (userData) {
+      const [updateFileError] = await this._usersHtpasswdFileRepository.update(userData.username, userData.password);
+      if (updateFileError) {
+        return [updateFileError];
+      }
     }
 
     if (runnerId) {
       await this._runnerRepository.reload(runnerId);
     }
 
-    return [null, result];
+    return [null, updateResult];
   }
 
   private async _upsertUser(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {

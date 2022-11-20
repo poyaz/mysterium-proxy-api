@@ -566,6 +566,7 @@ describe('UsersAdapterRepository', () => {
   describe(`Remove by id`, () => {
     let inputId: string;
     let outputRunnerModel1: RunnerModel;
+    let outputUsersModel: UsersModel;
 
     beforeEach(() => {
       inputId = identifierMock.generateId();
@@ -581,10 +582,20 @@ describe('UsersAdapterRepository', () => {
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
       });
+
+      outputUsersModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
     });
 
     it(`Should error remove by id when get runner info`, async () => {
       runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+      usersPgRepository.getById.mockResolvedValue([null, null]);
 
       const [error] = await repository.remove(inputId);
 
@@ -593,11 +604,30 @@ describe('UsersAdapterRepository', () => {
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should error remove by id`, async () => {
+    it(`Should error remove by id when get user info`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersPgRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error remove by id when remove in database`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
       usersPgRepository.remove.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.remove(inputId);
@@ -607,13 +637,17 @@ describe('UsersAdapterRepository', () => {
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
       expect(usersPgRepository.remove).toHaveBeenCalled();
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should remove get by id`, async () => {
+    it(`Should error remove by id when remove in file`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [], 0]);
-      usersPgRepository.remove.mockResolvedValue([null]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+      usersPgRepository.remove.mockResolvedValue([null, null]);
+      usersHtpasswdFileRepository.remove.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.remove(inputId);
 
@@ -622,13 +656,38 @@ describe('UsersAdapterRepository', () => {
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
       expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove get by id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+      usersPgRepository.remove.mockResolvedValue([null]);
+      usersHtpasswdFileRepository.remove.mockResolvedValue([null, null]);
+
+      const [error] = await repository.remove(inputId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
+      expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.remove).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.remove).toHaveBeenCalledWith(outputUsersModel.username);
       expect(error).toBeNull();
     });
 
-    it(`Should remove get by id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+    it(`Should successfully remove get by id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
       usersPgRepository.remove.mockResolvedValue([null]);
+      usersHtpasswdFileRepository.remove.mockResolvedValue([null, null]);
       runnerRepository.reload.mockResolvedValue([null]);
 
       const [error] = await repository.remove(inputId);
@@ -638,15 +697,21 @@ describe('UsersAdapterRepository', () => {
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
       expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.remove).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.remove).toHaveBeenCalledWith(outputUsersModel.username);
       expect(runnerRepository.reload).toHaveBeenCalled();
       expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
     });
 
-    it(`Should remove get by id and reload runner if exist`, async () => {
+    it(`Should successfully remove get by id and reload runner if exist`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
       usersPgRepository.remove.mockResolvedValue([null]);
+      usersHtpasswdFileRepository.remove.mockResolvedValue([null, null]);
       runnerRepository.reload.mockResolvedValue([null]);
 
       const [error] = await repository.remove(inputId);
@@ -656,7 +721,11 @@ describe('UsersAdapterRepository', () => {
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputId);
       expect(usersPgRepository.remove).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.remove).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.remove).toHaveBeenCalledWith(outputUsersModel.username);
       expect(runnerRepository.reload).toHaveBeenCalled();
       expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
@@ -666,6 +735,7 @@ describe('UsersAdapterRepository', () => {
   describe(`Update user`, () => {
     let inputUpdateModel: UpdateModel<UsersModel>;
     let outputRunnerModel1: RunnerModel;
+    let outputUsersModel: UsersModel;
 
     beforeEach(() => {
       inputUpdateModel = new UpdateModel<UsersModel>(identifierMock.generateId(), {isEnable: true});
@@ -681,10 +751,20 @@ describe('UsersAdapterRepository', () => {
         status: RunnerStatusEnum.RUNNING,
         insertDate: new Date(),
       });
+
+      outputUsersModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'my-user',
+        password: 'my-password',
+        role: UserRoleEnum.USER,
+        isEnable: true,
+        insertDate: new Date(),
+      });
     });
 
     it(`Should error update by id when get runner info`, async () => {
       runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+      usersPgRepository.getById.mockResolvedValue([null, null]);
 
       const [error] = await repository.update(inputUpdateModel);
 
@@ -693,16 +773,37 @@ describe('UsersAdapterRepository', () => {
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should error update by id`, async () => {
+    it(`Should error update by id when get user info`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersPgRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update by id when update in database`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
       usersPgRepository.update.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.update(inputUpdateModel);
 
       expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
       expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
@@ -711,52 +812,91 @@ describe('UsersAdapterRepository', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should update get by id`, async () => {
+    it(`Should error update by id when update in file`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [], 0]);
-      usersPgRepository.update.mockResolvedValue([null]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+      usersPgRepository.update.mockResolvedValue([null, null]);
+      usersHtpasswdFileRepository.update.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.update(inputUpdateModel);
 
       expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
       expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update get by id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [], 0]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+      usersPgRepository.update.mockResolvedValue([null, null]);
+      usersHtpasswdFileRepository.update.mockResolvedValue([null, null]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
       expect(error).toBeNull();
     });
 
-    it(`Should update get by id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+    it(`Should successfully update get by id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
-      usersPgRepository.update.mockResolvedValue([null]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+      usersPgRepository.update.mockResolvedValue([null, null]);
+      usersHtpasswdFileRepository.update.mockResolvedValue([null, null]);
       runnerRepository.reload.mockResolvedValue([null]);
 
       const [error] = await repository.update(inputUpdateModel);
 
       expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
       expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
       expect(runnerRepository.reload).toHaveBeenCalled();
       expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
     });
 
-    it(`Should update get by id and reload runner if exist`, async () => {
+    it(`Should successfully update get by id and reload runner if exist`, async () => {
       runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
-      usersPgRepository.update.mockResolvedValue([null]);
+      usersPgRepository.getById.mockResolvedValue([null, outputUsersModel]);
+      usersPgRepository.update.mockResolvedValue([null, null]);
+      usersHtpasswdFileRepository.update.mockResolvedValue([null, null]);
       runnerRepository.reload.mockResolvedValue([null]);
 
       const [error] = await repository.update(inputUpdateModel);
 
       expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalled();
+      expect(usersPgRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
       expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
         $opr: 'eq',
         service: RunnerServiceEnum.NGINX,
       });
       expect(usersPgRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalled();
+      expect(usersHtpasswdFileRepository.update).toHaveBeenCalledWith(outputUsersModel.username, outputUsersModel.password);
       expect(runnerRepository.reload).toHaveBeenCalled();
       expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
