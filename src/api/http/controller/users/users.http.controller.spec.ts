@@ -16,7 +16,6 @@ import {UpdatePasswordInputDto} from './dto/update-password-input.dto';
 import {LoginInputDto} from './dto/login-input.dto';
 import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
-import {IncomingMessage} from 'http';
 
 describe('UsersController', () => {
   let controller: UsersHttpController;
@@ -365,17 +364,24 @@ describe('UsersController', () => {
 
   describe(`Update password`, () => {
     let inputUpdatePasswordDto: UpdatePasswordInputDto;
+    let inputUpdateEqualPasswordDto: UpdatePasswordInputDto;
     let matchUpdateUser: UpdateModel<UsersModel>;
 
     beforeEach(() => {
       inputUpdatePasswordDto = new UpdatePasswordInputDto();
-      inputUpdatePasswordDto.password = '123456';
-      inputUpdatePasswordDto.confirmPassword = '123456';
+      inputUpdatePasswordDto.currentPassword = 'old-password';
+      inputUpdatePasswordDto.password = 'new-password';
+      inputUpdatePasswordDto.confirmPassword = 'new-password';
 
-      matchUpdateUser = new UpdateModel<UsersModel>(identifierMock.generateId(), {password: '123456'});
+      inputUpdateEqualPasswordDto = new UpdatePasswordInputDto();
+      inputUpdateEqualPasswordDto.currentPassword = 'old-password';
+      inputUpdateEqualPasswordDto.password = 'old-password';
+      inputUpdateEqualPasswordDto.confirmPassword = 'old-password';
+
+      matchUpdateUser = new UpdateModel<UsersModel>(identifierMock.generateId(), {password: inputUpdatePasswordDto.password});
     });
 
-    it(`Should error update user by id with admin access`, async () => {
+    it(`Should error update password by user id`, async () => {
       const userId = identifierMock.generateId();
       usersService.update.mockResolvedValue([new UnknownException()]);
 
@@ -386,7 +392,7 @@ describe('UsersController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully update user by id with admin access`, async () => {
+    it(`Should successfully update password by user id`, async () => {
       const userId = identifierMock.generateId();
       usersService.update.mockResolvedValue([null]);
 
@@ -394,6 +400,16 @@ describe('UsersController', () => {
 
       expect(usersService.update).toHaveBeenCalled();
       expect(usersService.update).toBeCalledWith(matchUpdateUser);
+      expect(error).toBeNull();
+    });
+
+    it(`Should successfully update password by user id and skip update password because all passwords is equal`, async () => {
+      const userId = identifierMock.generateId();
+      usersService.update.mockResolvedValue([null]);
+
+      const [error] = await controller.updatePassword(userId, inputUpdateEqualPasswordDto);
+
+      expect(usersService.update).toHaveBeenCalledTimes(0);
       expect(error).toBeNull();
     });
   });
