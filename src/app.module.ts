@@ -201,7 +201,7 @@ import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interf
     },
     {
       provide: ProviderTokenEnum.USER_SERVICE,
-      inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
+      inject: [ProviderTokenEnum.USER_ADAPTER_REPOSITORY],
       useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
         new UsersService(usersRepository),
     },
