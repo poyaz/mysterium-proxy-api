@@ -218,6 +218,10 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   private static _mergeRunnerData(identityData: MystIdentityModel, runnerDataList: Array<RunnerModel<any>>): MystIdentityModel {
     const identityRunnerList = [];
     for (const runnerData of runnerDataList) {
+      if (typeof runnerData.label !== 'undefined') {
+        continue;
+      }
+
       const labelList = Array.isArray(runnerData.label) ? runnerData.label : [runnerData.label];
 
       for (const label of labelList) {

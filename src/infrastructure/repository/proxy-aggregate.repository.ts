@@ -406,6 +406,10 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
         continue;
       }
 
+      if (typeof runner.label === 'undefined') {
+        continue;
+      }
+
       const label = Array.isArray(runner.label) ? runner.label : [runner.label];
       const mystIdentityId = label.find((v) => v.$namespace === MystIdentityModel.name)?.id;
       const vpnProviderId = label.find((v) => v.$namespace === VpnProviderModel.name)?.id;
