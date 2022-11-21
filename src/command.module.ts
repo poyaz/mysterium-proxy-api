@@ -39,6 +39,11 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
     },
 
     {
+      provide: ProviderTokenEnum.CAN_ANONYMOUS_REGISTER,
+      useValue: false,
+    },
+
+    {
       provide: ProviderTokenEnum.AUTH_SERVICE_DEFAULT,
       useFactory: () => ({}),
     },
