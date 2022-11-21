@@ -3,7 +3,7 @@ import {mock, MockProxy} from 'jest-mock-extended';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {Test, TestingModule} from '@nestjs/testing';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {DockerLabelParser} from '@src-infrastructure/utility/docker-label-parser';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {
@@ -36,7 +36,7 @@ jest.mock('@src-infrastructure/utility/filterAndSortRunner');
 describe('DockerRunnerRepository', () => {
   let repository: DockerRunnerRepository;
   let docker: MockProxy<Docker>;
-  let dockerCreateStrategy: MockProxy<ICreateRunnerRepository>;
+  let dockerCreateStrategy: MockProxy<ICreateRunnerRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
   let mystDataVolume: string;
   let envoyDefaultPort: number;
@@ -46,7 +46,7 @@ describe('DockerRunnerRepository', () => {
 
   beforeEach(async () => {
     docker = mock<Docker>();
-    dockerCreateStrategy = mock<ICreateRunnerRepository>();
+    dockerCreateStrategy = mock<ICreateRunnerRepositoryInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
@@ -70,7 +70,7 @@ describe('DockerRunnerRepository', () => {
         {
           provide: DockerRunnerRepository,
           inject: [ProviderTokenEnum.DOCKER_DYNAMIC_MODULE, ProviderTokenEnum.DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY],
-          useFactory: (docker: Docker, dockerCreateStrategy: ICreateRunnerRepository) =>
+          useFactory: (docker: Docker, dockerCreateStrategy: ICreateRunnerRepositoryInterface) =>
             new DockerRunnerRepository(
               docker,
               dockerCreateStrategy,

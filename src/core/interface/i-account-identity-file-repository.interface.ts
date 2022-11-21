@@ -1,6 +1,6 @@
 import {AsyncReturn} from '@src-core/utility';
 
-export interface IAccountIdentityFileRepository {
+export interface IAccountIdentityFileRepositoryInterface {
   getAll(): Promise<AsyncReturn<Error, Array<string>>>;
 
   getByDirPath(dirPath: string): Promise<AsyncReturn<Error, string | null>>;

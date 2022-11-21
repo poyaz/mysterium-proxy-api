@@ -10,7 +10,7 @@ import {
   RunnerSocketTypeEnum,
   RunnerStatusEnum,
 } from '@src-core/model/runner.model';
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {DockerLabelParser} from '@src-infrastructure/utility/docker-label-parser';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
@@ -32,7 +32,7 @@ export class DockerRunnerRepository implements IRunnerRepositoryInterface {
 
   constructor(
     private readonly _docker: Docker,
-    private readonly _createDockerRepository: ICreateRunnerRepository,
+    private readonly _createDockerRepository: ICreateRunnerRepositoryInterface,
     private readonly _containerOption: dockerContainerOption,
     namespace: string,
   ) {

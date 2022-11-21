@@ -49,7 +49,7 @@ import {MystProviderAggregateRepository} from '@src-infrastructure/repository/my
 import {DockerService} from './module/docker/docker.service';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {DockerRunnerRepository} from '@src-infrastructure/repository/docker-runner.repository';
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {DockerRunnerCreateStrategyRepository} from '@src-infrastructure/repository/docker-runner-create-strategy.repository';
 import {DockerRunnerCreateMystRepository} from '@src-infrastructure/repository/docker-runner-create-myst.repository';
 import {DockerRunnerCreateMystConnectRepository} from '@src-infrastructure/repository/docker-runner-create-myst-connect.repository';
@@ -57,7 +57,7 @@ import {MystIdentityPgRepository} from '@src-infrastructure/repository/myst-iden
 import {AccountIdentityEntity} from '@src-infrastructure/entity/account-identity.entity';
 import {MystIdentityFileRepository} from '@src-infrastructure/repository/myst-identity-file.repository';
 import {MystIdentityAggregateRepository} from '@src-infrastructure/repository/myst-identity-aggregate.repository';
-import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
+import {IAccountIdentityFileRepositoryInterface} from '@src-core/interface/i-account-identity-file-repository.interface';
 import {MystProviderService} from '@src-core/service/myst-provider.service';
 import {IMystIdentityServiceInterface} from '@src-core/interface/i-myst-identity-service.interface';
 import {DockerRunnerService} from '@src-core/service/docker-runner.service';
@@ -226,7 +226,7 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
       useFactory: (
         configService: ConfigService,
         docker: DockerService,
-        dockerRunnerCreateRepository: ICreateRunnerRepository,
+        dockerRunnerCreateRepository: ICreateRunnerRepositoryInterface,
       ) => {
         const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
 
@@ -369,7 +369,7 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
         ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY,
         ProviderTokenEnum.DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY,
       ],
-      useFactory: (...dockerRunnerCreateList: Array<ICreateRunnerRepository>) =>
+      useFactory: (...dockerRunnerCreateList: Array<ICreateRunnerRepositoryInterface>) =>
         new DockerRunnerCreateStrategyRepository(dockerRunnerCreateList),
     },
     {
@@ -380,7 +380,7 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
         ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
       ],
       useFactory: (
-        mystIdentityFileRepository: IAccountIdentityFileRepository,
+        mystIdentityFileRepository: IAccountIdentityFileRepositoryInterface,
         mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
         dockerRunnerRepository: IRunnerRepositoryInterface,
       ) => new MystIdentityAggregateRepository(

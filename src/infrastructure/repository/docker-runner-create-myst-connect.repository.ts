@@ -1,4 +1,4 @@
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {
   RunnerExecEnum,
   RunnerLabelNamespace,
@@ -28,7 +28,7 @@ type RedisOption = {
   db?: number,
 }
 
-export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRepository {
+export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRepositoryInterface {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.MYST_CONNECT;
   private readonly _MYST_API_BASE_ADDRESS = 'http://127.0.0.1:4050';
   private readonly _REDIS_PROVIDER_INFO_KEY = 'myst_provider:info:all';

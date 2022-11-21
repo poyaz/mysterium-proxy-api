@@ -2,7 +2,7 @@ import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-reposit
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {AsyncReturn} from '@src-core/utility';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
-import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
+import {IAccountIdentityFileRepositoryInterface} from '@src-core/interface/i-account-identity-file-repository.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {
   RunnerExecEnum,
@@ -27,7 +27,7 @@ export class MystIdentityAggregateRepository implements IGenericRepositoryInterf
   private readonly _maxPortRetry = 6;
 
   constructor(
-    private readonly _mystIdentityFileRepository: IAccountIdentityFileRepository,
+    private readonly _mystIdentityFileRepository: IAccountIdentityFileRepositoryInterface,
     private readonly _mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
     private readonly _dockerRunnerRepository: IRunnerRepositoryInterface,
   ) {

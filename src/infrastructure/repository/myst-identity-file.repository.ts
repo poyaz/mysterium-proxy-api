@@ -1,4 +1,4 @@
-import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
+import {IAccountIdentityFileRepositoryInterface} from '@src-core/interface/i-account-identity-file-repository.interface';
 import {AsyncReturn} from '@src-core/utility';
 
 import * as fsAsync from 'fs/promises';
@@ -9,7 +9,7 @@ import {ParseIdentityException} from '@src-core/exception/parse-identity.excepti
 import {NoAddressIdentityException} from '@src-core/exception/no-address-identity.exception';
 import {InvalidFileTypeException} from '@src-core/exception/invalid-file-type.exception';
 
-export class MystIdentityFileRepository implements IAccountIdentityFileRepository {
+export class MystIdentityFileRepository implements IAccountIdentityFileRepositoryInterface {
   private readonly _storeBasePath: string;
 
   constructor(storeBasePath: string) {

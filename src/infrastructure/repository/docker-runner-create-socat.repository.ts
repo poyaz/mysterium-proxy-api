@@ -1,4 +1,4 @@
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {
   RunnerExecEnum,
   RunnerModel,
@@ -34,7 +34,7 @@ type CreateContainerOutput = {
   port: number,
 }
 
-export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepository {
+export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositoryInterface {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.SOCAT;
 
   private readonly _maxRetry: number = 3;

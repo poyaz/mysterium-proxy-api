@@ -1,4 +1,4 @@
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {
   RunnerExecEnum,
   RunnerModel,
@@ -25,7 +25,7 @@ type EnvoyDockerContainerOption = {
   networkName: string,
 }
 
-export class DockerRunnerCreateEnvoyRepository implements ICreateRunnerRepository {
+export class DockerRunnerCreateEnvoyRepository implements ICreateRunnerRepositoryInterface {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.ENVOY;
 
   private readonly _namespace: string;

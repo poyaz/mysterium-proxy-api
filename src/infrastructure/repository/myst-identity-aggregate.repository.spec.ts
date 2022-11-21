@@ -6,7 +6,7 @@ import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {Test, TestingModule} from '@nestjs/testing';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
-import {IAccountIdentityFileRepository} from '@src-core/interface/i-account-identity-file.repository';
+import {IAccountIdentityFileRepositoryInterface} from '@src-core/interface/i-account-identity-file-repository.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 import {
@@ -29,14 +29,14 @@ jest.mock('@src-infrastructure/utility/utility');
 
 describe('MystIdentityAggregateRepository', () => {
   let repository: MystIdentityAggregateRepository;
-  let mystIdentityFileRepository: MockProxy<IAccountIdentityFileRepository>;
+  let mystIdentityFileRepository: MockProxy<IAccountIdentityFileRepositoryInterface>;
   let mystIdentityPgRepository: MockProxy<IGenericRepositoryInterface<MystIdentityModel>>;
   let dockerRunnerRepository: MockProxy<IRunnerRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
   let fakeIdentifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
-    mystIdentityFileRepository = mock<IAccountIdentityFileRepository>();
+    mystIdentityFileRepository = mock<IAccountIdentityFileRepositoryInterface>();
     mystIdentityPgRepository = mock<IGenericRepositoryInterface<MystIdentityModel>>();
     dockerRunnerRepository = mock<IRunnerRepositoryInterface>();
 
@@ -68,7 +68,7 @@ describe('MystIdentityAggregateRepository', () => {
             ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
           ],
           useFactory: (
-            mystIdentityFileRepository: IAccountIdentityFileRepository,
+            mystIdentityFileRepository: IAccountIdentityFileRepositoryInterface,
             mystIdentityPgRepository: IGenericRepositoryInterface<MystIdentityModel>,
             dockerRunnerRepository: IRunnerRepositoryInterface,
           ) =>

@@ -2,7 +2,7 @@ import {DockerRunnerCreateStrategyRepository} from './docker-runner-create-strat
 import {Test, TestingModule} from '@nestjs/testing';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {mock, MockProxy} from 'jest-mock-extended';
 import {
   RunnerExecEnum,
@@ -20,13 +20,13 @@ import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 
 describe('DockerRunnerCreateStrategyRepository', () => {
   let repository: DockerRunnerCreateStrategyRepository;
-  let dockerCreateMyst: MockProxy<ICreateRunnerRepository>;
-  let dockerCreateMystConnect: MockProxy<ICreateRunnerRepository>;
+  let dockerCreateMyst: MockProxy<ICreateRunnerRepositoryInterface>;
+  let dockerCreateMystConnect: MockProxy<ICreateRunnerRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
-    dockerCreateMyst = mock<ICreateRunnerRepository>({serviceType: RunnerServiceEnum.MYST});
-    dockerCreateMystConnect = mock<ICreateRunnerRepository>({serviceType: RunnerServiceEnum.MYST_CONNECT});
+    dockerCreateMyst = mock<ICreateRunnerRepositoryInterface>({serviceType: RunnerServiceEnum.MYST});
+    dockerCreateMystConnect = mock<ICreateRunnerRepositoryInterface>({serviceType: RunnerServiceEnum.MYST_CONNECT});
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
@@ -47,7 +47,7 @@ describe('DockerRunnerCreateStrategyRepository', () => {
             ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_REPOSITORY,
             ProviderTokenEnum.DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY,
           ],
-          useFactory: (...dockerCreateList: Array<ICreateRunnerRepository>) =>
+          useFactory: (...dockerCreateList: Array<ICreateRunnerRepositoryInterface>) =>
             new DockerRunnerCreateStrategyRepository(dockerCreateList),
         },
       ],
@@ -75,7 +75,7 @@ describe('DockerRunnerCreateStrategyRepository', () => {
             {
               provide: DockerRunnerCreateStrategyRepository,
               inject: [],
-              useFactory: (...dockerCreateList: Array<ICreateRunnerRepository>) =>
+              useFactory: (...dockerCreateList: Array<ICreateRunnerRepositoryInterface>) =>
                 new DockerRunnerCreateStrategyRepository(dockerCreateList),
             },
           ],
@@ -128,7 +128,7 @@ describe('DockerRunnerCreateStrategyRepository', () => {
               provide: DockerRunnerCreateStrategyRepository,
               inject: [],
               useFactory: () =>
-                new DockerRunnerCreateStrategyRepository(<Array<ICreateRunnerRepository>><any>'invalid-instance'),
+                new DockerRunnerCreateStrategyRepository(<Array<ICreateRunnerRepositoryInterface>><any>'invalid-instance'),
             },
           ],
         }).compile();

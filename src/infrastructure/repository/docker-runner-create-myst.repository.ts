@@ -1,5 +1,5 @@
 import {Injectable} from '@nestjs/common';
-import {ICreateRunnerRepository} from '@src-core/interface/i-create-runner-repository';
+import {ICreateRunnerRepositoryInterface} from '@src-core/interface/i-create-runner-repository.interface';
 import {
   RunnerExecEnum,
   RunnerLabelNamespace,
@@ -32,7 +32,7 @@ type MystDockerContainerOption = {
 }
 
 @Injectable()
-export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository {
+export class DockerRunnerCreateMystRepository implements ICreateRunnerRepositoryInterface {
   readonly serviceType: RunnerServiceEnum = RunnerServiceEnum.MYST;
 
   private readonly _namespace: string;
