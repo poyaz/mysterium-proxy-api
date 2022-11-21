@@ -98,6 +98,7 @@ describe('Proxy.HttpController', () => {
         ip: '25.14.65.1',
         mask: 32,
         type: ProxyTypeEnum.MYST,
+        country: 'GB',
         runner: outputRunnerDownstreamModel,
         status: ProxyStatusEnum.ONLINE,
       });
@@ -232,6 +233,7 @@ describe('Proxy.HttpController', () => {
         ip: '25.14.65.1',
         mask: 32,
         type: ProxyTypeEnum.MYST,
+        country: 'GB',
         runner: outputRunnerDownstreamModel,
         status: ProxyStatusEnum.ONLINE,
       });
