@@ -55,6 +55,7 @@ import {DefaultArraySuccessDto} from '@src-api/http/dto/default-array-success.dt
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {ChangeOwnPasswordInterceptor} from '@src-api/http/controller/users/interceptor/change-own-password.interceptor';
+import {AnonymousRegisterGuard} from '@src-api/http/controller/users/guard/anonymous-register.guard';
 
 @Controller({
   path: 'users',
@@ -77,7 +78,7 @@ export class UsersHttpController {
   @Post()
   @ExcludeAuth()
   @Roles(UserRoleEnum.ADMIN)
-  @UseGuards(CreateAdminUserGuard)
+  @UseGuards(AnonymousRegisterGuard, CreateAdminUserGuard)
   @ApiOperation({description: 'Register new user', operationId: 'Add new user'})
   @ApiBody({
     type: CreateUserInputDto,

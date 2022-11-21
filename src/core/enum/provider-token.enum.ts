@@ -3,6 +3,12 @@ export enum ProviderTokenEnum {
 
   /**
    *
+   * {@link AnonymousRegisterGuard}
+   */
+  CAN_ANONYMOUS_REGISTER = 'CAN_ANONYMOUS_REGISTER',
+
+  /**
+   *
    * {@link AUTH_SERVICE}
    * @implements IDateTime
    */

@@ -169,6 +169,11 @@ export class EnvConfigDto {
   @IsOptional()
   @IsNumber()
   PROXY_START_UPSTREAM_PORT: number;
+
+  @IsOptional()
+  @IsEnum(BooleanEnv)
+  @Transform(param => param.value.toLowerCase())
+  ENABLE_ANONYMOUS_LOGIN?: BooleanEnv;
 }
 
 

@@ -9,6 +9,7 @@ import htpasswdConfig from './config/htpasswd.config';
 import dockerConfig from './config/docker.config';
 import mystConfig from './config/myst.config';
 import proxyConfig from './config/proxy.config';
+import usersConfig from './config/users.config';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import proxyConfig from './config/proxy.config';
         dockerConfig,
         mystConfig,
         proxyConfig,
+        usersConfig
       ],
     }),
   ],

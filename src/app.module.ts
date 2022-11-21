@@ -71,6 +71,7 @@ import {IProxyRepositoryInterface} from '@src-core/interface/i-proxy-repository.
 import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.interface';
 import {MystProviderProxyService} from '@src-core/service/myst-provider-proxy.service';
 import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interface';
+import {UsersConfigInterface} from '@src-loader/configure/interface/users-config.interface';
 
 @Module({
   imports: [
@@ -140,6 +141,15 @@ import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interf
         }
 
         return new JwtAuthGuard(reflector);
+      },
+    },
+    {
+      provide: ProviderTokenEnum.CAN_ANONYMOUS_REGISTER,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const USERS_CONF = configService.get<UsersConfigInterface>('users');console.log(USERS_CONF)
+
+        return USERS_CONF.canAnonymousRegister;
       },
     },
 
