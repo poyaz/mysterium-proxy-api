@@ -75,11 +75,22 @@ export class FindProxyOutputDto {
 
   @ApiProperty({
     description: 'The status of proxy',
-    type: String,
-    enum: ProxyStatusEnum,
+    type: Number,
+    enum: {
+      [ProxyStatusEnum.DISABLE.toString()]: ProxyStatusEnum.DISABLE,
+      [ProxyStatusEnum.OFFLINE.toString()]: ProxyStatusEnum.OFFLINE,
+      [ProxyStatusEnum.ONLINE.toString()]: ProxyStatusEnum.ONLINE,
+    },
     required: false,
     readOnly: true,
     example: ProxyStatusEnum.ONLINE,
+    examples: {
+      'disable proxy': {
+        value: {
+          country: 'GB',
+        },
+      },
+    },
   })
   status: ProxyStatusEnum;
 }
