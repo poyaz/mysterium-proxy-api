@@ -147,7 +147,7 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
       provide: ProviderTokenEnum.CAN_ANONYMOUS_REGISTER,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const USERS_CONF = configService.get<UsersConfigInterface>('users');console.log(USERS_CONF)
+        const USERS_CONF = configService.get<UsersConfigInterface>('users');
 
         return USERS_CONF.canAnonymousRegister;
       },
