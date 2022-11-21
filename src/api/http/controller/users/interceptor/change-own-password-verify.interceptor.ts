@@ -6,7 +6,7 @@ import {UpdatePasswordInputDto} from '@src-api/http/controller/users/dto/update-
 import {PasswordMismatchException} from '@src-core/exception/password-mismatch.exception';
 
 @Injectable()
-export class ChangeOwnPasswordInterceptor implements NestInterceptor {
+export class ChangeOwnPasswordVerifyInterceptor implements NestInterceptor {
   constructor(
     @Inject(ProviderTokenEnum.USER_SERVICE_DEFAULT)
     private readonly _usersService: IUsersServiceInterface,

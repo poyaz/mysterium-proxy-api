@@ -54,8 +54,8 @@ import {IAuthServiceInterface} from '@src-core/interface/i-auth-service.interfac
 import {DefaultArraySuccessDto} from '@src-api/http/dto/default-array-success.dto';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
-import {ChangeOwnPasswordInterceptor} from '@src-api/http/controller/users/interceptor/change-own-password.interceptor';
 import {AnonymousRegisterGuard} from '@src-api/http/controller/users/guard/anonymous-register.guard';
+import {ChangeOwnPasswordVerifyInterceptor} from '@src-api/http/controller/users/interceptor/change-own-password-verify.interceptor';
 
 @Controller({
   path: 'users',
@@ -312,7 +312,7 @@ export class UsersHttpController {
 
   @Patch(':userId')
   @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
-  @UseInterceptors(ChangeOwnPasswordInterceptor)
+  @UseInterceptors(ChangeOwnPasswordVerifyInterceptor)
   @ApiOperation({description: 'Change password of user', operationId: 'Change password of user'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBearerAuth()
