@@ -510,7 +510,7 @@ import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repo
     {
       provide: ProviderTokenEnum.USER_ADAPTER_REPOSITORY,
       inject: [
-        ProviderTokenEnum.USER_PG_REPOSITORY,
+        ProviderTokenEnum.USERS_PG_REPOSITORY,
         ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
         ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
       ],
@@ -531,7 +531,7 @@ import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repo
       },
     },
     {
-      provide: ProviderTokenEnum.USER_PG_REPOSITORY,
+      provide: ProviderTokenEnum.USERS_PG_REPOSITORY,
       inject: [
         getRepositoryToken(UsersEntity),
         ProviderTokenEnum.IDENTIFIER_UUID,

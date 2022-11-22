@@ -25,12 +25,12 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: ProviderTokenEnum.USER_PG_REPOSITORY,
+          provide: ProviderTokenEnum.USERS_PG_REPOSITORY,
           useValue: usersRepository,
         },
         {
           provide: UsersService,
-          inject: [ProviderTokenEnum.USER_PG_REPOSITORY],
+          inject: [ProviderTokenEnum.USERS_PG_REPOSITORY],
           useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
             new UsersService(usersRepository),
         },

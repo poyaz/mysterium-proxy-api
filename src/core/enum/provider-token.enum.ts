@@ -212,7 +212,7 @@ export enum ProviderTokenEnum {
    * {@link UsersPgRepository}
    * @implements IGenericRepositoryInterface<UsersModel>
    */
-  USER_PG_REPOSITORY = 'USER_PG_REPOSITORY',
+  USERS_PG_REPOSITORY = 'USERS_PG_REPOSITORY',
 
   /**
    *

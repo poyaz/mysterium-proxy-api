@@ -38,7 +38,7 @@ describe('UsersAdapterRepository', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: ProviderTokenEnum.USER_PG_REPOSITORY,
+          provide: ProviderTokenEnum.USERS_PG_REPOSITORY,
           useValue: usersPgRepository,
         },
         {
@@ -52,7 +52,7 @@ describe('UsersAdapterRepository', () => {
         {
           provide: UsersAdapterRepository,
           inject: [
-            ProviderTokenEnum.USER_PG_REPOSITORY,
+            ProviderTokenEnum.USERS_PG_REPOSITORY,
             ProviderTokenEnum.USERS_HTPASSWD_FILE_REPOSITORY,
             ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
           ],
