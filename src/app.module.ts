@@ -215,6 +215,10 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
       useFactory: (usersRepository: IGenericRepositoryInterface<UsersModel>) =>
         new UsersService(usersRepository),
     },
+    {
+      provide: ProviderTokenEnum.USERS_PROXY_SERVICE,
+      useValue: () => ({}),
+    },
 
     {
       provide: ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,

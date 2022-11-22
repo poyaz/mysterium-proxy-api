@@ -52,10 +52,6 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
       useFactory: () => ({}),
     },
     {
-      provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
-      useFactory: () => ({}),
-    },
-    {
       provide: ProviderTokenEnum.MYST_PROVIDER_SERVICE_DEFAULT,
       useFactory: () => ({}),
     },
@@ -66,6 +62,14 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
     {
       provide: ProviderTokenEnum.PROXY_SERVICE_DEFAULT,
       useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
+      useFactory: () => ({}),
+    },
+    {
+      provide: ProviderTokenEnum.USERS_PROXY_SERVICE_DEFAULT,
+      useValue: () => ({}),
     },
   ],
   exports: [],
