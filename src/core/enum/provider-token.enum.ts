@@ -100,7 +100,7 @@ export enum ProviderTokenEnum {
   USER_SERVICE = 'USER_SERVICE',
   /**
    *
-   * {@link }
+   * {@link UsersProxyService}
    * @implements IUsersProxyServiceInterface
    */
   USERS_PROXY_SERVICE = 'USERS_PROXY_SERVICE',
@@ -114,31 +114,31 @@ export enum ProviderTokenEnum {
   /**
    *
    * {@link DockerRunnerCreateEnvoyRepository}
-   * @implements ICreateRunnerRepository
+   * @implements ICreateRunnerRepositoryInterface
    */
   DOCKER_RUNNER_CREATE_ENVOY_REPOSITORY = 'DOCKER_RUNNER_CREATE_ENVOY_REPOSITORY',
   /**
    *
    * {@link DockerRunnerCreateMystRepository}
-   * @implements ICreateRunnerRepository
+   * @implements ICreateRunnerRepositoryInterface
    */
   DOCKER_RUNNER_CREATE_MYST_REPOSITORY = 'DOCKER_RUNNER_CREATE_MYST_REPOSITORY',
   /**
    *
    * {@link DockerRunnerCreateMystConnectRepository}
-   * @implements ICreateRunnerRepository
+   * @implements ICreateRunnerRepositoryInterface
    */
   DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY = 'DOCKER_RUNNER_CREATE_MYST_CONNECT_REPOSITORY',
   /**
    *
    * {@link DockerRunnerCreateSocatRepository}
-   * @implements ICreateRunnerRepository
+   * @implements ICreateRunnerRepositoryInterface
    */
   DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY = 'DOCKER_RUNNER_CREATE_SOCAT_REPOSITORY',
   /**
    *
    * {@link DockerRunnerCreateStrategyRepository}
-   * @implements ICreateRunnerRepository
+   * @implements ICreateRunnerRepositoryInterface
    */
   DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY = 'DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY',
   /**
@@ -150,7 +150,7 @@ export enum ProviderTokenEnum {
   /**
    *
    * {@link MystIdentityFileRepository}
-   * @implements IAccountIdentityFileRepository
+   * @implements IAccountIdentityFileRepositoryInterface
    */
   MYST_IDENTITY_FILE_REPOSITORY = 'MYST_IDENTITY_FILE_REPOSITORY',
   /**
