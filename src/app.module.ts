@@ -72,6 +72,9 @@ import {IProviderServiceInterface} from '@src-core/interface/i-provider-service.
 import {MystProviderProxyService} from '@src-core/service/myst-provider-proxy.service';
 import {IProxyServiceInterface} from '@src-core/interface/i-proxy-service.interface';
 import {UsersConfigInterface} from '@src-loader/configure/interface/users-config.interface';
+import {NginxProxyAclRepository} from '@src-infrastructure/repository/nginx-proxy-acl.repository';
+import {NginxProxyAclAggregateRepository} from '@src-infrastructure/repository/nginx-proxy-acl-aggregate.repository';
+import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repository.interface';
 
 @Module({
   imports: [
@@ -459,6 +462,23 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
         mystProviderApiRepository: IMystApiRepositoryInterface,
         logger: Logger,
       ) => new MystProviderCacheApiRepository(redis, mystProviderApiRepository, logger),
+    },
+    {
+      provide: ProviderTokenEnum.NGINX_PROXY_ACL_REPOSITORY,
+      inject: [ConfigService, ProviderTokenEnum.IDENTIFIER_UUID],
+      useFactory: (configService: ConfigService, identity: IIdentifier) => {
+        const PROXY_CONFIG = configService.get<ProxyConfigInterface>('proxy');
+
+        return new NginxProxyAclRepository(identity, PROXY_CONFIG.nginxAclFile);
+      },
+    },
+    {
+      provide: ProviderTokenEnum.NGINX_PROXY_ACL_AGGREGATE_REPOSITORY,
+      inject: [ProviderTokenEnum.NGINX_PROXY_ACL_REPOSITORY, ProviderTokenEnum.USER_ADAPTER_REPOSITORY],
+      useFactory: (
+        proxyAclRepository: IProxyAclRepositoryInterface,
+        usersRepository: IGenericRepositoryInterface<UsersModel>,
+      ) => new NginxProxyAclAggregateRepository(proxyAclRepository, usersRepository),
     },
     {
       provide: ProviderTokenEnum.PROXY_AGGREGATE_REPOSITORY,

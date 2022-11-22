@@ -179,6 +179,18 @@ export enum ProviderTokenEnum {
   MYST_PROVIDER_CACHE_API_REPOSITORY = 'MYST_PROVIDER_CACHE_API_REPOSITORY',
   /**
    *
+   * {@link NginxProxyAclRepository}
+   * @implements IProxyAclRepositoryInterface
+   */
+  NGINX_PROXY_ACL_REPOSITORY = 'NGINX_PROXY_ACL_REPOSITORY',
+  /**
+   *
+   * {@link NginxProxyAclAggregateRepository}
+   * @implements IProxyAclRepositoryInterface
+   */
+  NGINX_PROXY_ACL_AGGREGATE_REPOSITORY = 'NGINX_PROXY_ACL_AGGREGATE_REPOSITORY',
+  /**
+   *
    * {@link ProxyAggregateRepository}
    * @implements IProxyRepositoryInterface
    */
