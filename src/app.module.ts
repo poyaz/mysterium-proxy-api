@@ -75,6 +75,9 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
 import {NginxProxyAclRepository} from '@src-infrastructure/repository/nginx-proxy-acl.repository';
 import {NginxProxyAclAggregateRepository} from '@src-infrastructure/repository/nginx-proxy-acl-aggregate.repository';
 import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repository.interface';
+import {UsersProxyAggregateRepository} from '@src-infrastructure/repository/users-proxy-aggregate.repository';
+import {UsersProxyService} from '@src-core/service/users-proxy.service';
+import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-repository.interface';
 
 @Module({
   imports: [
@@ -220,7 +223,12 @@ import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repo
     },
     {
       provide: ProviderTokenEnum.USERS_PROXY_SERVICE,
-      useValue: () => ({}),
+      inject: [
+        ProviderTokenEnum.USER_SERVICE,
+        ProviderTokenEnum.USERS_PROXY_AGGREGATE_REPOSITORY,
+      ],
+      useValue: (usersService: IUsersServiceInterface, usersProxyRepository: IUsersProxyRepositoryInterface) =>
+        new UsersProxyService(usersService, usersProxyRepository),
     },
 
     {
@@ -539,6 +547,19 @@ import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repo
       ],
       useFactory: (db: Repository<UsersEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
         new UsersPgRepository(db, identifier, dateTime),
+    },
+    {
+      provide: ProviderTokenEnum.USERS_PROXY_AGGREGATE_REPOSITORY,
+      inject: [
+        ProviderTokenEnum.PROXY_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.NGINX_PROXY_ACL_AGGREGATE_REPOSITORY,
+        ProviderTokenEnum.USER_ADAPTER_REPOSITORY,
+      ],
+      useFactory: (
+        proxyRepository: IProxyRepositoryInterface,
+        proxyAclRepository: IProxyAclRepositoryInterface,
+        usersRepository: IGenericRepositoryInterface<UsersModel>,
+      ) => new UsersProxyAggregateRepository(proxyRepository, proxyAclRepository, usersRepository),
     },
 
     {

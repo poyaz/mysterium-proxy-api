@@ -213,6 +213,12 @@ export enum ProviderTokenEnum {
    * @implements IGenericRepositoryInterface<UsersModel>
    */
   USERS_PG_REPOSITORY = 'USERS_PG_REPOSITORY',
+  /**
+   *
+   * {@link UsersProxyAggregateRepository}
+   * @implements IUsersProxyRepositoryInterface
+   */
+  USERS_PROXY_AGGREGATE_REPOSITORY = 'USERS_PROXY_AGGREGATE_REPOSITORY',
 
   /**
    *
