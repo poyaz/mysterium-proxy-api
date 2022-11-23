@@ -227,7 +227,7 @@ import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-
         ProviderTokenEnum.USER_SERVICE,
         ProviderTokenEnum.USERS_PROXY_AGGREGATE_REPOSITORY,
       ],
-      useValue: (usersService: IUsersServiceInterface, usersProxyRepository: IUsersProxyRepositoryInterface) =>
+      useFactory: (usersService: IUsersServiceInterface, usersProxyRepository: IUsersProxyRepositoryInterface) =>
         new UsersProxyService(usersService, usersProxyRepository),
     },
 
