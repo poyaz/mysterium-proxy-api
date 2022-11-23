@@ -143,24 +143,30 @@ export class FindProviderQueryDto extends OmitType(FilterInputDto, ['sorts'] as 
   filters?: FilterProviderInputDto;
 
   static toModel(dto: FindProviderQueryDto): FilterModel<VpnProviderModel> {
-    const data = instanceToPlain(dto);
+    const obj: { page?: number, limit?: number } = {};
+    if (typeof dto.page !== 'undefined') {
+      obj.page = dto.page;
+    }
+    if (typeof dto.limit !== 'undefined') {
+      obj.limit = dto.limit;
+    }
 
-    const filterModel = new FilterModel<VpnProviderModel>(data);
+    const filterModel = new FilterModel<VpnProviderModel>(obj);
 
     if (typeof dto.filters?.country !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', country: data.filters.country});
+      filterModel.addCondition({$opr: 'eq', country: dto.filters.country});
     }
     if (typeof dto.filters?.providerIdentity !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', providerIdentity: data.filters.providerIdentity});
+      filterModel.addCondition({$opr: 'eq', providerIdentity: dto.filters.providerIdentity});
     }
     if (typeof dto.filters?.providerIpType !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', providerIpType: data.filters.providerIpType});
+      filterModel.addCondition({$opr: 'eq', providerIpType: dto.filters.providerIpType});
     }
     if (typeof dto.filters?.isRegister !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', isRegister: data.filters.isRegister});
+      filterModel.addCondition({$opr: 'eq', isRegister: dto.filters.isRegister});
     }
     if (typeof dto.filters?.proxyCount !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', proxyCount: data.filters.proxyCount});
+      filterModel.addCondition({$opr: 'eq', proxyCount: dto.filters.proxyCount});
     }
 
     return filterModel;

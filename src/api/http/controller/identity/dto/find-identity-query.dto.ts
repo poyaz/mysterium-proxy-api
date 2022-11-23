@@ -103,19 +103,25 @@ export class FindIdentityQueryDto extends PartialType(FilterInputDto) {
   filters?: FilterIdentityInputDto;
 
   static toModel(dto: FindIdentityQueryDto): FilterModel<MystIdentityModel> {
-    const data = instanceToPlain(dto);
+    const obj: { page?: number, limit?: number } = {};
+    if (typeof dto.page !== 'undefined') {
+      obj.page = dto.page;
+    }
+    if (typeof dto.limit !== 'undefined') {
+      obj.limit = dto.limit;
+    }
 
-    const filterModel = new FilterModel<MystIdentityModel>(data);
+    const filterModel = new FilterModel<MystIdentityModel>(obj);
 
     if (typeof dto.sorts?.insertDate !== 'undefined') {
       filterModel.addSortBy({insertDate: dto.sorts.insertDate});
     }
 
     if (typeof dto.filters?.identity !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', identity: data.filters.identity});
+      filterModel.addCondition({$opr: 'eq', identity: dto.filters.identity});
     }
     if (typeof dto.filters?.isUse !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', isUse: data.filters.isUse});
+      filterModel.addCondition({$opr: 'eq', isUse: dto.filters.isUse});
     }
 
     return filterModel;

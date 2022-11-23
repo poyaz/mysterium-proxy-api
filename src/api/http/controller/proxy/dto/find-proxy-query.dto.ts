@@ -75,12 +75,18 @@ export class FindProxyQueryDto extends OmitType(FilterInputDto, ['sorts'] as con
   filters?: FilterProxyInputDto;
 
   static toModel(dto: FindProxyQueryDto): FilterModel<ProxyUpstreamModel> {
-    const data = instanceToPlain(dto);
+    const obj: { page?: number, limit?: number } = {};
+    if (typeof dto.page !== 'undefined') {
+      obj.page = dto.page;
+    }
+    if (typeof dto.limit !== 'undefined') {
+      obj.limit = dto.limit;
+    }
 
-    const filterModel = new FilterModel<ProxyUpstreamModel>(data);
+    const filterModel = new FilterModel<ProxyUpstreamModel>(obj);
 
     if (typeof dto.filters?.listenPort !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', listenPort: data.filters.listenPort});
+      filterModel.addCondition({$opr: 'eq', listenPort: dto.filters.listenPort});
     }
     if (typeof dto.filters?.status !== 'undefined') {
       const downstreamFilter = defaultModelFactory<ProxyDownstreamModel>(

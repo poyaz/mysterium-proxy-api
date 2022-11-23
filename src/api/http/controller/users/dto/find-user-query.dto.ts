@@ -1,6 +1,5 @@
 import {
   IsBoolean,
-  IsDateString,
   IsEnum,
   IsOptional,
   IsString,
@@ -9,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {ApiProperty, PartialType} from '@nestjs/swagger';
-import {instanceToPlain, Transform, Type} from 'class-transformer';
+import {Transform, Type} from 'class-transformer';
 import {FilterModel, SortEnum} from '@src-core/model/filter.model';
 import {UsersModel} from '@src-core/model/users.model';
 import {FilterInputDto} from '@src-api/http/dto/filter-input.dto';
@@ -151,9 +150,15 @@ export class FindUserQueryDto extends PartialType(FilterInputDto) {
   filters?: FilterUserInputDto;
 
   static toModel(dto: FindUserQueryDto): FilterModel<UsersModel> {
-    const data = instanceToPlain(dto);
+    const obj: { page?: number, limit?: number } = {};
+    if (typeof dto.page !== 'undefined') {
+      obj.page = dto.page;
+    }
+    if (typeof dto.limit !== 'undefined') {
+      obj.limit = dto.limit;
+    }
 
-    const filterModel = new FilterModel<UsersModel>(data);
+    const filterModel = new FilterModel<UsersModel>(obj);
 
     if (typeof dto.sorts?.username !== 'undefined') {
       filterModel.addSortBy({username: dto.sorts.username});
@@ -166,10 +171,10 @@ export class FindUserQueryDto extends PartialType(FilterInputDto) {
     }
 
     if (typeof dto.filters?.username !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', username: data.filters.username});
+      filterModel.addCondition({$opr: 'eq', username: dto.filters.username});
     }
     if (typeof dto.filters?.isEnable !== 'undefined') {
-      filterModel.addCondition({$opr: 'eq', isEnable: data.filters.isEnable});
+      filterModel.addCondition({$opr: 'eq', isEnable: dto.filters.isEnable});
     }
 
     return filterModel;
