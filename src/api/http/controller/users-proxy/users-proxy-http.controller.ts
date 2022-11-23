@@ -1,4 +1,4 @@
-import {Controller, Get, Inject, Param, Query, UseGuards} from '@nestjs/common';
+import {Controller, Get, Inject, Param, Query, UseGuards, UseInterceptors} from '@nestjs/common';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {
   ApiBadRequestResponse,
@@ -21,6 +21,7 @@ import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {IUsersProxyServiceInterface} from '@src-core/interface/i-users-proxy-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {FindUsersProxyQueryDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-query.dto';
+import {OutputUsersProxyInterceptor} from '@src-api/http/controller/users-proxy/interceptor/output-users-proxy.interceptor';
 
 @Controller({
   path: 'users',
@@ -47,6 +48,7 @@ export class UsersProxyHttpController {
   }
 
   @Get(':userId/proxy')
+  @UseInterceptors(OutputUsersProxyInterceptor)
   @ApiOperation({description: 'The list of proxies user has access to it', operationId: 'Get user access proxy'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiQuery({
