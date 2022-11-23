@@ -323,11 +323,13 @@ import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-
         ConfigService,
         DockerService,
         ProviderTokenEnum.IDENTIFIER_UUID,
+        ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
       ],
       useFactory: (
         configService: ConfigService,
         docker: DockerService,
         identity: IIdentifier,
+        systemInfoRepository: ISystemInfoRepositoryInterface,
       ) => {
         const DOCKER_CONFIG = configService.get<DockerConfigInterface>('docker');
         const REDIS_CONFIG = configService.get<RedisConfigInterface>('redis');
@@ -335,6 +337,7 @@ import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-
         return new DockerRunnerCreateMystConnectRepository(
           docker.getInstance(),
           identity,
+          systemInfoRepository,
           {
             imageName: DOCKER_CONFIG.containerInfo.mystConnect.image,
             networkName: DOCKER_CONFIG.networkName,

@@ -35,6 +35,8 @@ docker_setup_env() {
   file_env 'REDIS_PORT' '6379'
   file_env 'REDIS_DB'
   file_env 'REDIS_PROVIDER_INFO_KEY'
+  file_env 'OUTGOING_IP_ADDRESS'
+  file_env 'CONNECTED_LOCK_FILE' '/tmp/connected.lock'
 }
 
 check_total_interface_count() {
@@ -147,6 +149,48 @@ get_current_ip() {
   echo $(echo "$CONTENT")
 }
 
+disconnect_vpn_if_ip_not_match() {
+  if [ -z $OUTGOING_IP_ADDRESS ]; then
+    echo 0
+    return 0
+  fi
+
+  local CONTENT_IP CONTENT_IP_RC
+  CONTENT_IP=$(get_current_ip)
+  CONTENT_IP_RC=$?
+  if [ $CONTENT_IP_RC -ne 0 ]; then
+    exit $CONTENT_IP_RC
+  fi
+
+  local CURRENT_IP=$(echo "$CONTENT_IP" | jq -r .ip)
+  if [ $OUTGOING_IP_ADDRESS != $CURRENT_IP ]; then
+    echo 0
+    return 0
+  fi
+
+  declare -r RES=$(
+    curl -s \
+      -w "\n%{http_code}" \
+      -X DELETE \
+      -H 'content-type: application/json' \
+      "${MYST_API_BASE_ADDRESS}/connection"
+  )
+  declare -r HTTP_CODE=$(tail -n1 <<<"$RES")
+  declare -r CONTENT=$(sed '$ d' <<<"$RES")
+
+  if [ $HTTP_CODE -ne 202 ]; then
+    if echo "$CONTENT" | grep -q "err_no_connection_exists"; then
+      echo 1
+      return 0
+    fi
+
+    print_stderr "[ERR] Fail after execute disconnect provider!"
+    exit 1
+  fi
+
+  echo 1
+}
+
 store_ip_in_redis() {
   declare -r DATA=$(echo "$1" | jq -S '. |= . + {"provider_identity": "'$PROVIDER_IDENTITY'"}')
 
@@ -184,6 +228,8 @@ run() {
 
 _main() {
   if [ "$1" = 'myst' ]; then
+    rm -f "$CONNECTED_LOCK_FILE"
+
     sleep 2
 
     docker_setup_env
@@ -220,9 +266,22 @@ _main() {
     if [ $IS_CONNECTED -eq 0 ]; then
       connect_vpn
     else
-      echo "[INFO] Skipping connect to provider because it has already connected."
+      local IS_DISCONNECTED IS_DISCONNECTED_RC
+      IS_DISCONNECTED=$(disconnect_vpn_if_ip_not_match)
+      IS_DISCONNECTED_RC=$?
+
+      if [ $IS_DISCONNECTED_RC -ne 0 ]; then
+        exit $IS_DISCONNECTED_RC
+      fi
+
+      if [ $IS_DISCONNECTED -eq 1 ]; then
+        connect_vpn
+      else
+        echo "[INFO] Skipping connect to provider because it has already connected."
+      fi
     fi
 
+    touch "$CONNECTED_LOCK_FILE"
     run
   fi
 

@@ -16,6 +16,7 @@ import {defaultModelType} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
+import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
 
 type MystDockerContainerOption = {
   imageName: string,
@@ -38,6 +39,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
   constructor(
     private readonly _docker: Docker,
     private readonly _identity: IIdentifier,
+    private readonly _systemInfoRepository: ISystemInfoRepositoryInterface,
     private readonly _mystContainerOption: MystDockerContainerOption,
     private readonly _redisConnection: RedisOption,
     namespace: string,
@@ -60,6 +62,11 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
     const [vpnModelError, vpnModelData] = DockerRunnerCreateMystConnectRepository._getVpnProviderModel(dockerLabelParser);
     if (vpnModelError) {
       return [vpnModelError];
+    }
+
+    const [outgoingIpError, outgoingIpData] = await this._systemInfoRepository.getOutgoingIpAddress();
+    if (outgoingIpError) {
+      return [outgoingIpError];
     }
 
     try {
@@ -88,6 +95,7 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
           `REDIS_PORT=${this._redisConnection.port}`,
           `REDIS_DB=${this._redisConnection.db}`,
           `REDIS_PROVIDER_INFO_KEY=${this._REDIS_PROVIDER_INFO_KEY}`,
+          `OUTGOING_IP_ADDRESS=${outgoingIpData}`
         ],
         HostConfig: {
           Binds: [

@@ -22,16 +22,19 @@ import {
 } from '@src-core/model/vpn-provider.model';
 import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
-import Docker = require('dockerode');
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import Dockerode from 'dockerode';
 import {NotRunningServiceException} from '@src-core/exception/not-running-service.exception';
+import {ISystemInfoRepositoryInterface} from '@src-core/interface/i-system-info-repository.interface';
+import Docker = require('dockerode');
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 jest.mock('@src-infrastructure/utility/docker-label-parser');
 
 describe('DockerRunnerCreateMystConnectRepository', () => {
   let repository: DockerRunnerCreateMystConnectRepository;
   let docker: MockProxy<Docker>;
+  let systemInfoRepository: MockProxy<ISystemInfoRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
   let networkName: string;
   let imageName: string;
@@ -45,6 +48,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('11111111-1111-1111-1111-111111111111');
+
+    systemInfoRepository = mock<ISystemInfoRepositoryInterface>();
 
     networkName = 'mysterium-proxy-api_main';
     imageName = 'mysterium-proxy-api-myst-connect';
@@ -64,12 +69,21 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           useValue: identifierMock,
         },
         {
+          provide: ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
+          useValue: systemInfoRepository,
+        },
+        {
           provide: DockerRunnerCreateMystConnectRepository,
-          inject: [ProviderTokenEnum.DOCKER_DYNAMIC_MODULE, ProviderTokenEnum.IDENTIFIER_UUID],
-          useFactory: (docker: Docker, identity: IIdentifier) =>
+          inject: [
+            ProviderTokenEnum.DOCKER_DYNAMIC_MODULE,
+            ProviderTokenEnum.IDENTIFIER_UUID,
+            ProviderTokenEnum.SYSTEM_INFO_REPOSITORY,
+          ],
+          useFactory: (docker: Docker, identity: IIdentifier, systemInfoRepository: ISystemInfoRepositoryInterface) =>
             new DockerRunnerCreateMystConnectRepository(
               docker,
               identity,
+              systemInfoRepository,
               {imageName, networkName},
               {host: redisHost, port: redisPort, db: redisDb},
               namespace,
@@ -98,6 +112,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
     let outputMystIdentityValid: defaultModelType<MystIdentityModel>;
     let outputVpnProviderInvalid: defaultModelType<VpnProviderModel>;
     let outputVpnProviderValid: defaultModelType<VpnProviderModel>;
+    let outputOutgoingIp: string;
     let outputEmptyContainerList: Array<Dockerode.ContainerInfo>;
     let outputExistContainerList: Array<Dockerode.ContainerInfo>;
     let outputCreateContainer: { id: string, start: any };
@@ -199,6 +214,8 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
         },
         ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
       );
+
+      outputOutgoingIp = '45.12.65.10';
 
       outputEmptyContainerList = [];
       outputExistContainerList = [
@@ -327,6 +344,34 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect((<FillDataRepositoryException<RunnerLabelNamespace<VpnProviderModel>>>error).fillProperties).toEqual(expect.arrayContaining(['id']));
     });
 
+    it(`Should error create container when get current outgoing ip`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.create(inputRunner);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
     it(`Should error create container when get myst inspect info`, async () => {
       const parseLabelMock = jest.fn().mockReturnValue([null]);
       const getClassInstanceMock = jest.fn()
@@ -342,6 +387,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputOutgoingIp]);
       const executeError = new Error('Error in get list of container');
       docker.listContainers.mockRejectedValue(<never>executeError);
 
@@ -352,6 +398,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
@@ -383,6 +430,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputOutgoingIp]);
       docker.listContainers.mockResolvedValue(outputEmptyContainerList);
 
       const [error] = await repository.create(inputRunner);
@@ -392,6 +440,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
@@ -432,6 +481,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputOutgoingIp]);
       docker.listContainers.mockResolvedValue(outputExistContainerList);
       const executeError = new Error('Error on create container');
       docker.createContainer.mockRejectedValue(executeError);
@@ -443,6 +493,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
@@ -481,6 +532,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `REDIS_PORT=${redisPort}`,
           `REDIS_DB=${redisDb}`,
           `REDIS_PROVIDER_INFO_KEY=myst_provider:info:all`,
+          `OUTGOING_IP_ADDRESS=${outputOutgoingIp}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -529,6 +581,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputOutgoingIp]);
       docker.listContainers.mockResolvedValue(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on start container');
@@ -541,6 +594,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
@@ -579,6 +633,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `REDIS_PORT=${redisPort}`,
           `REDIS_DB=${redisDb}`,
           `REDIS_PROVIDER_INFO_KEY=myst_provider:info:all`,
+          `OUTGOING_IP_ADDRESS=${outputOutgoingIp}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -628,6 +683,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
         };
       });
+      systemInfoRepository.getOutgoingIpAddress.mockResolvedValue([null, outputOutgoingIp]);
       docker.listContainers.mockResolvedValue(outputExistContainerList);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       outputCreateContainer.start.mockResolvedValue();
@@ -639,6 +695,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
       expect(getClassInstanceMock).toHaveBeenCalledTimes(2);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(systemInfoRepository.getOutgoingIpAddress).toHaveBeenCalled();
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
       expect(docker.listContainers).toHaveBeenCalled();
@@ -677,6 +734,7 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           `REDIS_PORT=${redisPort}`,
           `REDIS_DB=${redisDb}`,
           `REDIS_PROVIDER_INFO_KEY=myst_provider:info:all`,
+          `OUTGOING_IP_ADDRESS=${outputOutgoingIp}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
