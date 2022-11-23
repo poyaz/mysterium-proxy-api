@@ -1,0 +1,57 @@
+version: "2.3"
+services:
+  app:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5g"
+        max-file: "2"
+
+  redoc:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1g"
+        max-file: "2"
+
+  postgres:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5g"
+        max-file: "2"
+
+  redis:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1g"
+        max-file: "2"
+
+  docker-proxy:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1g"
+        max-file: "2"
+
+  auth-nginx:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5g"
+        max-file: "2"
+
+  auth-grpc:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1g"
+        max-file: "2"
+
+  autoheal:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2g"
+        max-file: "2"
