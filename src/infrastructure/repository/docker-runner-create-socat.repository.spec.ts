@@ -1064,106 +1064,12 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
-        },
-        NetworkingConfig: {
-          EndpointsConfig: {
-            [networkName]: {},
-          },
-        },
-      }));
-      expect(error).toBeInstanceOf(RepositoryException);
-      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
-    });
-
-    it(`Should error create container when create socat container (Create socat with initiated port)`, async () => {
-      const parseLabelMock = jest.fn().mockReturnValue([null]);
-      const getClassInstanceMock = jest.fn()
-        .mockReturnValueOnce([null, outputMystIdentityValid])
-        .mockReturnValueOnce([null, outputVpnProviderValid])
-        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
-      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
-        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-      });
-      const convertLabelToObjectMock = jest.fn().mockReturnValue({
-        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
-        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
-      });
-      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
-        return {
-          parseLabel: parseLabelMock,
-          getClassInstance: getClassInstanceMock,
-          convertLabelToObject: convertLabelToObjectMock,
-          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
-        };
-      });
-      docker.listContainers
-        .mockResolvedValueOnce(outputExistContainerList)
-        .mockResolvedValueOnce([]);
-      const executeError = new Error('Error on create container');
-      docker.createContainer.mockRejectedValue(executeError);
-
-      const [error] = await repository.create(inputRunnerWithPort);
-
-      expect(DockerLabelParser).toHaveBeenCalled();
-      expect(parseLabelMock).toHaveBeenCalled();
-      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
-      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
-      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
-      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
-      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
-      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
-        all: false,
-        filters: JSON.stringify({
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.MYST}`,
-            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
-          ],
-        }),
-      }));
-      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
-      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
-        all: true,
-        filters: JSON.stringify({
-          name: [inputRunnerWithPort.name],
-          status: ['created'],
-          label: [
-            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
-            `${namespace}.publish-port`,
-          ],
-        }),
-      }));
-      expect(docker.createContainer).toHaveBeenCalledTimes(1);
-      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
-        Image: imageName,
-        name: RunnerServiceEnum.SOCAT,
-        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
-        Labels: {
-          autoheal: 'true',
-          [`${namespace}.id`]: identifierMock.generateId(),
-          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
-          [`${namespace}.create-by`]: 'api',
-          [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
-          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
-          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
-          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
-        },
-        ExposedPorts: {
-          [`1234/tcp`]: {},
-        },
-        HostConfig: {
-          Binds: expect.arrayContaining([
-            `/etc/localtime:/etc/localtime:ro`,
-          ]),
-          PortBindings: {
-            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort.toString()}],
-          },
-          NetworkMode: 'bridge',
-          RestartPolicy: {
-            Name: 'always',
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {
@@ -1265,6 +1171,121 @@ describe('DockerRunnerCreateSocatRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
+        },
+        NetworkingConfig: {
+          EndpointsConfig: {
+            [networkName]: {},
+          },
+        },
+      }));
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should error create container when create socat container (Create socat with initiated port)`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([]);
+      const executeError = new Error('Error on create container');
+      docker.createContainer.mockRejectedValue(executeError);
+
+      const [error] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: true,
+        filters: JSON.stringify({
+          name: [inputRunnerWithPort.name],
+          status: ['created'],
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+            `${namespace}.publish-port`,
+          ],
+        }),
+      }));
+      expect(docker.createContainer).toHaveBeenCalledTimes(1);
+      expect(docker.createContainer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        Image: imageName,
+        name: RunnerServiceEnum.SOCAT,
+        Cmd: ['TCP-LISTEN:1234,fork', `TCP:${outputExistContainerList[0].NetworkSettings.Networks[networkName].IPAddress}:${envoyDefaultPort}`],
+        Labels: {
+          autoheal: 'true',
+          [`${namespace}.id`]: identifierMock.generateId(),
+          [`${namespace}.project`]: RunnerServiceEnum.SOCAT,
+          [`${namespace}.create-by`]: 'api',
+          [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
+          [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+          [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+        },
+        ExposedPorts: {
+          [`1234/tcp`]: {},
+        },
+        HostConfig: {
+          Binds: expect.arrayContaining([
+            `/etc/localtime:/etc/localtime:ro`,
+          ]),
+          PortBindings: {
+            '1234/tcp': [{HostPort: inputRunnerWithPort.socketPort.toString()}],
+          },
+          NetworkMode: 'bridge',
+          RestartPolicy: {
+            Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {
@@ -1371,6 +1392,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {
@@ -1481,6 +1509,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1587,6 +1622,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {
@@ -1786,6 +1828,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -1920,6 +1969,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {
@@ -2072,6 +2128,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -2128,6 +2191,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -2183,6 +2253,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {
@@ -2315,6 +2392,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -2371,6 +2455,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {
           EndpointsConfig: {
@@ -2426,6 +2517,13 @@ describe('DockerRunnerCreateSocatRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {

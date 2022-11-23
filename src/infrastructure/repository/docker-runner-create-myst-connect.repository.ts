@@ -97,6 +97,13 @@ export class DockerRunnerCreateMystConnectRepository implements ICreateRunnerRep
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {},
       });

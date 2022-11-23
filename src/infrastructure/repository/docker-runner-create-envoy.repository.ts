@@ -90,6 +90,13 @@ export class DockerRunnerCreateEnvoyRepository implements ICreateRunnerRepositor
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
         },
         NetworkingConfig: {},
       });

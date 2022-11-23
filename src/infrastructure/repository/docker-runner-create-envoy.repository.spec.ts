@@ -205,10 +205,11 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           refId: 'default-ref-id',
           ip: 'default-ip',
           mask: 32,
+          country: 'default-country',
           type: ProxyTypeEnum.MYST,
           status: ProxyStatusEnum.DISABLE,
         },
-        ['id', 'refId', 'ip', 'mask', 'type', 'status'],
+        ['id', 'refId', 'ip', 'mask', 'country', 'type', 'status'],
       );
       outputProxyDownstreamValid = defaultModelFactory<ProxyDownstreamModel>(
         ProxyDownstreamModel,
@@ -217,10 +218,11 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           refId: 'default-ref-id',
           ip: 'default-ip',
           mask: 32,
+          country: 'default-country',
           type: ProxyTypeEnum.MYST,
           status: ProxyStatusEnum.DISABLE,
         },
-        ['refId', 'ip', 'mask', 'type', 'status'],
+        ['refId', 'ip', 'mask', 'country', 'type', 'status'],
       );
 
       outputEmptyContainerList = [];
@@ -572,6 +574,13 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
         },
         NetworkingConfig: {},
       }));
@@ -653,6 +662,13 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
         },
         NetworkingConfig: {},
       }));
@@ -733,6 +749,13 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
           NetworkMode: `container:${outputExistContainerList[0].Id}`,
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
           },
         },
         NetworkingConfig: {},

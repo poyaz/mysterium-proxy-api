@@ -247,6 +247,13 @@ export class DockerRunnerCreateMystRepository implements ICreateRunnerRepository
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
           Devices: [
             {
               PathOnHost: '/dev/net/tun',

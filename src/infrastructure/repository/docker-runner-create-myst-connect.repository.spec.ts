@@ -490,6 +490,13 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {},
       }));
@@ -581,6 +588,13 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
+          },
         },
         NetworkingConfig: {},
       }));
@@ -671,6 +685,13 @@ describe('DockerRunnerCreateMystConnectRepository', () => {
           NetworkMode: `container:${outputExistContainerList[0].Id}`,
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '1g',
+            },
           },
         },
         NetworkingConfig: {},

@@ -846,6 +846,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
           Devices: [
             {
               PathOnHost: '/dev/net/tun',
@@ -952,6 +959,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
           },
           Devices: [
             {
@@ -1073,6 +1087,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
           },
           Devices: [
             {
@@ -1246,6 +1267,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
           Devices: [
             {
               PathOnHost: '/dev/net/tun',
@@ -1360,6 +1388,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
           },
           Devices: [
             {
@@ -1483,6 +1518,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
           },
           Devices: [
             {
@@ -1610,6 +1652,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           RestartPolicy: {
             Name: 'always',
           },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
+          },
           Devices: [
             {
               PathOnHost: '/dev/net/tun',
@@ -1736,6 +1785,13 @@ describe('DockerRunnerCreateMystRepository', () => {
           NetworkMode: 'bridge',
           RestartPolicy: {
             Name: 'always',
+          },
+          LogConfig: {
+            Type: 'json-file',
+            Config: {
+              'max-file': '2',
+              'max-size': '2g',
+            },
           },
           Devices: [
             {
