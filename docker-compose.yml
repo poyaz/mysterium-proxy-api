@@ -9,6 +9,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - $PWD/storage/tmp:/data/storage/tmp
+      - nginx-conf-storage:/data/storage/docker/volume/nginx-conf
     environment:
       - DOCKER_REAL_PROJECT_PATH=$PWD
     networks:
