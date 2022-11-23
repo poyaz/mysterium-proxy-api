@@ -8,6 +8,7 @@ import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum} from '@src-core/mo
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
 import {UsersModel} from '@src-core/model/users.model';
+import {FilterModel} from '@src-core/model/filter.model';
 
 describe('UsersProxyService', () => {
   let service: UsersProxyService;
@@ -117,7 +118,7 @@ describe('UsersProxyService', () => {
       expect(usersService.findOne).toHaveBeenCalled();
       expect(usersService.findOne).toHaveBeenCalledWith(inputUserId);
       expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
-      expect(usersProxyRepository.getByUserId).toHaveBeenCalledWith(inputUserId);
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalledWith(inputUserId, undefined);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
@@ -130,7 +131,7 @@ describe('UsersProxyService', () => {
       expect(usersService.findOne).toHaveBeenCalled();
       expect(usersService.findOne).toHaveBeenCalledWith(inputUserId);
       expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
-      expect(usersProxyRepository.getByUserId).toHaveBeenCalledWith(inputUserId);
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalledWith(inputUserId, undefined);
       expect(error).toBeNull();
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual<UsersProxyModel>(outputUsersProxyMode1);

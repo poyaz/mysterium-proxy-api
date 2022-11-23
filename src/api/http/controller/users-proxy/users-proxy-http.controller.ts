@@ -1,11 +1,11 @@
-import {Controller, Get, Inject, Param, UseGuards} from '@nestjs/common';
+import {Controller, Get, Inject, Param, Query, UseGuards} from '@nestjs/common';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth, ApiExtraModels,
   ApiForbiddenResponse, ApiOkResponse,
   ApiOperation,
-  ApiParam,
+  ApiParam, ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse, getSchemaPath,
 } from '@nestjs/swagger';
@@ -20,6 +20,7 @@ import {FindUserProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/f
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {IUsersProxyServiceInterface} from '@src-core/interface/i-users-proxy-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {FindUsersProxyQueryDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-query.dto';
 
 @Controller({
   path: 'users',
@@ -34,6 +35,7 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
   DefaultArraySuccessDto,
   DefaultExceptionDto,
   FindUserProxyOutputDto,
+  FindUsersProxyQueryDto,
 )
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
@@ -47,6 +49,13 @@ export class UsersProxyHttpController {
   @Get(':userId/proxy')
   @ApiOperation({description: 'The list of proxies user has access to it', operationId: 'Get user access proxy'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
+  @ApiQuery({
+    name: 'sorts',
+    required: false,
+    style: 'deepObject',
+    explode: true,
+    type: 'object',
+  })
   @ApiOkResponse({
     schema: {
       anyOf: [
@@ -131,7 +140,7 @@ export class UsersProxyHttpController {
       ],
     },
   })
-  async findByUserId(@Param('userId') userId: string) {
-    return this._usersProxyService.getByUserId(userId);
+  async findByUserId(@Param('userId') userId: string, @Query() queryFilterDto: FindUsersProxyQueryDto) {
+    return this._usersProxyService.getByUserId(userId, FindUsersProxyQueryDto.toModel(queryFilterDto));
   }
 }

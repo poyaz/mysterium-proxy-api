@@ -11,6 +11,9 @@ import {ProxyAclMode, ProxyAclModel, ProxyAclType} from '@src-core/model/proxyAc
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
 import {UsersModel} from '@src-core/model/users.model';
+import {filterAndSortUsersProxy} from '@src-infrastructure/utility/filterAndSortUsersProxy';
+
+jest.mock('@src-infrastructure/utility/filterAndSortUsersProxy');
 
 describe('UsersProxyAggregateRepository', () => {
   let repository: UsersProxyAggregateRepository;
@@ -318,6 +321,50 @@ describe('UsersProxyAggregateRepository', () => {
         [outputProxyUpstream1, outputProxyUpstream2, outputProxyUpstream3],
         3,
       ]);
+      (<jest.Mock>filterAndSortUsersProxy).mockReturnValue([
+        [
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream1.id,
+            listenAddr: outputProxyUpstream1.listenAddr,
+            listenPort: outputProxyUpstream1.listenPort,
+            proxyDownstream: outputProxyUpstream1.proxyDownstream,
+            runner: outputProxyUpstream1.runner,
+            insertDate: outputProxyUpstream1.insertDate,
+          },
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream2.id,
+            listenAddr: outputProxyUpstream2.listenAddr,
+            listenPort: outputProxyUpstream2.listenPort,
+            proxyDownstream: outputProxyUpstream2.proxyDownstream,
+            runner: outputProxyUpstream2.runner,
+            insertDate: outputProxyUpstream2.insertDate,
+          },
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream3.id,
+            listenAddr: outputProxyUpstream3.listenAddr,
+            listenPort: outputProxyUpstream3.listenPort,
+            proxyDownstream: outputProxyUpstream3.proxyDownstream,
+            runner: outputProxyUpstream3.runner,
+            insertDate: outputProxyUpstream3.insertDate,
+          },
+        ],
+        3,
+      ]);
 
       const [error, result, total] = await repository.getByUserId(inputUserId);
 
@@ -328,6 +375,46 @@ describe('UsersProxyAggregateRepository', () => {
       expect(proxyAclRepository.getAll.mock.calls[0][0].getLengthOfCondition()).toEqual(1);
       expect(proxyAclRepository.getAll.mock.calls[0][0].getCondition('user').user.id).toEqual(inputUserId);
       expect(proxyRepository.getAll).toHaveBeenCalled();
+      expect(filterAndSortUsersProxy).toHaveBeenCalled();
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream1.id,
+        listenAddr: outputProxyUpstream1.listenAddr,
+        listenPort: outputProxyUpstream1.listenPort,
+        proxyDownstream: outputProxyUpstream1.proxyDownstream,
+        runner: outputProxyUpstream1.runner,
+        insertDate: outputProxyUpstream1.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][1]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream2.id,
+        listenAddr: outputProxyUpstream2.listenAddr,
+        listenPort: outputProxyUpstream2.listenPort,
+        proxyDownstream: outputProxyUpstream2.proxyDownstream,
+        runner: outputProxyUpstream2.runner,
+        insertDate: outputProxyUpstream2.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][2]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream3.id,
+        listenAddr: outputProxyUpstream3.listenAddr,
+        listenPort: outputProxyUpstream3.listenPort,
+        proxyDownstream: outputProxyUpstream3.proxyDownstream,
+        runner: outputProxyUpstream3.runner,
+        insertDate: outputProxyUpstream3.insertDate,
+      });
       expect(error).toBeNull();
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
@@ -380,6 +467,24 @@ describe('UsersProxyAggregateRepository', () => {
         [outputProxyUpstream1, outputProxyUpstream2, outputProxyUpstream3],
         3,
       ]);
+      (<jest.Mock>filterAndSortUsersProxy).mockReturnValue([
+        [
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream1.id,
+            listenAddr: outputProxyUpstream1.listenAddr,
+            listenPort: outputProxyUpstream1.listenPort,
+            proxyDownstream: outputProxyUpstream1.proxyDownstream,
+            runner: outputProxyUpstream1.runner,
+            insertDate: outputProxyUpstream1.insertDate,
+          }
+        ],
+        1,
+      ]);
 
       const [error, result, total] = await repository.getByUserId(inputUserId);
 
@@ -390,6 +495,20 @@ describe('UsersProxyAggregateRepository', () => {
       expect(proxyAclRepository.getAll.mock.calls[0][0].getLengthOfCondition()).toEqual(1);
       expect(proxyAclRepository.getAll.mock.calls[0][0].getCondition('user').user.id).toEqual(inputUserId);
       expect(proxyRepository.getAll).toHaveBeenCalled();
+      expect(filterAndSortUsersProxy).toHaveBeenCalled();
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream1.id,
+        listenAddr: outputProxyUpstream1.listenAddr,
+        listenPort: outputProxyUpstream1.listenPort,
+        proxyDownstream: outputProxyUpstream1.proxyDownstream,
+        runner: outputProxyUpstream1.runner,
+        insertDate: outputProxyUpstream1.insertDate,
+      });
       expect(error).toBeNull();
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
@@ -416,6 +535,37 @@ describe('UsersProxyAggregateRepository', () => {
         [outputProxyUpstream1, outputProxyUpstream2, outputProxyUpstream3],
         3,
       ]);
+      (<jest.Mock>filterAndSortUsersProxy).mockReturnValue([
+        [
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream2.id,
+            listenAddr: outputProxyUpstream2.listenAddr,
+            listenPort: outputProxyUpstream2.listenPort,
+            proxyDownstream: outputProxyUpstream2.proxyDownstream,
+            runner: outputProxyUpstream2.runner,
+            insertDate: outputProxyUpstream2.insertDate,
+          },
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream3.id,
+            listenAddr: outputProxyUpstream3.listenAddr,
+            listenPort: outputProxyUpstream3.listenPort,
+            proxyDownstream: outputProxyUpstream3.proxyDownstream,
+            runner: outputProxyUpstream3.runner,
+            insertDate: outputProxyUpstream3.insertDate,
+          },
+        ],
+        2,
+      ]);
 
       const [error, result, total] = await repository.getByUserId(inputUserId);
 
@@ -426,6 +576,33 @@ describe('UsersProxyAggregateRepository', () => {
       expect(proxyAclRepository.getAll.mock.calls[0][0].getLengthOfCondition()).toEqual(1);
       expect(proxyAclRepository.getAll.mock.calls[0][0].getCondition('user').user.id).toEqual(inputUserId);
       expect(proxyRepository.getAll).toHaveBeenCalled();
+      expect(filterAndSortUsersProxy).toHaveBeenCalled();
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream2.id,
+        listenAddr: outputProxyUpstream2.listenAddr,
+        listenPort: outputProxyUpstream2.listenPort,
+        proxyDownstream: outputProxyUpstream2.proxyDownstream,
+        runner: outputProxyUpstream2.runner,
+        insertDate: outputProxyUpstream2.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][1]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream3.id,
+        listenAddr: outputProxyUpstream3.listenAddr,
+        listenPort: outputProxyUpstream3.listenPort,
+        proxyDownstream: outputProxyUpstream3.proxyDownstream,
+        runner: outputProxyUpstream3.runner,
+        insertDate: outputProxyUpstream3.insertDate,
+      });
       expect(error).toBeNull();
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
@@ -465,6 +642,50 @@ describe('UsersProxyAggregateRepository', () => {
         [outputProxyUpstream1, outputProxyUpstream2, outputProxyUpstream3],
         3,
       ]);
+      (<jest.Mock>filterAndSortUsersProxy).mockReturnValue([
+        [
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream1.id,
+            listenAddr: outputProxyUpstream1.listenAddr,
+            listenPort: outputProxyUpstream1.listenPort,
+            proxyDownstream: outputProxyUpstream1.proxyDownstream,
+            runner: outputProxyUpstream1.runner,
+            insertDate: outputProxyUpstream1.insertDate,
+          },
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream2.id,
+            listenAddr: outputProxyUpstream2.listenAddr,
+            listenPort: outputProxyUpstream2.listenPort,
+            proxyDownstream: outputProxyUpstream2.proxyDownstream,
+            runner: outputProxyUpstream2.runner,
+            insertDate: outputProxyUpstream2.insertDate,
+          },
+          {
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            id: outputProxyUpstream3.id,
+            listenAddr: outputProxyUpstream3.listenAddr,
+            listenPort: outputProxyUpstream3.listenPort,
+            proxyDownstream: outputProxyUpstream3.proxyDownstream,
+            runner: outputProxyUpstream3.runner,
+            insertDate: outputProxyUpstream3.insertDate,
+          },
+        ],
+        3,
+      ]);
 
       const [error, result, total] = await repository.getByUserId(inputUserId);
 
@@ -475,6 +696,46 @@ describe('UsersProxyAggregateRepository', () => {
       expect(proxyAclRepository.getAll.mock.calls[0][0].getLengthOfCondition()).toEqual(1);
       expect(proxyAclRepository.getAll.mock.calls[0][0].getCondition('user').user.id).toEqual(inputUserId);
       expect(proxyRepository.getAll).toHaveBeenCalled();
+      expect(filterAndSortUsersProxy).toHaveBeenCalled();
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][0]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream1.id,
+        listenAddr: outputProxyUpstream1.listenAddr,
+        listenPort: outputProxyUpstream1.listenPort,
+        proxyDownstream: outputProxyUpstream1.proxyDownstream,
+        runner: outputProxyUpstream1.runner,
+        insertDate: outputProxyUpstream1.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][1]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream2.id,
+        listenAddr: outputProxyUpstream2.listenAddr,
+        listenPort: outputProxyUpstream2.listenPort,
+        proxyDownstream: outputProxyUpstream2.proxyDownstream,
+        runner: outputProxyUpstream2.runner,
+        insertDate: outputProxyUpstream2.insertDate,
+      });
+      expect((<jest.Mock>filterAndSortUsersProxy).mock.calls[0][0][2]).toEqual<Omit<UsersProxyModel, 'clone'>>({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: outputProxyUpstream3.id,
+        listenAddr: outputProxyUpstream3.listenAddr,
+        listenPort: outputProxyUpstream3.listenPort,
+        proxyDownstream: outputProxyUpstream3.proxyDownstream,
+        runner: outputProxyUpstream3.runner,
+        insertDate: outputProxyUpstream3.insertDate,
+      });
       expect(error).toBeNull();
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual<Omit<UsersProxyModel, 'clone'>>({

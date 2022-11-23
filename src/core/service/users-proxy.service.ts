@@ -4,6 +4,7 @@ import {AsyncReturn} from '@src-core/utility';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-repository.interface';
 import {IUsersServiceInterface} from '@src-core/interface/i-users-service.interface';
+import {FilterModel} from '@src-core/model/filter.model';
 
 @Injectable()
 export class UsersProxyService implements IUsersProxyServiceInterface {
@@ -13,12 +14,12 @@ export class UsersProxyService implements IUsersProxyServiceInterface {
   ) {
   }
 
-  async getByUserId(userId: string): Promise<AsyncReturn<Error, Array<UsersProxyModel>>> {
+  async getByUserId(userId: string, filter?: FilterModel<UsersProxyModel>): Promise<AsyncReturn<Error, Array<UsersProxyModel>>> {
     const [userError] = await this._usersService.findOne(userId);
     if (userError) {
       return [userError];
     }
 
-    return this._usersProxyRepository.getByUserId(userId);
+    return this._usersProxyRepository.getByUserId(userId, filter);
   }
 }

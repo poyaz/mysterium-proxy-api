@@ -7,6 +7,8 @@ import {IUsersProxyServiceInterface} from '@src-core/interface/i-users-proxy-ser
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum} from '@src-core/model/proxy.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
+import {FindUsersProxyQueryDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-query.dto';
+import {FilterModel} from '@src-core/model/filter.model';
 
 describe('UsersProxyHttpController', () => {
   let controller: UsersProxyHttpController;
@@ -45,10 +47,12 @@ describe('UsersProxyHttpController', () => {
 
   describe(`Get all user's proxies`, () => {
     let inputUserId: string;
+    let inputFilter: FindUsersProxyQueryDto;
     let outputUsersProxyMode1: UsersProxyModel;
 
     beforeEach(() => {
       inputUserId = identifierMock.generateId();
+      inputFilter = new FindUsersProxyQueryDto();
 
       outputUsersProxyMode1 = new UsersProxyModel({
         user: {
@@ -77,20 +81,20 @@ describe('UsersProxyHttpController', () => {
     it(`Should error get all user's proxies with user id`, async () => {
       usersProxyService.getByUserId.mockResolvedValue([new UnknownException()]);
 
-      const [error] = await controller.findByUserId(inputUserId);
+      const [error] = await controller.findByUserId(inputUserId, inputFilter);
 
       expect(usersProxyService.getByUserId).toHaveBeenCalled();
-      expect(usersProxyService.getByUserId).toHaveBeenCalledWith(inputUserId);
+      expect(usersProxyService.getByUserId).toHaveBeenCalledWith(inputUserId, new FilterModel());
       expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should successfully get all user's proxies with user id`, async () => {
       usersProxyService.getByUserId.mockResolvedValue([null, [outputUsersProxyMode1], 1]);
 
-      const [error, result, count] = await controller.findByUserId(inputUserId);
+      const [error, result, count] = await controller.findByUserId(inputUserId, inputFilter);
 
       expect(usersProxyService.getByUserId).toHaveBeenCalled();
-      expect(usersProxyService.getByUserId).toHaveBeenCalledWith(inputUserId);
+      expect(usersProxyService.getByUserId).toHaveBeenCalledWith(inputUserId, new FilterModel());
       expect(error).toBeNull();
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual<UsersProxyModel>(outputUsersProxyMode1);

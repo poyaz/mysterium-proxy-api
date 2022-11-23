@@ -9,6 +9,7 @@ import {defaultModelFactory} from '@src-core/model/defaultModel';
 import {UsersModel} from '@src-core/model/users.model';
 import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-repository.interface';
 import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
+import {filterAndSortUsersProxy} from '@src-infrastructure/utility/filterAndSortUsersProxy';
 
 export class UsersProxyAggregateRepository implements IUsersProxyRepositoryInterface {
   constructor(
@@ -18,7 +19,9 @@ export class UsersProxyAggregateRepository implements IUsersProxyRepositoryInter
   ) {
   }
 
-  async getByUserId(userId: string): Promise<AsyncReturn<Error, Array<UsersProxyModel>>> {
+  async getByUserId(userId: string, filter?: FilterModel<UsersProxyModel>): Promise<AsyncReturn<Error, Array<UsersProxyModel>>> {
+    const dataFilter: FilterModel<UsersProxyModel> = !filter ? new FilterModel<UsersProxyModel>() : filter;
+
     const proxyAclFilter = new FilterModel<ProxyAclModel>({skipPagination: true});
     proxyAclFilter.addCondition({
       $opr: 'eq',
@@ -54,16 +57,18 @@ export class UsersProxyAggregateRepository implements IUsersProxyRepositoryInter
       return [null, [], 0];
     }
 
-    const find = proxyAclList.find((v) => v.mode === ProxyAclMode.ALL);
-    if (find) {
-      const userProxyList = proxyList.map((v) => UsersProxyAggregateRepository._fillProxyAllAccessModel(v, userData));
+    let userProxyList: Array<UsersProxyModel>;
 
-      return [null, userProxyList, proxyTotal];
+    const findAccessToAllProxy = proxyAclList.find((v) => v.mode === ProxyAclMode.ALL);
+    if (findAccessToAllProxy) {
+      userProxyList = proxyList.map((v) => UsersProxyAggregateRepository._fillProxyAllAccessModel(v, userData));
+    } else {
+      userProxyList = proxyAclList.map((v) => UsersProxyAggregateRepository._fillProxyPortAccessModel(v, proxyList)).flat();
     }
 
-    const userProxyList = proxyAclList.map((v) => UsersProxyAggregateRepository._fillProxyPortAccessModel(v, proxyList)).flat();
+    const [result, totalCount] = filterAndSortUsersProxy(userProxyList, dataFilter);
 
-    return [null, userProxyList, userProxyList.length];
+    return [null, result, totalCount];
   }
 
   private static _fillProxyAllAccessModel(proxy: ProxyUpstreamModel, user: UsersModel): UsersProxyModel {
