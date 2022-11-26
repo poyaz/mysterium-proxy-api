@@ -4,6 +4,7 @@ import {MystProviderHttpController} from '@src-api/http/controller/provider/myst
 import {ProxyHttpController} from '@src-api/http/controller/proxy/proxy.http.controller';
 import {MystProviderProxyHttpController} from '@src-api/http/controller/proxy/myst/myst-provider-proxy-http.controller';
 import {UsersProxyHttpController} from '@src-api/http/controller/users-proxy/users-proxy-http.controller';
+import {AclHttpController} from '@src-api/http/controller/acl/acl-http.controller';
 
 export const controllersExport = [
   UsersHttpController,
@@ -12,4 +13,5 @@ export const controllersExport = [
   MystProviderHttpController,
   ProxyHttpController,
   MystProviderProxyHttpController,
+  AclHttpController,
 ];
