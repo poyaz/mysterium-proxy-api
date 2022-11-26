@@ -15,7 +15,7 @@ class UserAuthInfoDto extends PickType(FindUserOutputDto, ['id', 'username'] as 
   password: string;
 }
 
-export class FindUserProxyOutputDto extends OmitType(FindProxyOutputDto, ['identityId', 'providerId'] as const) {
+export class FindUsersProxyOutputDto extends OmitType(FindProxyOutputDto, ['identityId', 'providerId'] as const) {
   @ApiProperty({
     required: false,
     readOnly: true,

@@ -2,10 +2,10 @@ import {CallHandler, ExecutionContext, Injectable, NestInterceptor} from '@nestj
 import {map, Observable} from 'rxjs';
 import {Return} from '@src-core/utility';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
-import {FindUserProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-user-proxy-output.dto';
+import {FindUsersProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-output.dto';
 
 type InputMapData = Return<Error, UsersProxyModel | Array<UsersProxyModel>>;
-type OutputMapData = Return<Error, FindUserProxyOutputDto | Array<FindUserProxyOutputDto>>;
+type OutputMapData = Return<Error, FindUsersProxyOutputDto | Array<FindUsersProxyOutputDto>>;
 
 @Injectable()
 export class OutputUsersProxyInterceptor implements NestInterceptor {
@@ -16,11 +16,11 @@ export class OutputUsersProxyInterceptor implements NestInterceptor {
           return [err];
         }
 
-        let result: FindUserProxyOutputDto | Array<FindUserProxyOutputDto>;
+        let result: FindUsersProxyOutputDto | Array<FindUsersProxyOutputDto>;
 
         if (typeof data !== undefined && data !== undefined && data !== null) {
           if (Array.isArray(data)) {
-            result = data.map<FindUserProxyOutputDto>((v: UsersProxyModel) => ({
+            result = data.map<FindUsersProxyOutputDto>((v: UsersProxyModel) => ({
               id: v.id,
               listenAddr: v.listenAddr,
               listenPort: v.listenPort || 0,

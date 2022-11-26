@@ -16,7 +16,7 @@ import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {DefaultSuccessDto} from '@src-api/http/dto/default-success.dto';
 import {DefaultArraySuccessDto} from '@src-api/http/dto/default-array-success.dto';
 import {DefaultExceptionDto} from '@src-api/http/dto/default-exception.dto';
-import {FindUserProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-user-proxy-output.dto';
+import {FindUsersProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-output.dto';
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {IUsersProxyServiceInterface} from '@src-core/interface/i-users-proxy-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
@@ -35,7 +35,7 @@ import {OutputUsersProxyInterceptor} from '@src-api/http/controller/users-proxy/
   DefaultSuccessDto,
   DefaultArraySuccessDto,
   DefaultExceptionDto,
-  FindUserProxyOutputDto,
+  FindUsersProxyOutputDto,
   FindUsersProxyQueryDto,
 )
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
@@ -76,7 +76,7 @@ export class UsersProxyHttpController {
                 data: {
                   type: 'array',
                   items: {
-                    $ref: getSchemaPath(FindUserProxyOutputDto),
+                    $ref: getSchemaPath(FindUsersProxyOutputDto),
                   },
                 },
               },
