@@ -1,7 +1,8 @@
-import {ApiProperty} from '@nestjs/swagger';
+import {ApiProperty, PartialType} from '@nestjs/swagger';
 import {ProxyStatusEnum} from '@src-core/model/proxy.model';
+import {DateOutputDto} from '@src-api/http/dto/date-output.dto';
 
-export class FindProxyOutputDto {
+export class FindProxyOutputDto extends PartialType(DateOutputDto) {
   @ApiProperty({
     description: 'The identity of proxy',
     type: String,
