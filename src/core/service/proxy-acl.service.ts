@@ -30,7 +30,7 @@ export class ProxyAclService implements IProxyAclServiceInterface {
     return this._proxyAclRepository.create(model);
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    return this._proxyAclRepository.remove(id);
   }
 }
