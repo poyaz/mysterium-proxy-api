@@ -102,7 +102,7 @@ export class FindAclQueryDto extends PartialType(FilterInputDto) {
         user: defaultModelFactory<UsersModel>(
           UsersModel,
           {
-            id: dto.filters?.user?.id,
+            id: dto.filters.user.id,
             username: 'default-username',
             password: 'default-password',
             insertDate: new Date(),

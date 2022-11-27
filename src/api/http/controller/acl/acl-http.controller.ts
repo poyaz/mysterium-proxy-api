@@ -1,4 +1,16 @@
-import {Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {Roles} from '@src-api/http/decorator/roles.decorator';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
@@ -28,6 +40,8 @@ import {ProxyAclMode, ProxyAclType} from '@src-core/model/proxyAclModel';
 import {AclPortInputDto, CreateAclInputDto, UserInputDto} from '@src-api/http/controller/acl/dto/create-acl-input.dto';
 import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
 import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
+import {IProxyAclServiceInterface} from '@src-core/interface/i-proxy-acl-service.interface';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 @Controller({
   path: 'acl',
@@ -50,6 +64,11 @@ import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 export class AclHttpController {
+  constructor(
+    @Inject(ProviderTokenEnum.PROXY_ACL_SERVICE_DEFAULT)
+    private readonly _proxyAclService: IProxyAclServiceInterface,
+  ) {
+  }
 
   @Get()
   @ApiOperation({description: 'Get all acl', operationId: 'Get all acl'})
@@ -222,6 +241,7 @@ export class AclHttpController {
   })
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
   async findAll(@Query() queryFilterDto: FindAclQueryDto) {
+    return this._proxyAclService.getAll(FindAclQueryDto.toModel(queryFilterDto));
   }
 
   @Post()

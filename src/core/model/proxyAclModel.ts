@@ -15,7 +15,7 @@ export class ProxyAclModel {
   id: string;
   mode: ProxyAclMode;
   type: ProxyAclType;
-  user?: UsersModel;
+  user?: Omit<UsersModel, 'clone'>;
   proxies: Array<ProxyUpstreamModel>;
   insertDate: Date;
 
