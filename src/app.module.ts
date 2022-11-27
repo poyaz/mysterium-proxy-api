@@ -222,6 +222,10 @@ import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-
         new UsersService(usersRepository),
     },
     {
+      provide: ProviderTokenEnum.PROXY_ACL_SERVICE,
+      useFactory: () => ({}),
+    },
+    {
       provide: ProviderTokenEnum.USERS_PROXY_SERVICE,
       inject: [
         ProviderTokenEnum.USER_SERVICE,

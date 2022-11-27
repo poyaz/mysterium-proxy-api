@@ -64,6 +64,10 @@ import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
       useFactory: () => ({}),
     },
     {
+      provide: ProviderTokenEnum.PROXY_ACL_SERVICE_DEFAULT,
+      useFactory: () => ({}),
+    },
+    {
       provide: ProviderTokenEnum.USER_SERVICE_DEFAULT,
       useFactory: () => ({}),
     },
