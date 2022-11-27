@@ -18,8 +18,16 @@ export class ProxyAclService implements IProxyAclServiceInterface {
     return this._proxyAclRepository.getAll(filter);
   }
 
-  create(model: ProxyAclModel): Promise<AsyncReturn<Error, ProxyAclModel>> {
-    return Promise.resolve(undefined);
+  async create(model: ProxyAclModel): Promise<AsyncReturn<Error, ProxyAclModel>> {
+    if (model.user) {
+      const [userError, userData] = await this._usersService.findOne(model.user.id);
+      if (userError) {
+        return [userError];
+      }
+
+      model.user = userData;
+    }
+    return this._proxyAclRepository.create(model);
   }
 
   remove(id: string): Promise<AsyncReturn<Error, null>> {
