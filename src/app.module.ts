@@ -492,11 +492,16 @@ import {ProxyAclService} from '@src-core/service/proxy-acl.service';
     },
     {
       provide: ProviderTokenEnum.NGINX_PROXY_ACL_AGGREGATE_REPOSITORY,
-      inject: [ProviderTokenEnum.NGINX_PROXY_ACL_REPOSITORY, ProviderTokenEnum.USER_ADAPTER_REPOSITORY],
+      inject: [
+        ProviderTokenEnum.NGINX_PROXY_ACL_REPOSITORY,
+        ProviderTokenEnum.USER_ADAPTER_REPOSITORY,
+        ProviderTokenEnum.DOCKER_RUNNER_REPOSITORY,
+      ],
       useFactory: (
         proxyAclRepository: IProxyAclRepositoryInterface,
         usersRepository: IGenericRepositoryInterface<UsersModel>,
-      ) => new NginxProxyAclAggregateRepository(proxyAclRepository, usersRepository),
+        runnerRepository: IRunnerRepositoryInterface,
+      ) => new NginxProxyAclAggregateRepository(proxyAclRepository, usersRepository, runnerRepository),
     },
     {
       provide: ProviderTokenEnum.PROXY_AGGREGATE_REPOSITORY,
