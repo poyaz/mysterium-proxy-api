@@ -151,7 +151,7 @@ describe('AclHttpController', () => {
     let inputCreateAccessOneUserToAllPorts: CreateAclInputDto;
     let inputCreateAccessOneUserToMultiplyPorts: CreateAclInputDto;
 
-    let outputAccessAllUsersToAllPorts: ProxyAclModel;
+    let outputAccessOneUserToAllPorts: ProxyAclModel;
 
     beforeEach(() => {
       inputCreateAccessAllUsersToAllPorts = new CreateAclInputDto();
@@ -169,7 +169,7 @@ describe('AclHttpController', () => {
       inputCreateAccessOneUserToMultiplyPorts.user = {id: identifierMock.generateId()};
       inputCreateAccessOneUserToMultiplyPorts.proxies = [{port: 3128}, {port: 3129}];
 
-      outputAccessAllUsersToAllPorts = new ProxyAclModel({
+      outputAccessOneUserToAllPorts = new ProxyAclModel({
         id: identifierMock.generateId(),
         mode: ProxyAclMode.ALL,
         type: ProxyAclType.USER_PORT,
@@ -278,23 +278,31 @@ describe('AclHttpController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully create acl (For access all users to all ports)`, async () => {
-      proxyAclService.create.mockResolvedValue([null, outputAccessAllUsersToAllPorts]);
+    it(`Should successfully create acl (For access one user to all ports)`, async () => {
+      proxyAclService.create.mockResolvedValue([null, outputAccessOneUserToAllPorts]);
 
-      const [error, result] = await controller.create(inputCreateAccessAllUsersToAllPorts);
+      const [error, result] = await controller.create(inputCreateAccessOneUserToAllPorts);
 
       expect(proxyAclService.create).toHaveBeenCalled();
       expect(proxyAclService.create.mock.calls[0][0]).toEqual<defaultModelType<ProxyAclModel> | { _defaultProperties: Array<keyof ProxyAclModel> }>({
         id: expect.anything(),
         mode: ProxyAclMode.ALL,
         type: ProxyAclType.USER_PORT,
+        user: <Omit<UsersModel, 'clone'>>{
+          id: inputCreateAccessOneUserToAllPorts.user.id,
+          username: expect.anything(),
+          password: expect.anything(),
+          insertDate: expect.anything(),
+          IS_DEFAULT_MODEL: true,
+          _defaultProperties: ['username', 'password', 'insertDate'],
+        },
         proxies: [],
         insertDate: expect.anything(),
         IS_DEFAULT_MODEL: true,
         _defaultProperties: ['id', 'proxies', 'insertDate'],
       });
       expect(error).toBeNull();
-      expect(result).toEqual(outputAccessAllUsersToAllPorts);
+      expect(result).toEqual(outputAccessOneUserToAllPorts);
     });
   });
 

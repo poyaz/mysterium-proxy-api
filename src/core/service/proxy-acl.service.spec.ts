@@ -163,7 +163,7 @@ describe('ProxyAclService', () => {
     let inputCreateAccessOneUserToMultiplyPorts: ProxyAclModel;
 
     let outputUserModel: UsersModel;
-    let outputAccessAllUsersToAllPorts: ProxyAclModel;
+    let outputAccessOneUserToAllPorts: ProxyAclModel;
 
     beforeEach(() => {
       inputCreateAccessAllUsersToAllPorts = defaultModelFactory<ProxyAclModel>(
@@ -253,7 +253,7 @@ describe('ProxyAclService', () => {
         insertDate: new Date(),
       });
 
-      outputAccessAllUsersToAllPorts = new ProxyAclModel({
+      outputAccessOneUserToAllPorts = new ProxyAclModel({
         id: identifierMock.generateId(),
         mode: ProxyAclMode.ALL,
         type: ProxyAclType.USER_PORT,
@@ -329,15 +329,51 @@ describe('ProxyAclService', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully create new acl proxy (For access all users to all ports)`, async () => {
-      proxyAclRepository.create.mockResolvedValue([null, outputAccessAllUsersToAllPorts]);
+    it(`Should successfully create new acl proxy (For access one user to all ports)`, async () => {
+      usersService.findOne.mockResolvedValue([null, outputUserModel]);
+      proxyAclRepository.create.mockResolvedValue([null, outputAccessOneUserToAllPorts]);
 
-      const [error, result] = await service.create(inputCreateAccessAllUsersToAllPorts);
+      const [error, result] = await service.create(inputCreateAccessOneUserToMultiplyPorts);
 
-      expect(proxyAclRepository.create).toHaveBeenCalled();
-      expect(proxyAclRepository.create).toHaveBeenCalledWith(inputCreateAccessAllUsersToAllPorts);
+      expect(usersService.findOne).toHaveBeenCalled();
+      expect(usersService.findOne).toHaveBeenCalledWith(inputCreateAccessOneUserToMultiplyPorts.user.id);
+      expect(proxyAclRepository.create).toHaveBeenCalledWith(defaultModelFactory<ProxyAclModel>(
+        ProxyAclModel,
+        {
+          id: 'default-id',
+          mode: ProxyAclMode.CUSTOM,
+          type: ProxyAclType.USER_PORT,
+          user: outputUserModel,
+          proxies: [
+            defaultModelFactory<ProxyUpstreamModel>(
+              ProxyUpstreamModel,
+              {
+                id: 'default-id',
+                listenAddr: 'default-listen-addr',
+                listenPort: 3128,
+                proxyDownstream: [],
+                insertDate: new Date(),
+              },
+              ['id', 'listenAddr', 'proxyDownstream', 'insertDate'],
+            ),
+            defaultModelFactory<ProxyUpstreamModel>(
+              ProxyUpstreamModel,
+              {
+                id: 'default-id',
+                listenAddr: 'default-listen-addr',
+                listenPort: 3129,
+                proxyDownstream: [],
+                insertDate: new Date(),
+              },
+              ['id', 'listenAddr', 'proxyDownstream', 'insertDate'],
+            ),
+          ],
+          insertDate: new Date(),
+        },
+        ['id', 'proxies', 'insertDate'],
+      ));
       expect(error).toBeNull();
-      expect(result).toEqual(outputAccessAllUsersToAllPorts);
+      expect(result).toEqual(outputAccessOneUserToAllPorts);
     });
   });
 
