@@ -133,7 +133,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
           [
             '',
             `    ### id: ${proxyAclModel.id}`,
-            `    ### userId: -`,
+            `    ### userId: ${NginxProxyAclRepository._ALL_USERS_KEY}`,
             `    ### date: ${proxyAclModel.insertDate.getTime()}`,
             `    ~.+:[0-9]+ 200;`,
           ].join('\n'),
