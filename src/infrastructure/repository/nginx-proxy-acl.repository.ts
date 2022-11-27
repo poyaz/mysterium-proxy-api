@@ -329,7 +329,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       return {next: false, capture: false};
     }
 
-    aclRowObj.id = idMatch[1];
+    aclRowObj.id = idMatch[1].trim();
 
     return {next: true, capture: true};
   }
@@ -340,7 +340,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       return {next: false, capture: false};
     }
 
-    aclRowObj.userId = userIdMatch[1];
+    aclRowObj.userId = userIdMatch[1].trim();
 
     let capture = true;
     if (!(
@@ -360,7 +360,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       return {next: false, capture: false};
     }
 
-    aclRowObj.date = dateMatch[1];
+    aclRowObj.date = dateMatch[1].trim();
 
     return {next: true, capture: true};
   }
