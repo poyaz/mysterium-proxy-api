@@ -54,7 +54,7 @@ export class NginxProxyAclAggregateRepository implements IProxyAclRepositoryInte
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+    return this._proxyAclRepository.remove(id);
   }
 
   private async _getAllCombine(filter: FilterModel<ProxyAclModel>): Promise<AsyncReturn<Error, CombineUsersAndProxies>> {

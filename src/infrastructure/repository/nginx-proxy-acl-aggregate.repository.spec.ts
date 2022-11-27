@@ -743,4 +743,33 @@ describe('NginxProxyAclAggregateRepository', () => {
       expect(result).toEqual(outputAccessAllUsersToAllPorts);
     });
   });
+
+  describe(`Remove acl with id`, () => {
+    let inputAclId: string;
+
+    beforeEach(() => {
+      inputAclId = identifierMock.generateId();
+    });
+
+    it(`Should error remove acl with id`, async () => {
+      proxyAclRepository.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputAclId);
+
+      expect(proxyAclRepository.remove).toHaveBeenCalled();
+      expect(proxyAclRepository.remove).toHaveBeenCalledWith(inputAclId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove acl with id`, async () => {
+      proxyAclRepository.remove.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.remove(inputAclId);
+
+      expect(proxyAclRepository.remove).toHaveBeenCalled();
+      expect(proxyAclRepository.remove).toHaveBeenCalledWith(inputAclId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
