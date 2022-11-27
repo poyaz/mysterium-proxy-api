@@ -78,6 +78,7 @@ import {IProxyAclRepositoryInterface} from '@src-core/interface/i-proxy-acl-repo
 import {UsersProxyAggregateRepository} from '@src-infrastructure/repository/users-proxy-aggregate.repository';
 import {UsersProxyService} from '@src-core/service/users-proxy.service';
 import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-repository.interface';
+import {ProxyAclService} from '@src-core/service/proxy-acl.service';
 
 @Module({
   imports: [
@@ -223,7 +224,9 @@ import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-
     },
     {
       provide: ProviderTokenEnum.PROXY_ACL_SERVICE,
-      useFactory: () => ({}),
+      inject: [ProviderTokenEnum.NGINX_PROXY_ACL_AGGREGATE_REPOSITORY, ProviderTokenEnum.USER_SERVICE],
+      useFactory: (proxyAclRepository: IProxyAclRepositoryInterface, usersService: IUsersServiceInterface) =>
+        new ProxyAclService(proxyAclRepository, usersService),
     },
     {
       provide: ProviderTokenEnum.USERS_PROXY_SERVICE,
