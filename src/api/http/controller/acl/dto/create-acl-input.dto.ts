@@ -1,16 +1,10 @@
-import {ProxyAclMode, ProxyAclType} from '@src-core/model/proxyAclModel';
-import {
-  ArrayNotEmpty,
-  IsDefined,
-  IsEnum, IsNumber,
-  IsOptional,
-  IsUUID, Min,
-  MinLength,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator';
+import {ProxyAclMode, ProxyAclModel, ProxyAclType} from '@src-core/model/proxyAclModel';
+import {ArrayNotEmpty, IsDefined, IsEnum, IsNumber, IsUUID, Min, ValidateIf, ValidateNested} from 'class-validator';
 import {ApiHideProperty, ApiProperty} from '@nestjs/swagger';
 import {Transform, Type} from 'class-transformer';
+import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {UsersModel} from '@src-core/model/users.model';
+import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
 
 export class UserInputDto {
   @ApiProperty({
@@ -90,4 +84,49 @@ export class CreateAclInputDto {
   @IsDefined()
   @Transform((params) => params.obj.mode === ProxyAclMode.CUSTOM ? params.value : undefined)
   proxies?: Array<AclPortInputDto>;
+
+  static toModel(dto: CreateAclInputDto): ProxyAclModel {
+    const model = defaultModelFactory<ProxyAclModel>(
+      ProxyAclModel,
+      {
+        id: 'default-id',
+        mode: dto.mode,
+        type: dto.type,
+        proxies: [],
+        insertDate: new Date(),
+      },
+      ['id', 'proxies', 'insertDate'],
+    );
+
+    if (typeof dto?.user?.id !== 'undefined') {
+      model.user = defaultModelFactory<UsersModel>(
+        UsersModel,
+        {
+          id: dto.user.id,
+          username: 'default-username',
+          password: 'default-password',
+          insertDate: new Date(),
+        },
+        ['username', 'password', 'insertDate'],
+      );
+
+      if (dto.mode === ProxyAclMode.CUSTOM) {
+        model.proxies = dto.proxies.map((v) =>
+          defaultModelFactory<ProxyUpstreamModel>(
+            ProxyUpstreamModel,
+            {
+              id: 'default-id',
+              listenAddr: 'default-listen-addr',
+              listenPort: v.port,
+              proxyDownstream: [],
+              insertDate: new Date(),
+            },
+            ['id', 'listenAddr', 'proxyDownstream', 'insertDate'],
+          ),
+        );
+      }
+    }
+
+    return model;
+  }
 }

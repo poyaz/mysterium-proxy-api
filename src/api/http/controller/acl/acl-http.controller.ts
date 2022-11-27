@@ -347,7 +347,7 @@ export class AclHttpController {
   })
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
   async create(@Body() createAclDto: CreateAclInputDto) {
-    return [null, createAclDto];
+    return this._proxyAclService.create(CreateAclInputDto.toModel(createAclDto));
   }
 
   @Delete(':aclId')
