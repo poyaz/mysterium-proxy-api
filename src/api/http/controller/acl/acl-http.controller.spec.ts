@@ -297,4 +297,33 @@ describe('AclHttpController', () => {
       expect(result).toEqual(outputAccessAllUsersToAllPorts);
     });
   });
+
+  describe(`Remove acl`, () => {
+    let inputAclId: string;
+
+    beforeEach(() => {
+      inputAclId = identifierMock.generateId();
+    });
+
+    it(`Should error remove acl with id`, async () => {
+      proxyAclService.remove.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.remove(inputAclId);
+
+      expect(proxyAclService.remove).toHaveBeenCalled();
+      expect(proxyAclService.remove).toHaveBeenCalledWith(inputAclId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove acl with id`, async () => {
+      proxyAclService.remove.mockResolvedValue([null, null]);
+
+      const [error, result] = await controller.remove(inputAclId);
+
+      expect(proxyAclService.remove).toHaveBeenCalled();
+      expect(proxyAclService.remove).toHaveBeenCalledWith(inputAclId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });

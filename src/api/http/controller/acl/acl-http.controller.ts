@@ -395,6 +395,6 @@ export class AclHttpController {
     },
   })
   async remove(@Param('aclId') aclId: string) {
-    return [null, null];
+    return this._proxyAclService.remove(aclId);
   }
 }
