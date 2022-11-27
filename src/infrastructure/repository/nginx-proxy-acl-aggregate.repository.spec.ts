@@ -694,4 +694,53 @@ describe('NginxProxyAclAggregateRepository', () => {
       expect(total).toEqual(2);
     });
   });
+
+  describe(`Create new acl proxy`, () => {
+    let inputCreateAccessAllUsersToAllPorts: ProxyAclModel;
+
+    let outputAccessAllUsersToAllPorts: ProxyAclModel;
+
+    beforeEach(() => {
+      inputCreateAccessAllUsersToAllPorts = defaultModelFactory<ProxyAclModel>(
+        ProxyAclModel,
+        {
+          id: 'default-id',
+          mode: ProxyAclMode.ALL,
+          type: ProxyAclType.USER_PORT,
+          proxies: [],
+          insertDate: new Date(),
+        },
+        ['id', 'proxies', 'insertDate'],
+      );
+
+      outputAccessAllUsersToAllPorts = new ProxyAclModel({
+        id: identifierMock.generateId(),
+        mode: ProxyAclMode.ALL,
+        type: ProxyAclType.USER_PORT,
+        proxies: [],
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create new acl proxy`, async () => {
+      proxyAclRepository.create.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.create(inputCreateAccessAllUsersToAllPorts);
+
+      expect(proxyAclRepository.create).toHaveBeenCalled();
+      expect(proxyAclRepository.create).toHaveBeenCalledWith(inputCreateAccessAllUsersToAllPorts);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully create new acl proxy`, async () => {
+      proxyAclRepository.create.mockResolvedValue([null, outputAccessAllUsersToAllPorts]);
+
+      const [error, result] = await repository.create(inputCreateAccessAllUsersToAllPorts);
+
+      expect(proxyAclRepository.create).toHaveBeenCalled();
+      expect(proxyAclRepository.create).toHaveBeenCalledWith(inputCreateAccessAllUsersToAllPorts);
+      expect(error).toBeNull();
+      expect(result).toEqual(outputAccessAllUsersToAllPorts);
+    });
+  });
 });

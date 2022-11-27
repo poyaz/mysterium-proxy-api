@@ -50,7 +50,7 @@ export class NginxProxyAclAggregateRepository implements IProxyAclRepositoryInte
   }
 
   async create(model: ProxyAclModel): Promise<AsyncReturn<Error, ProxyAclModel>> {
-    return Promise.resolve(undefined);
+    return this._proxyAclRepository.create(model);
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
