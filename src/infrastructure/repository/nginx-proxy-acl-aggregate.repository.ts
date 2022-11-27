@@ -6,6 +6,8 @@ import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-reposit
 import {UsersModel} from '@src-core/model/users.model';
 import {defaultModelType} from '@src-core/model/defaultModel';
 import {filterAndSortProxyAcl} from '@src-infrastructure/utility/filterAndSortProxyAcl';
+import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
+import {RunnerModel, RunnerServiceEnum} from '@src-core/model/runner.model';
 
 type CombineUsersAndProxies = {
   usersList,
@@ -27,6 +29,7 @@ export class NginxProxyAclAggregateRepository implements IProxyAclRepositoryInte
   constructor(
     private readonly _proxyAclRepository: IProxyAclRepositoryInterface,
     private readonly _usersRepository: IGenericRepositoryInterface<UsersModel>,
+    private readonly _runnerRepository: IRunnerRepositoryInterface,
   ) {
   }
 
@@ -50,11 +53,39 @@ export class NginxProxyAclAggregateRepository implements IProxyAclRepositoryInte
   }
 
   async create(model: ProxyAclModel): Promise<AsyncReturn<Error, ProxyAclModel>> {
-    return this._proxyAclRepository.create(model);
+    const [runnerError, runnerId] = await this._getRunner();
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    const [createError, createData] = await this._proxyAclRepository.create(model);
+    if (createError) {
+      return [createError];
+    }
+
+    if (runnerId) {
+      await this._runnerRepository.reload(runnerId);
+    }
+
+    return [null, createData];
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return this._proxyAclRepository.remove(id);
+    const [runnerError, runnerId] = await this._getRunner();
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    const [removeError, removeData] = await this._proxyAclRepository.remove(id);
+    if (removeError) {
+      return [removeError];
+    }
+
+    if (runnerId) {
+      await this._runnerRepository.reload(runnerId);
+    }
+
+    return [null, removeData];
   }
 
   private async _getAllCombine(filter: FilterModel<ProxyAclModel>): Promise<AsyncReturn<Error, CombineUsersAndProxies>> {
@@ -127,5 +158,21 @@ export class NginxProxyAclAggregateRepository implements IProxyAclRepositoryInte
     proxyData.user = usersList[userDataIndex];
 
     return proxyData;
+  }
+
+  private async _getRunner(): Promise<AsyncReturn<Error, string | null>> {
+    const runnerFilter = new FilterModel<RunnerModel>();
+    runnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.NGINX});
+
+    const [runnerError, runnerList] = await this._runnerRepository.getAll(runnerFilter);
+    if (runnerError) {
+      return [runnerError];
+    }
+
+    if (runnerList.length !== 1) {
+      return [null, null];
+    }
+
+    return [null, runnerList[0].id];
   }
 }

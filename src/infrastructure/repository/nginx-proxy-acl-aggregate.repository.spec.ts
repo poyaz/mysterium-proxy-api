@@ -11,6 +11,14 @@ import {IGenericRepositoryInterface} from '@src-core/interface/i-generic-reposit
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {ProxyUpstreamModel} from '@src-core/model/proxy.model';
 import {filterAndSortProxyAcl} from '@src-infrastructure/utility/filterAndSortProxyAcl';
+import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
+import {
+  RunnerExecEnum,
+  RunnerModel,
+  RunnerServiceEnum,
+  RunnerSocketTypeEnum,
+  RunnerStatusEnum,
+} from '@src-core/model/runner.model';
 
 jest.mock('@src-infrastructure/utility/filterAndSortProxyAcl');
 
@@ -18,17 +26,20 @@ describe('NginxProxyAclAggregateRepository', () => {
   let repository: NginxProxyAclAggregateRepository;
   let proxyAclRepository: MockProxy<IProxyAclRepositoryInterface>;
   let usersRepository: MockProxy<IGenericRepositoryInterface<UsersModel>>;
+  let runnerRepository: MockProxy<IRunnerRepositoryInterface>;
   let identifierMock: MockProxy<IIdentifier>;
 
   beforeEach(async () => {
     proxyAclRepository = mock<IProxyAclRepositoryInterface>();
     usersRepository = mock<IGenericRepositoryInterface<UsersModel>>();
+    runnerRepository = mock<IRunnerRepositoryInterface>();
 
     identifierMock = mock<IIdentifier>();
     identifierMock.generateId.mockReturnValue('00000000-0000-0000-0000-000000000000');
 
     const proxyAclRepositoryProvider = 'proxy-acl-repository';
     const usersRepositoryProvider = 'users-repository';
+    const runnerRepositoryProvider = 'runner-repository';
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -41,12 +52,17 @@ describe('NginxProxyAclAggregateRepository', () => {
           useValue: usersRepository,
         },
         {
+          provide: runnerRepositoryProvider,
+          useValue: runnerRepository,
+        },
+        {
           provide: NginxProxyAclAggregateRepository,
-          inject: [proxyAclRepositoryProvider, usersRepositoryProvider],
+          inject: [proxyAclRepositoryProvider, usersRepositoryProvider, runnerRepositoryProvider],
           useFactory: (
             proxyAclRepository: IProxyAclRepositoryInterface,
             usersRepository: IGenericRepositoryInterface<UsersModel>,
-          ) => new NginxProxyAclAggregateRepository(proxyAclRepository, usersRepository),
+            runnerRepository: IRunnerRepositoryInterface,
+          ) => new NginxProxyAclAggregateRepository(proxyAclRepository, usersRepository, runnerRepository),
         },
       ],
     }).compile();
@@ -698,6 +714,7 @@ describe('NginxProxyAclAggregateRepository', () => {
   describe(`Create new acl proxy`, () => {
     let inputCreateAccessAllUsersToAllPorts: ProxyAclModel;
 
+    let outputRunnerModel1: RunnerModel;
     let outputAccessAllUsersToAllPorts: ProxyAclModel;
 
     beforeEach(() => {
@@ -713,6 +730,18 @@ describe('NginxProxyAclAggregateRepository', () => {
         ['id', 'proxies', 'insertDate'],
       );
 
+      outputRunnerModel1 = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'nginx-serial',
+        name: 'nginx-name',
+        service: RunnerServiceEnum.NGINX,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketPort: 80,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+
       outputAccessAllUsersToAllPorts = new ProxyAclModel({
         id: identifierMock.generateId(),
         mode: ProxyAclMode.ALL,
@@ -722,23 +751,71 @@ describe('NginxProxyAclAggregateRepository', () => {
       });
     });
 
+    it(`Should error create new acl proxy when get runner info`, async () => {
+      runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.create(inputCreateAccessAllUsersToAllPorts);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
     it(`Should error create new acl proxy`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
       proxyAclRepository.create.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.create(inputCreateAccessAllUsersToAllPorts);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(proxyAclRepository.create).toHaveBeenCalled();
       expect(proxyAclRepository.create).toHaveBeenCalledWith(inputCreateAccessAllUsersToAllPorts);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully create new acl proxy`, async () => {
+    it(`Should successfully create new acl proxy and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
       proxyAclRepository.create.mockResolvedValue([null, outputAccessAllUsersToAllPorts]);
+      runnerRepository.reload.mockResolvedValue([new UnknownException()]);
 
       const [error, result] = await repository.create(inputCreateAccessAllUsersToAllPorts);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(proxyAclRepository.create).toHaveBeenCalled();
       expect(proxyAclRepository.create).toHaveBeenCalledWith(inputCreateAccessAllUsersToAllPorts);
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
+      expect(error).toBeNull();
+      expect(result).toEqual(outputAccessAllUsersToAllPorts);
+    });
+
+    it(`Should successfully create new acl proxy and reload runner if exist`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      proxyAclRepository.create.mockResolvedValue([null, outputAccessAllUsersToAllPorts]);
+      runnerRepository.reload.mockResolvedValue([null]);
+
+      const [error, result] = await repository.create(inputCreateAccessAllUsersToAllPorts);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(proxyAclRepository.create).toHaveBeenCalled();
+      expect(proxyAclRepository.create).toHaveBeenCalledWith(inputCreateAccessAllUsersToAllPorts);
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
       expect(result).toEqual(outputAccessAllUsersToAllPorts);
     });
@@ -747,27 +824,89 @@ describe('NginxProxyAclAggregateRepository', () => {
   describe(`Remove acl with id`, () => {
     let inputAclId: string;
 
+    let outputRunnerModel1: RunnerModel;
+
     beforeEach(() => {
       inputAclId = identifierMock.generateId();
+
+      outputRunnerModel1 = new RunnerModel({
+        id: identifierMock.generateId(),
+        serial: 'nginx-serial',
+        name: 'nginx-name',
+        service: RunnerServiceEnum.NGINX,
+        exec: RunnerExecEnum.DOCKER,
+        socketType: RunnerSocketTypeEnum.HTTP,
+        socketPort: 80,
+        status: RunnerStatusEnum.RUNNING,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error remove acl with id when get runner info`, async () => {
+      runnerRepository.getAll.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.remove(inputAclId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(error).toBeInstanceOf(UnknownException);
     });
 
     it(`Should error remove acl with id`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
       proxyAclRepository.remove.mockResolvedValue([new UnknownException()]);
 
       const [error] = await repository.remove(inputAclId);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(proxyAclRepository.remove).toHaveBeenCalled();
       expect(proxyAclRepository.remove).toHaveBeenCalledWith(inputAclId);
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully remove acl with id`, async () => {
+    it(`Should successfully remove acl with id and reload runner if exist`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
       proxyAclRepository.remove.mockResolvedValue([null, null]);
+      runnerRepository.reload.mockResolvedValue([null, null]);
 
       const [error, result] = await repository.remove(inputAclId);
 
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
       expect(proxyAclRepository.remove).toHaveBeenCalled();
       expect(proxyAclRepository.remove).toHaveBeenCalledWith(inputAclId);
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully remove acl with id and reload runner if exist (Ignore reload runner if error happened)`, async () => {
+      runnerRepository.getAll.mockResolvedValue([null, [outputRunnerModel1], 1]);
+      proxyAclRepository.remove.mockResolvedValue([null, null]);
+      runnerRepository.reload.mockResolvedValue([new UnknownException()]);
+
+      const [error, result] = await repository.remove(inputAclId);
+
+      expect(runnerRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<RunnerModel>><unknown>runnerRepository.getAll.mock.calls[0][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.NGINX,
+      });
+      expect(proxyAclRepository.remove).toHaveBeenCalled();
+      expect(proxyAclRepository.remove).toHaveBeenCalledWith(inputAclId);
+      expect(runnerRepository.reload).toHaveBeenCalled();
+      expect(runnerRepository.reload).toHaveBeenCalledWith(outputRunnerModel1.id);
       expect(error).toBeNull();
       expect(result).toBeNull();
     });
