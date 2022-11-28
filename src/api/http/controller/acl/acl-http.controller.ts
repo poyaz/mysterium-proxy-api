@@ -9,7 +9,7 @@ import {
   Param,
   Post,
   Query,
-  UseGuards,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {Roles} from '@src-api/http/decorator/roles.decorator';
@@ -42,6 +42,7 @@ import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
 import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 import {IProxyAclServiceInterface} from '@src-core/interface/i-proxy-acl-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {OutputAclInterceptor} from '@src-api/http/controller/acl/interceptor/output-acl.interceptor';
 
 @Controller({
   path: 'acl',
@@ -71,6 +72,7 @@ export class AclHttpController {
   }
 
   @Get()
+  @UseInterceptors(OutputAclInterceptor)
   @ApiOperation({description: 'Get all acl', operationId: 'Get all acl'})
   @ApiQuery({
     name: 'sorts',
