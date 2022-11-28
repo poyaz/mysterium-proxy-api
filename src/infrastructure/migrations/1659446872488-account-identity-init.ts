@@ -1,19 +1,17 @@
 import {MigrationInterface, QueryRunner, Table, TableIndex} from 'typeorm';
-
-const TABLE_NAME = 'account_identity';
-const UNIQUE_INDEX_IDENTITY = 'account_identity_identity_unique_idx';
+import {ACCOUNT_IDENTITY_ENTITY_OPTIONS} from '@src-infrastructure/entity/account-identity.entity';
 
 export class accountIdentityInit1659446872488 implements MigrationInterface {
-
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: TABLE_NAME,
+        name: ACCOUNT_IDENTITY_ENTITY_OPTIONS.tableName,
         columns: [
           {
             name: 'id',
             type: 'uuid',
             isPrimary: true,
+            primaryKeyConstraintName: ACCOUNT_IDENTITY_ENTITY_OPTIONS.primaryKeyName.id,
           },
           {
             name: 'identity',
@@ -48,8 +46,8 @@ export class accountIdentityInit1659446872488 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.createIndex(TABLE_NAME, new TableIndex({
-      name: UNIQUE_INDEX_IDENTITY,
+    await queryRunner.createIndex(ACCOUNT_IDENTITY_ENTITY_OPTIONS.tableName, new TableIndex({
+      name: ACCOUNT_IDENTITY_ENTITY_OPTIONS.uniqueName.identity,
       columnNames: ['identity'],
       isUnique: true,
       where: 'delete_date ISNULL',
@@ -57,8 +55,7 @@ export class accountIdentityInit1659446872488 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropIndex(TABLE_NAME, UNIQUE_INDEX_IDENTITY);
-    await queryRunner.dropTable(TABLE_NAME);
+    await queryRunner.dropIndex(ACCOUNT_IDENTITY_ENTITY_OPTIONS.tableName, ACCOUNT_IDENTITY_ENTITY_OPTIONS.uniqueName.identity);
+    await queryRunner.dropTable(ACCOUNT_IDENTITY_ENTITY_OPTIONS.tableName);
   }
-
 }

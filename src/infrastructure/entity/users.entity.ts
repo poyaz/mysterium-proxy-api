@@ -3,19 +3,31 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
-  Entity,
+  Entity, Index,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {Exclude} from 'class-transformer';
 
-@Entity({name: 'users'})
+const ENTITY_PREFIX = 'users';
+export const USERS_ENTITY_OPTIONS = {
+  tableName: ENTITY_PREFIX,
+  primaryKeyName: {
+    id: `${ENTITY_PREFIX}_id_pk`,
+  },
+  uniqueName: {
+    username: `${ENTITY_PREFIX}_username_unique_idx`,
+  },
+};
+
+@Entity({name: USERS_ENTITY_OPTIONS.tableName})
 export class UsersEntity extends BaseEntity {
-  @PrimaryColumn({type: 'uuid'})
+  @PrimaryColumn({type: 'uuid', primaryKeyConstraintName: USERS_ENTITY_OPTIONS.primaryKeyName.id})
   id: string;
 
   @Column({type: 'varchar', length: 100})
+  @Index(USERS_ENTITY_OPTIONS.uniqueName.username, {unique: true, where: 'delete_date ISNULL'})
   username: string;
 
   @Column({type: 'varchar', length: 225})

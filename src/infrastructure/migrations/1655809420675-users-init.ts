@@ -1,20 +1,18 @@
 import {MigrationInterface, QueryRunner, Table, TableIndex} from 'typeorm';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
-
-const TABLE_NAME = 'users';
-const UNIQUE_INDEX_USERNAME = 'users_username_unique_idx';
+import {USERS_ENTITY_OPTIONS} from '@src-infrastructure/entity/users.entity';
 
 export class usersInit1655809420675 implements MigrationInterface {
-
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: TABLE_NAME,
+        name: USERS_ENTITY_OPTIONS.tableName,
         columns: [
           {
             name: 'id',
             type: 'uuid',
             isPrimary: true,
+            primaryKeyConstraintName: USERS_ENTITY_OPTIONS.primaryKeyName.id,
           },
           {
             name: 'username',
@@ -54,8 +52,8 @@ export class usersInit1655809420675 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.createIndex(TABLE_NAME, new TableIndex({
-      name: UNIQUE_INDEX_USERNAME,
+    await queryRunner.createIndex(USERS_ENTITY_OPTIONS.tableName, new TableIndex({
+      name: USERS_ENTITY_OPTIONS.uniqueName.username,
       columnNames: ['username'],
       isUnique: true,
       where: 'delete_date ISNULL',
@@ -63,8 +61,7 @@ export class usersInit1655809420675 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropIndex(TABLE_NAME, UNIQUE_INDEX_USERNAME);
-    await queryRunner.dropTable(TABLE_NAME);
+    await queryRunner.dropIndex(USERS_ENTITY_OPTIONS.tableName, USERS_ENTITY_OPTIONS.uniqueName.username);
+    await queryRunner.dropTable(USERS_ENTITY_OPTIONS.tableName);
   }
-
 }
