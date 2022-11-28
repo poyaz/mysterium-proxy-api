@@ -7,7 +7,7 @@ export enum FavoritesListTypeEnum {
 
 export class FavoritesModel {
   id: string;
-  listType: FavoritesListTypeEnum;
+  kind: FavoritesListTypeEnum;
   user: Omit<UsersModel, 'clone'>;
   providerId: string;
   providerIdentity: string;
