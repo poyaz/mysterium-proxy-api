@@ -5,11 +5,13 @@ import {UnknownException} from '@src-core/exception/unknown.exception';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
+  private readonly _MODIFICATION_METHOD = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
   constructor(private reflector: Reflector) {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const disableCheckAuth = this.reflector.get<string[]>('disableCheckAuth', context.getHandler());
+    const disableCheckAuth = this.reflector.get<boolean>('disableCheckAuth', context.getHandler());
     if (disableCheckAuth) {
       return true;
     }
@@ -25,13 +27,25 @@ export class RoleGuard implements CanActivate {
     if (roles.indexOf(request.user.role) === -1) {
       return false;
     }
+
+    const enableOwnAccessClass = this.reflector.get<boolean>('ownAccess', context.getClass());
+    const enableOwnAccessHandler = this.reflector.get<boolean>('ownAccess', context.getHandler());
+    const enableOwnAccess = enableOwnAccessClass || enableOwnAccessHandler;
+    if (enableOwnAccess) {
+      return request.params['userId'] === request.user.userId;
+    }
+
+    const enableOwnModificationClass = this.reflector.get<boolean>('ownModification', context.getClass());
+    const enableOwnModificationHandler = this.reflector.get<boolean>('ownModification', context.getHandler());
+    const enableOwnModification = enableOwnModificationClass || enableOwnModificationHandler;
+    if (enableOwnModification && this._MODIFICATION_METHOD.indexOf(request.method) !== -1) {
+      return request.params['userId'] === request.user.userId;
+    }
+
     if (request.user.role === UserRoleEnum.ADMIN) {
       return true;
     }
-    if (request.user.role === UserRoleEnum.USER && request.params['userId'] === request.user.userId) {
-      return true;
-    }
 
-    return false;
+    return request.params['userId'] === request.user.userId;
   }
 }

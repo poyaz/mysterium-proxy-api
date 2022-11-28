@@ -22,6 +22,7 @@ import {IUsersProxyServiceInterface} from '@src-core/interface/i-users-proxy-ser
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 import {FindUsersProxyQueryDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-query.dto';
 import {OutputUsersProxyInterceptor} from '@src-api/http/controller/users-proxy/interceptor/output-users-proxy.interceptor';
+import {OwnAccess} from '@src-api/http/decorator/own-access.decorator';
 
 @Controller({
   path: 'users',
@@ -29,6 +30,7 @@ import {OutputUsersProxyInterceptor} from '@src-api/http/controller/users-proxy/
 })
 @UseGuards(RoleGuard)
 @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
+@OwnAccess()
 @ApiBearerAuth()
 @ApiTags('users')
 @ApiExtraModels(
