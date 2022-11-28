@@ -79,6 +79,7 @@ import {UsersProxyAggregateRepository} from '@src-infrastructure/repository/user
 import {UsersProxyService} from '@src-core/service/users-proxy.service';
 import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-repository.interface';
 import {ProxyAclService} from '@src-core/service/proxy-acl.service';
+import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
 
 @Module({
   imports: [
@@ -89,7 +90,7 @@ import {ProxyAclService} from '@src-core/service/proxy-acl.service';
       inject: [ConfigService],
       useClass: PgConfigService,
     }),
-    TypeOrmModule.forFeature([UsersEntity, AccountIdentityEntity]),
+    TypeOrmModule.forFeature([UsersEntity, AccountIdentityEntity, FavoritesEntity]),
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
