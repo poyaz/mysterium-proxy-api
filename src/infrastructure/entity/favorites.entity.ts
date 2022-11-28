@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import {UsersEntity} from '@src-infrastructure/entity/users.entity';
 import {Exclude} from 'class-transformer';
+import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
 
 const ENTITY_PREFIX = 'favorites';
 export const FAVORITES_ENTITY_OPTIONS = {
@@ -30,13 +31,16 @@ export class FavoritesEntity extends BaseEntity {
   @PrimaryColumn({type: 'uuid', primaryKeyConstraintName: FAVORITES_ENTITY_OPTIONS.primaryKeyName.id})
   id: string;
 
-  @ManyToOne((type) => UsersEntity)
+  @ManyToOne(() => UsersEntity)
   @JoinColumn({
     name: 'user_id',
     referencedColumnName: 'id',
     foreignKeyConstraintName: FAVORITES_ENTITY_OPTIONS.foreignKeyName.usersId,
   })
   user: UsersEntity;
+
+  @Column({type: 'enum', enum: FavoritesListTypeEnum})
+  kind: FavoritesListTypeEnum;
 
   @Column({type: 'uuid', name: 'provider_id'})
   providerId: string;

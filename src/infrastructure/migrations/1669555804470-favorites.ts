@@ -1,6 +1,8 @@
 import {MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex} from 'typeorm';
 import {FAVORITES_ENTITY_OPTIONS} from '@src-infrastructure/entity/favorites.entity';
 import {USERS_ENTITY_OPTIONS} from '@src-infrastructure/entity/users.entity';
+import {UserRoleEnum} from '@src-core/enum/user-role.enum';
+import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
 
 export class favorites1669555804470 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -18,6 +20,11 @@ export class favorites1669555804470 implements MigrationInterface {
             name: 'user_id',
             type: 'uuid',
             isNullable: false,
+          },
+          {
+            name: 'kind',
+            type: 'enum',
+            enum: Object.values(FavoritesListTypeEnum),
           },
           {
             name: 'provider_id',
