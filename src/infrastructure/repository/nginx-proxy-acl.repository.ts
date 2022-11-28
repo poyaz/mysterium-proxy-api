@@ -218,7 +218,7 @@ export class NginxProxyAclRepository implements IProxyAclRepositoryInterface {
       return [null, null];
     }
 
-    const overwriteRows = parseRowData.rows.filter((v, i) => find.lines.indexOf(i + 1) === -1 && !(v === '' && i === find.lines.at(-1)));
+    const overwriteRows = parseRowData.rows.filter((v, i) => find.lines.indexOf(i + 1) === -1 && !(v.trim() === '' && i + 1 === find.lines.at(0) - 1));
 
     try {
       await fsAsync.writeFile(this._aclFile, overwriteRows.join('\n'), 'utf8');
