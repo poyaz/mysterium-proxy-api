@@ -43,6 +43,6 @@ export class AccountIdentityEntity extends BaseEntity {
   updateDate!: Date;
 
   @Exclude()
-  @DeleteDateColumn({type: 'timestamp', name: 'delete_date'})
+  @DeleteDateColumn({type: 'timestamp', name: 'delete_date', nullable: true})
   deleteDate!: Date;
 }

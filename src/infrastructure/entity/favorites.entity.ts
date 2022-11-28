@@ -46,10 +46,10 @@ export class FavoritesEntity extends BaseEntity {
   providerIdentity: string;
 
   @Column({type: 'varchar', length: 100, name: 'last_outgoing_ip', nullable: true})
-  lastOutgoingIp!: string;
+  lastOutgoingIp?: string;
 
   @Column({type: 'text', nullable: true})
-  note!: string;
+  note?: string;
 
   @CreateDateColumn({type: 'timestamp', name: 'insert_date'})
   insertDate!: Date;
@@ -58,6 +58,6 @@ export class FavoritesEntity extends BaseEntity {
   updateDate!: Date;
 
   @Exclude()
-  @DeleteDateColumn({type: 'timestamp', name: 'delete_date'})
+  @DeleteDateColumn({type: 'timestamp', name: 'delete_date', nullable: true})
   deleteDate!: Date;
 }
