@@ -14,5 +14,5 @@ export class DeleteUsersFavoritesBulkInputDto {
   @ArrayNotEmpty()
   @IsUUID('all', {each: true})
   @IsDefined()
-  bulk: Array<string>;
+  proxiesList: Array<string>;
 }

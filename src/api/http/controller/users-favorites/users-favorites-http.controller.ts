@@ -477,6 +477,6 @@ export class UsersFavoritesHttpController {
     @Param('userId') userId: string,
     @Body() deleteBulkFavoriteDto: DeleteUsersFavoritesBulkInputDto,
   ) {
-    return [null, deleteBulkFavoriteDto];
+    return this._favoritesService.removeBulk(deleteBulkFavoriteDto.proxiesList);
   }
 }

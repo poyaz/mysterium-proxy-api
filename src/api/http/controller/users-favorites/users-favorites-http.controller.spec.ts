@@ -15,6 +15,7 @@ import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {UpdateUsersFavoritesInputDto} from '@src-api/http/controller/users-favorites/dto/update-users-favorites-input.dto';
 import {UpdateModel} from '@src-core/model/update.model';
 import {UpdateUsersFavoritesBulkKindInputDto} from '@src-api/http/controller/users-favorites/dto/update-users-favorites-bulk-kind-input.dto';
+import {DeleteUsersFavoritesBulkInputDto} from '@src-api/http/controller/users-favorites/dto/delete-users-favorites-bulk-input.dto';
 
 describe('UsersFavoritesHttpController', () => {
   let controller: UsersFavoritesHttpController;
@@ -327,6 +328,39 @@ describe('UsersFavoritesHttpController', () => {
 
       expect(favoritesService.updateBulkKind).toHaveBeenCalled();
       expect(favoritesService.updateBulkKind).toHaveBeenCalledWith(inputBody.kind, inputBody.proxiesList);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe(`remove bulk favorites by user id`, () => {
+    let inputUserId: string;
+    let inputBody: DeleteUsersFavoritesBulkInputDto;
+
+    beforeEach(() => {
+      inputUserId = identifierMock.generateId();
+
+      inputBody = new DeleteUsersFavoritesBulkInputDto();
+      inputBody.proxiesList = [identifierMock.generateId()];
+    });
+
+    it(`Should error remove bulk favorites by user id`, async () => {
+      favoritesService.removeBulk.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.removeBulkByUserId(inputUserId, inputBody);
+
+      expect(favoritesService.removeBulk).toHaveBeenCalled();
+      expect(favoritesService.removeBulk).toHaveBeenCalledWith(inputBody.proxiesList);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove bulk favorites by user id`, async () => {
+      favoritesService.removeBulk.mockResolvedValue([null, null]);
+
+      const [error, result] = await controller.removeBulkByUserId(inputUserId, inputBody);
+
+      expect(favoritesService.removeBulk).toHaveBeenCalled();
+      expect(favoritesService.removeBulk).toHaveBeenCalledWith(inputBody.proxiesList);
       expect(error).toBeNull();
       expect(result).toBeNull();
     });
