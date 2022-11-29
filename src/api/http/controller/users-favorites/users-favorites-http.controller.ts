@@ -329,7 +329,7 @@ export class UsersFavoritesHttpController {
     @Param('userId') userId: string,
     @Body() createUsersFavoritesBulkDto: CreateUsersFavoritesBulkInputDto,
   ) {
-    return [null, createUsersFavoritesBulkDto];
+    return this._favoritesService.createBulk(CreateUsersFavoritesBulkInputDto.toModel(createUsersFavoritesBulkDto));
   }
 
   @Put(':userId/favorites/:favoriteId')
