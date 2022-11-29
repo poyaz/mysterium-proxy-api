@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpStatus,
+  HttpStatus, Inject,
   Param,
   Patch,
   Post,
@@ -20,7 +20,8 @@ import {
   ApiBearerAuth,
   ApiBody, ApiCreatedResponse,
   ApiExtraModels,
-  ApiForbiddenResponse, ApiNoContentResponse, ApiNotFoundResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -41,16 +42,15 @@ import {ValidateExceptionDto} from '@src-api/http/dto/validate-exception.dto';
 import {CreateUsersFavoritesInputDto} from '@src-api/http/controller/users-favorites/dto/create-users-favorites-input.dto';
 import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
 import {CreateUsersFavoritesBulkInputDto} from '@src-api/http/controller/users-favorites/dto/create-users-favorites-bulk-input.dto';
-import {OwnAccess, OwnModification} from '@src-api/http/decorator/own-access.decorator';
+import {OwnAccess} from '@src-api/http/decorator/own-access.decorator';
 import {FindUsersFavoritesOutputDto} from '@src-api/http/controller/users-favorites/dto/find-users-favorites-output.dto';
-import {FindProxyOutputDto} from '@src-api/http/controller/proxy/dto/find-proxy-output.dto';
 import {ProxyStatusEnum} from '@src-core/model/proxy.model';
-import {FindUsersProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-output.dto';
 import {UpdateUsersFavoritesInputDto} from '@src-api/http/controller/users-favorites/dto/update-users-favorites-input.dto';
 import {NoBodySuccessDto} from '@src-api/http/dto/no-body-success.dto';
 import {UpdateUsersFavoritesBulkKindInputDto} from '@src-api/http/controller/users-favorites/dto/update-users-favorites-bulk-kind-input.dto';
-import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 import {DeleteUsersFavoritesBulkInputDto} from '@src-api/http/controller/users-favorites/dto/delete-users-favorites-bulk-input.dto';
+import {IFavoritesServiceInterface} from '@src-core/interface/i-favorites-service.interface';
+import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
 
 @Controller({
   path: 'users',
@@ -72,6 +72,12 @@ import {DeleteUsersFavoritesBulkInputDto} from '@src-api/http/controller/users-f
 @ApiUnauthorizedResponse({description: 'Unauthorized', type: UnauthorizedExceptionDto})
 @ApiForbiddenResponse({description: 'Forbidden', type: ForbiddenExceptionDto})
 export class UsersFavoritesHttpController {
+  constructor(
+    @Inject(ProviderTokenEnum.FAVORITES_SERVICE_DEFAULT)
+    private readonly _favoritesService: IFavoritesServiceInterface,
+  ) {
+  }
+
   @Get(':userId/favorites')
   @ApiOperation({
     description: 'The list of favorites user has created by own user',
@@ -208,6 +214,7 @@ export class UsersFavoritesHttpController {
   })
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
   async findByUserId(@Param('userId') userId: string, @Query() queryFilterDto: FindUsersFavoritesQueryDto) {
+    return this._favoritesService.getByUserId(userId, FindUsersFavoritesQueryDto.toModel(queryFilterDto));
   }
 
   @Post(':userId/favorites')
@@ -320,7 +327,7 @@ export class UsersFavoritesHttpController {
   @ApiUnprocessableEntityResponse({description: 'Unprocessable Entity', type: ValidateExceptionDto})
   async createBulkByUserId(
     @Param('userId') userId: string,
-    @Body() createUsersFavoritesBulkDto: CreateUsersFavoritesBulkInputDto
+    @Body() createUsersFavoritesBulkDto: CreateUsersFavoritesBulkInputDto,
   ) {
     return [null, createUsersFavoritesBulkDto];
   }
@@ -468,7 +475,7 @@ export class UsersFavoritesHttpController {
   })
   async removeBulkByUserId(
     @Param('userId') userId: string,
-    @Body() deleteBulkFavoriteDto: DeleteUsersFavoritesBulkInputDto
+    @Body() deleteBulkFavoriteDto: DeleteUsersFavoritesBulkInputDto,
   ) {
     return [null, deleteBulkFavoriteDto];
   }

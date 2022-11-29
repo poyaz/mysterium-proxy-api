@@ -1,8 +1,8 @@
 import {ApiProperty, PartialType} from '@nestjs/swagger';
 import {IsEnum, IsOptional, IsString, ValidateNested} from 'class-validator';
 import {Transform, Type} from 'class-transformer';
-import {SortEnum} from '@src-core/model/filter.model';
-import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
+import {FilterModel, SortEnum} from '@src-core/model/filter.model';
+import {FavoritesListTypeEnum, FavoritesModel} from '@src-core/model/favorites.model';
 import {FilterInputDto} from '@src-api/http/dto/filter-input.dto';
 
 class FilterUsersFavoritesInputDto {
@@ -84,6 +84,25 @@ export class FindUsersFavoritesQueryDto extends PartialType(FilterInputDto) {
   })
   filters?: FilterUsersFavoritesInputDto;
 
-  static toModel(dto: FindUsersFavoritesQueryDto) {
+  static toModel(dto: FindUsersFavoritesQueryDto): FilterModel<FavoritesModel> {
+    const obj: { page?: number, limit?: number } = {};
+    if (typeof dto.page !== 'undefined') {
+      obj.page = dto.page;
+    }
+    if (typeof dto.limit !== 'undefined') {
+      obj.limit = dto.limit;
+    }
+
+    const filterModel = new FilterModel<FavoritesModel>(obj);
+
+    if (typeof dto.filters?.kind !== 'undefined') {
+      filterModel.addCondition({$opr: 'eq', kind: dto.filters.kind});
+    }
+
+    if (typeof dto.sorts?.insertDate !== 'undefined') {
+      filterModel.addSortBy({insertDate: dto.sorts.insertDate});
+    }
+
+    return filterModel;
   }
 }
