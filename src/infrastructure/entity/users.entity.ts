@@ -19,6 +19,9 @@ export const USERS_ENTITY_OPTIONS = {
   uniqueName: {
     username: `${ENTITY_PREFIX}_username_unique_idx`,
   },
+  enumName: {
+    role: `${ENTITY_PREFIX}_role_enum`,
+  },
 };
 
 @Entity({name: USERS_ENTITY_OPTIONS.tableName})
@@ -33,7 +36,11 @@ export class UsersEntity extends BaseEntity {
   @Column({type: 'varchar', length: 225})
   password: string;
 
-  @Column({type: 'enum', enum: UserRoleEnum})
+  @Column({
+    type: 'enum',
+    enum: UserRoleEnum,
+    enumName: USERS_ENTITY_OPTIONS.enumName.role,
+  })
   role: UserRoleEnum;
 
   @Column({type: 'boolean', name: 'is_enable'})

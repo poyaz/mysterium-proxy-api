@@ -28,6 +28,7 @@ export class usersInit1655809420675 implements MigrationInterface {
             name: 'role',
             type: 'enum',
             enum: Object.values(UserRoleEnum),
+            enumName: USERS_ENTITY_OPTIONS.enumName.role,
           },
           {
             name: 'is_enable',
@@ -63,5 +64,6 @@ export class usersInit1655809420675 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropIndex(USERS_ENTITY_OPTIONS.tableName, USERS_ENTITY_OPTIONS.uniqueName.username);
     await queryRunner.dropTable(USERS_ENTITY_OPTIONS.tableName);
+    await queryRunner.query(`DROP TYPE ${USERS_ENTITY_OPTIONS.enumName.role}`);
   }
 }
