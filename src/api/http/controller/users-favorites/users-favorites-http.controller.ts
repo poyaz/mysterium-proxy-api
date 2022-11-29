@@ -379,7 +379,7 @@ export class UsersFavoritesHttpController {
     @Param('favoriteId') favoriteId: string,
     @Body() updateFavoriteDto: UpdateUsersFavoritesInputDto,
   ) {
-    return [null, updateFavoriteDto];
+    return this._favoritesService.update(UpdateUsersFavoritesInputDto.toModel(favoriteId, updateFavoriteDto));
   }
 
   @Patch(':userId/favorites')

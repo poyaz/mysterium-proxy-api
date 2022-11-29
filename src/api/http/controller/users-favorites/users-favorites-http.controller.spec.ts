@@ -12,6 +12,8 @@ import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum} from '@src-core/mo
 import {CreateUsersFavoritesBulkInputDto} from '@src-api/http/controller/users-favorites/dto/create-users-favorites-bulk-input.dto';
 import {defaultModelType} from '@src-core/model/defaultModel';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
+import {UpdateUsersFavoritesInputDto} from '@src-api/http/controller/users-favorites/dto/update-users-favorites-input.dto';
+import {UpdateModel} from '@src-core/model/update.model';
 
 describe('UsersFavoritesHttpController', () => {
   let controller: UsersFavoritesHttpController;
@@ -136,7 +138,7 @@ describe('UsersFavoritesHttpController', () => {
     });
   });
 
-  describe(`Create bulk for user id`, () => {
+  describe(`Create bulk favorites for user id`, () => {
     let inputUserId: string;
     let inputBody: CreateUsersFavoritesBulkInputDto;
 
@@ -184,7 +186,7 @@ describe('UsersFavoritesHttpController', () => {
       });
     });
 
-    it(`Should error create bulk for user id`, async () => {
+    it(`Should error create bulk favorites for user id`, async () => {
       favoritesService.createBulk.mockResolvedValue([new UnknownException()]);
 
       const [error] = await controller.createBulkByUserId(inputUserId, inputBody);
@@ -216,7 +218,7 @@ describe('UsersFavoritesHttpController', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should successfully create bulk for user id`, async () => {
+    it(`Should successfully create bulk favorites for user id`, async () => {
       favoritesService.createBulk.mockResolvedValue([null, [outputFavoritesModel1], 1]);
 
       const [error, result, total] = await controller.createBulkByUserId(inputUserId, inputBody);
@@ -249,6 +251,49 @@ describe('UsersFavoritesHttpController', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(outputFavoritesModel1);
       expect(total).toEqual(1);
+    });
+  });
+
+  describe(`Update favorite by user id`, () => {
+    let inputUserId: string;
+    let inputFavoriteId: string;
+    let inputBody: UpdateUsersFavoritesInputDto;
+
+    beforeEach(() => {
+      inputUserId = identifierMock.generateId();
+
+      inputFavoriteId = identifierMock.generateId();
+
+      inputBody = new UpdateUsersFavoritesInputDto();
+      inputBody.kind = FavoritesListTypeEnum.FAVORITE;
+      inputBody.note = 'This is a note';
+    });
+
+    it(`Should error favorite by user id`, async () => {
+      favoritesService.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.updateByUserId(inputUserId, inputFavoriteId, inputBody);
+
+      expect(favoritesService.update).toHaveBeenCalled();
+      expect(favoritesService.update).toHaveBeenCalledWith(new UpdateModel<FavoritesModel>(inputFavoriteId, {
+        kind: inputBody.kind,
+        note: inputBody.note,
+      }));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully favorite by user id`, async () => {
+      favoritesService.update.mockResolvedValue([null, null]);
+
+      const [error, result] = await controller.updateByUserId(inputUserId, inputFavoriteId, inputBody);
+
+      expect(favoritesService.update).toHaveBeenCalled();
+      expect(favoritesService.update).toHaveBeenCalledWith(new UpdateModel<FavoritesModel>(inputFavoriteId, {
+        kind: inputBody.kind,
+        note: inputBody.note,
+      }));
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });
