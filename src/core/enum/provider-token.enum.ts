@@ -15,6 +15,12 @@ export enum ProviderTokenEnum {
   AUTH_SERVICE_DEFAULT = 'AUTH_SERVICE',
   /**
    *
+   * {@link FAVORITES_SERVICE}
+   * @implements IFavoritesServiceInterface
+   */
+  FAVORITES_SERVICE_DEFAULT = 'FAVORITES_SERVICE',
+  /**
+   *
    * {@link DATE_TIME}
    * @implements IDateTime
    */
@@ -74,6 +80,12 @@ export enum ProviderTokenEnum {
    * @implements IRunnerServiceInterface
    */
   DOCKER_RUNNER_SERVICE = 'DOCKER_RUNNER_SERVICE',
+  /**
+   *
+   * {@link FavoritesService}
+   * @implements IFavoritesServiceInterface
+   */
+  FAVORITES_SERVICE = 'FAVORITES_SERVICE',
   /**
    *
    * {@link MystIdentityService}

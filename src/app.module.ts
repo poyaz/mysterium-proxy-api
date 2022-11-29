@@ -174,6 +174,11 @@ import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
         new DockerRunnerService(dockerRunnerRepository),
     },
     {
+      provide: ProviderTokenEnum.FAVORITES_SERVICE,
+      inject: [],
+      useFactory: () => ({}),
+    },
+    {
       provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE,
       inject: [
         ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
