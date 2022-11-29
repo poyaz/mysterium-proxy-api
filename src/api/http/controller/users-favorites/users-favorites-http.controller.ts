@@ -427,7 +427,7 @@ export class UsersFavoritesHttpController {
     @Param('userId') userId: string,
     @Body() updateFavoriteDto: UpdateUsersFavoritesBulkKindInputDto,
   ) {
-    return [null, updateFavoriteDto];
+    return this._favoritesService.updateBulkKind(updateFavoriteDto.kind, updateFavoriteDto.proxiesList);
   }
 
   @Delete(':userId/favorites')

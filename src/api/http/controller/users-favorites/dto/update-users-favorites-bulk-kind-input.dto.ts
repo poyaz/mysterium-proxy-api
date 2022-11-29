@@ -15,5 +15,5 @@ export class UpdateUsersFavoritesBulkKindInputDto extends PickType(UpdateUsersFa
   @ArrayNotEmpty()
   @IsUUID('all', {each: true})
   @IsDefined()
-  bulk: Array<string>;
+  proxiesList: Array<string>;
 }
