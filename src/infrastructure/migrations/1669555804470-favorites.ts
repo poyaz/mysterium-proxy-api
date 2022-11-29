@@ -1,7 +1,6 @@
 import {MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex} from 'typeorm';
 import {FAVORITES_ENTITY_OPTIONS} from '@src-infrastructure/entity/favorites.entity';
 import {USERS_ENTITY_OPTIONS} from '@src-infrastructure/entity/users.entity';
-import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
 
 export class favorites1669555804470 implements MigrationInterface {
@@ -19,29 +18,16 @@ export class favorites1669555804470 implements MigrationInterface {
           {
             name: 'user_id',
             type: 'uuid',
-            isNullable: false,
           },
           {
             name: 'kind',
             type: 'enum',
-            enum: Object.values(FavoritesListTypeEnum),
+            enumName: FAVORITES_ENTITY_OPTIONS.enumName.kind,
+            enum: [FavoritesListTypeEnum.FAVORITE, FavoritesListTypeEnum.TODAY],
           },
           {
-            name: 'provider_id',
+            name: 'proxy_id',
             type: 'uuid',
-            isNullable: false,
-          },
-          {
-            name: 'provider_identity',
-            type: 'varchar',
-            length: '225',
-            isNullable: false,
-          },
-          {
-            name: 'last_outgoing_ip',
-            type: 'varchar',
-            length: '100',
-            isNullable: true,
           },
           {
             name: 'note',
@@ -68,8 +54,8 @@ export class favorites1669555804470 implements MigrationInterface {
     );
 
     await queryRunner.createIndex(FAVORITES_ENTITY_OPTIONS.tableName, new TableIndex({
-      name: FAVORITES_ENTITY_OPTIONS.uniqueName.providerIdentity,
-      columnNames: ['provider_identity'],
+      name: FAVORITES_ENTITY_OPTIONS.uniqueName.proxyId,
+      columnNames: ['proxy_id'],
       isUnique: true,
       where: 'delete_date ISNULL',
     }));
@@ -84,7 +70,8 @@ export class favorites1669555804470 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropForeignKey(FAVORITES_ENTITY_OPTIONS.tableName, FAVORITES_ENTITY_OPTIONS.foreignKeyName.usersId);
-    await queryRunner.dropIndex(FAVORITES_ENTITY_OPTIONS.tableName, FAVORITES_ENTITY_OPTIONS.uniqueName.providerIdentity);
+    await queryRunner.dropIndex(FAVORITES_ENTITY_OPTIONS.tableName, FAVORITES_ENTITY_OPTIONS.uniqueName.proxyId);
     await queryRunner.dropTable(FAVORITES_ENTITY_OPTIONS.tableName);
+    await queryRunner.query(`DROP TYPE ${FAVORITES_ENTITY_OPTIONS.enumName.kind}`);
   }
 }

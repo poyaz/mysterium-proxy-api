@@ -19,10 +19,13 @@ export const FAVORITES_ENTITY_OPTIONS = {
     id: `${ENTITY_PREFIX}_id_pk`,
   },
   uniqueName: {
-    providerIdentity: `${ENTITY_PREFIX}_provider_identity_unique_idx`,
+    proxyId: `${ENTITY_PREFIX}_proxy_id_unique_idx`,
   },
   foreignKeyName: {
     usersId: `${ENTITY_PREFIX}_user_id_fk`,
+  },
+  enumName: {
+    kind: `${ENTITY_PREFIX}_kind_enum`,
   },
 };
 
@@ -39,18 +42,19 @@ export class FavoritesEntity extends BaseEntity {
   })
   user: UsersEntity;
 
-  @Column({type: 'enum', enum: FavoritesListTypeEnum})
-  kind: FavoritesListTypeEnum;
+  @Column({
+    type: 'enum',
+    enum: {
+      [FavoritesListTypeEnum.FAVORITE]: FavoritesListTypeEnum.FAVORITE,
+      [FavoritesListTypeEnum.TODAY]: FavoritesListTypeEnum.TODAY,
+    },
+    enumName: FAVORITES_ENTITY_OPTIONS.enumName.kind,
+  })
+  kind: Exclude<FavoritesListTypeEnum, FavoritesListTypeEnum.OTHER>;
 
-  @Column({type: 'uuid', name: 'provider_id'})
-  providerId: string;
-
-  @Column({type: 'varchar', length: 225, name: 'provider_identity'})
-  @Index(FAVORITES_ENTITY_OPTIONS.uniqueName.providerIdentity, {unique: true, where: 'delete_date ISNULL'})
-  providerIdentity: string;
-
-  @Column({type: 'varchar', length: 100, name: 'last_outgoing_ip', nullable: true})
-  lastOutgoingIp?: string;
+  @Column({type: 'uuid', name: 'proxy_identity'})
+  @Index(FAVORITES_ENTITY_OPTIONS.uniqueName.proxyId, {unique: true, where: 'delete_date ISNULL'})
+  proxyId: string;
 
   @Column({type: 'text', nullable: true})
   note?: string;
