@@ -5,13 +5,15 @@ import {ProxyHttpController} from '@src-api/http/controller/proxy/proxy.http.con
 import {MystProviderProxyHttpController} from '@src-api/http/controller/proxy/myst/myst-provider-proxy-http.controller';
 import {UsersProxyHttpController} from '@src-api/http/controller/users-proxy/users-proxy-http.controller';
 import {AclHttpController} from '@src-api/http/controller/acl/acl-http.controller';
+import {UsersFavoritesHttpController} from '@src-api/http/controller/users-favorites/users-favorites-http.controller';
 
 export const controllersExport = [
-  UsersHttpController,
-  UsersProxyHttpController,
+  AclHttpController,
   IdentityHttpController,
   MystProviderHttpController,
-  ProxyHttpController,
   MystProviderProxyHttpController,
-  AclHttpController,
+  ProxyHttpController,
+  UsersHttpController,
+  UsersFavoritesHttpController,
+  UsersProxyHttpController,
 ];
