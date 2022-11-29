@@ -1,10 +1,10 @@
 import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import {ValidationPipe, VersioningType} from '@nestjs/common';
-import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
+import {SwaggerModule} from '@nestjs/swagger';
 import {ServerConfigInterface} from '@src-loader/configure/interface/server-config.interface';
 import {ConfigService} from '@nestjs/config';
-import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import {generateSwagger} from './swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,19 +24,7 @@ async function bootstrap() {
   }));
   app.enableCors({origin: '*'});
 
-  const swaggerConf = new DocumentBuilder()
-    .setTitle('Mysterium proxy api')
-    .setDescription('The proxy API description')
-    .setVersion('1.0')
-    .addBearerAuth({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      name: 'Authorization',
-      description: 'JWT token header',
-      in: 'header',
-    } as SecuritySchemeObject)
-    .build();
+  const swaggerConf = generateSwagger();
   const document = SwaggerModule.createDocument(app, swaggerConf);
   SwaggerModule.setup('api', app, document);
 

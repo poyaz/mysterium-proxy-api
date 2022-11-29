@@ -1,12 +1,12 @@
 import {CommandRunner, Command, Option} from 'nest-commander';
-import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
+import {SwaggerModule} from '@nestjs/swagger';
 import {NestFactory} from '@nestjs/core';
 import {resolve} from 'path';
 import {writeFileSync} from 'fs';
 import * as yaml from 'yaml';
-import {SecuritySchemeObject} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import {VersioningType} from '@nestjs/common';
 import {CommandModule} from '../../../command.module';
+import {generateSwagger} from '../../../swagger';
 
 const DEFAULT_STORE_PATH = resolve('storage', 'tmp');
 
@@ -19,19 +19,7 @@ export class SwaggerCommand implements CommandRunner {
       type: VersioningType.URI,
     });
 
-    const swaggerConf = new DocumentBuilder()
-      .setTitle('Mysterium proxy api')
-      .setDescription('The proxy API description')
-      .setVersion('1.0')
-      .addBearerAuth({
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'Authorization',
-        description: 'JWT token header',
-        in: 'header',
-      } as SecuritySchemeObject)
-      .build();
+    const swaggerConf = generateSwagger();
     const document = SwaggerModule.createDocument(app, swaggerConf);
 
     const type = options?.type !== undefined && options?.type !== '' ? options.type : 'json';
