@@ -32,7 +32,7 @@ import {OwnAccess} from '@src-api/http/decorator/own-access.decorator';
 @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
 @OwnAccess()
 @ApiBearerAuth()
-@ApiTags('users')
+@ApiTags('users - access proxy')
 @ApiExtraModels(
   DefaultSuccessDto,
   DefaultArraySuccessDto,
