@@ -11,6 +11,8 @@ import {UnknownException} from '@src-core/exception/unknown.exception';
 import {defaultModelFactory} from '@src-core/model/defaultModel';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum} from '@src-core/model/proxy.model';
+import {UpdateModel} from '@src-core/model/update.model';
+import {NotFoundException} from '@nestjs/common';
 
 describe('FavoritesService', () => {
   let service: FavoritesService;
@@ -313,6 +315,93 @@ describe('FavoritesService', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(outputFavoritesModel1);
       expect(total).toEqual(1);
+    });
+  });
+
+  describe(`Update one favorite with id`, () => {
+    let inputUpdateModel: UpdateModel<FavoritesModel>;
+    let outputFavoriteModel: FavoritesModel;
+
+    beforeEach(() => {
+      inputUpdateModel = new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+        kind: FavoritesListTypeEnum.FAVORITE,
+        note: 'This is a note',
+      });
+      outputFavoriteModel = new FavoritesModel({
+        id: identifierMock.generateId(),
+        usersProxy: {
+          user: {
+            id: identifierMock.generateId(),
+            username: 'user1',
+            password: 'pass1',
+          },
+          id: identifierMock.generateId(),
+          listenAddr: '26.110.20.6',
+          listenPort: 3128,
+          proxyDownstream: [
+            new ProxyDownstreamModel({
+              id: identifierMock.generateId(),
+              refId: identifierMock.generateId(),
+              ip: '65.23.45.12',
+              mask: 32,
+              country: 'GB',
+              type: ProxyTypeEnum.MYST,
+              status: ProxyStatusEnum.ONLINE,
+            }),
+          ],
+          insertDate: new Date(),
+        },
+        kind: FavoritesListTypeEnum.FAVORITE,
+        note: 'This is a note',
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error update one favorite with id when get favorite info`, async () => {
+      favoritesRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.update(inputUpdateModel);
+
+      expect(favoritesRepository.getById).toHaveBeenCalled();
+      expect(favoritesRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update one favorite with id when favorite not found`, async () => {
+      favoritesRepository.getById.mockResolvedValue([null, null]);
+
+      const [error] = await service.update(inputUpdateModel);
+
+      expect(favoritesRepository.getById).toHaveBeenCalled();
+      expect(favoritesRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
+      expect(error).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error update one favorite with id`, async () => {
+      favoritesRepository.getById.mockResolvedValue([null, outputFavoriteModel]);
+      favoritesRepository.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.update(inputUpdateModel);
+
+      expect(favoritesRepository.getById).toHaveBeenCalled();
+      expect(favoritesRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
+      expect(favoritesRepository.update).toHaveBeenCalled();
+      expect(favoritesRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update one favorite with id`, async () => {
+      favoritesRepository.getById.mockResolvedValue([null, outputFavoriteModel]);
+      favoritesRepository.update.mockResolvedValue([null, null]);
+
+      const [error, result] = await service.update(inputUpdateModel);
+
+      expect(favoritesRepository.getById).toHaveBeenCalled();
+      expect(favoritesRepository.getById).toHaveBeenCalledWith(inputUpdateModel.id);
+      expect(favoritesRepository.update).toHaveBeenCalled();
+      expect(favoritesRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });

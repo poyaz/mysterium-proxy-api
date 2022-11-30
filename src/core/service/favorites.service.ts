@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import {IFavoritesServiceInterface} from '@src-core/interface/i-favorites-service.interface';
 import {UpdateModel} from '@src-core/model/update.model';
 import {FavoritesListTypeEnum, FavoritesModel} from '@src-core/model/favorites.model';
@@ -51,8 +51,16 @@ export class FavoritesService implements IFavoritesServiceInterface {
     return this._favoritesRepository.addBulk(models);
   }
 
-  update(model: UpdateModel<FavoritesModel>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async update(model: UpdateModel<FavoritesModel>): Promise<AsyncReturn<Error, null>> {
+    const [favoriteError, favoriteData] = await this._favoritesRepository.getById(model.id);
+    if (favoriteError) {
+      return [favoriteError];
+    }
+    if (!favoriteData) {
+      return [new NotFoundException()];
+    }
+
+    return this._favoritesRepository.update(model);
   }
 
   updateBulkKind(kind: FavoritesListTypeEnum, proxiesListId: Array<string>): Promise<AsyncReturn<Error, null>> {
