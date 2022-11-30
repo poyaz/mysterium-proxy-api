@@ -9,7 +9,7 @@ export class DateOutputDto {
     format: 'date-time',
     example: '2022-01-01 00:00:00',
   })
-  insertDate: string;
+  insertDate: string | Date;
 
   @ApiProperty({
     description: 'The entity has been updated (Can be null)',
@@ -19,5 +19,5 @@ export class DateOutputDto {
     format: 'date-time',
     example: null,
   })
-  updateDate?: string;
+  updateDate?: string | Date;
 }
