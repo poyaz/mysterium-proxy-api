@@ -8,6 +8,7 @@ import {ExistException} from '@src-core/exception/exist.exception';
 import {UpdateModel} from '@src-core/model/update.model';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {RunnerModel, RunnerServiceEnum} from '@src-core/model/runner.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 @Injectable()
 export class UsersAdapterRepository implements IGenericRepositoryInterface<UsersModel> {
@@ -70,6 +71,10 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     return [null, output];
   }
 
+  async addBulk(models: Array<UsersModel>): Promise<AsyncReturn<Error, Array<UsersModel>>> {
+    return [new UnknownException()];
+  }
+
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<UsersModel>>> {
     return this._usersPgRepository.getAll(filter);
   }
@@ -110,6 +115,10 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     return [null, removeResult];
   }
 
+  async removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
+  }
+
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
     const [
       [runnerError, runnerId],
@@ -141,6 +150,10 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     }
 
     return [null, updateResult];
+  }
+
+  async updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
   }
 
   private async _upsertUser(model: UsersModel): Promise<AsyncReturn<Error, UsersModel>> {

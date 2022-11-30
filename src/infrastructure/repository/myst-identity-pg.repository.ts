@@ -8,8 +8,8 @@ import {AccountIdentityEntity} from '@src-infrastructure/entity/account-identity
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {FilterModel, SortEnum} from '@src-core/model/filter.model';
-import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 export class MystIdentityPgRepository implements IGenericRepositoryInterface<MystIdentityModel> {
   constructor(
@@ -96,8 +96,16 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     }
   }
 
+  async addBulk(models: Array<MystIdentityModel>): Promise<AsyncReturn<Error, Array<MystIdentityModel>>> {
+    return [new UnknownException()];
+  }
+
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
     return [null, null];
+  }
+
+  async updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {
@@ -113,6 +121,10 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     } catch (error) {
       return [new RepositoryException(error)];
     }
+  }
+
+  async removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
   }
 
   private static _fillModel(entity) {

@@ -11,6 +11,7 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {FilterModel, SortEnum} from '@src-core/model/filter.model';
 import {UpdateModel} from '@src-core/model/update.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 @Injectable()
 export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel> {
@@ -38,6 +39,10 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     } catch (error) {
       return [new RepositoryException(error)];
     }
+  }
+
+  async addBulk(models: Array<UsersModel>): Promise<AsyncReturn<Error, Array<UsersModel>>> {
+    return [new UnknownException()];
   }
 
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<UsersModel>>> {
@@ -125,6 +130,10 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     }
   }
 
+  async removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
+  }
+
   async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
     const updateModel = <UpdateModel<UsersModel>><any>model;
     const updateUserModel = <UsersModel>updateModel.getModel();
@@ -148,6 +157,10 @@ export class UsersPgRepository implements IGenericRepositoryInterface<UsersModel
     } catch (error) {
       return [new RepositoryException(error)];
     }
+  }
+
+  async updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
   }
 
   private static _fillModel(entity) {

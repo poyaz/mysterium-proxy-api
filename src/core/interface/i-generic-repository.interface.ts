@@ -7,7 +7,13 @@ export interface IGenericRepositoryInterface<T> {
 
   add(model: T): Promise<AsyncReturn<Error, T>>;
 
+  addBulk(models: Array<T>): Promise<AsyncReturn<Error, Array<T>>>;
+
   update<F>(model: F): Promise<AsyncReturn<Error, null>>;
 
+  updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>>;
+
   remove(id: string): Promise<AsyncReturn<Error, null>>;
+
+  removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>>;
 }
