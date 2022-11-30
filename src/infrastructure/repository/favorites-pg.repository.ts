@@ -10,6 +10,7 @@ import {FilterModel, SortEnum} from '@src-core/model/filter.model';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
 
 export class FavoritesPgRepository implements IGenericRepositoryInterface<FavoritesModel> {
   constructor(
@@ -79,8 +80,8 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     }
   }
 
-  add(model: FavoritesModel): Promise<AsyncReturn<Error, FavoritesModel>> {
-    return Promise.resolve(undefined);
+  async add(model: FavoritesModel): Promise<AsyncReturn<Error, FavoritesModel>> {
+    return [new UnknownException()];
   }
 
   addBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
@@ -95,8 +96,8 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     return Promise.resolve(undefined);
   }
 
-  remove(id: string): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async remove(id: string): Promise<AsyncReturn<Error, null>> {
+    return [new UnknownException()];
   }
 
   removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
