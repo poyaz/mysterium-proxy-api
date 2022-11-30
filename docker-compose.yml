@@ -162,5 +162,5 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.110.0.0/20
+        - subnet: 10.110.0.0/16
           gateway: 10.110.0.1
