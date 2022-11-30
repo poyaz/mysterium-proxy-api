@@ -69,7 +69,7 @@ export class FavoritesService implements IFavoritesServiceInterface {
     return this._favoritesRepository.updateBulk(updateModelList);
   }
 
-  removeBulk(favoritesListId: Array<string>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async removeBulk(favoritesListId: Array<string>): Promise<AsyncReturn<Error, null>> {
+    return this._favoritesRepository.removeBulk(favoritesListId);
   }
 }

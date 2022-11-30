@@ -443,4 +443,33 @@ describe('FavoritesService', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe(`Remove bulk favorites`, () => {
+    let inputProxiesList: Array<string>;
+
+    beforeEach(() => {
+      inputProxiesList = [identifierMock.generateId()];
+    });
+
+    it(`Should error remove bulk favorites`, async () => {
+      favoritesRepository.removeBulk.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.removeBulk(inputProxiesList);
+
+      expect(favoritesRepository.removeBulk).toHaveBeenCalled();
+      expect(favoritesRepository.removeBulk).toHaveBeenCalledWith(expect.arrayContaining(inputProxiesList));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully remove bulk favorites`, async () => {
+      favoritesRepository.removeBulk.mockResolvedValue([null, null]);
+
+      const [error, result] = await service.removeBulk(inputProxiesList);
+
+      expect(favoritesRepository.removeBulk).toHaveBeenCalled();
+      expect(favoritesRepository.removeBulk).toHaveBeenCalledWith(expect.arrayContaining(inputProxiesList));
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
