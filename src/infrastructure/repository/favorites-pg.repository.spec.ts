@@ -232,4 +232,82 @@ describe('FavoritesPgRepository', () => {
       expect(total).toEqual(1);
     });
   });
+
+  describe(`Get favorite by id`, () => {
+    let inputFavoriteId: string;
+    let outputFavoriteEntity: FavoritesEntity;
+
+    beforeEach(() => {
+      inputFavoriteId = identifierFakeMock.generateId();
+
+      outputFavoriteEntity = new FavoritesEntity();
+      outputFavoriteEntity.id = identifierFakeMock.generateId();
+      outputFavoriteEntity.user = new UsersEntity();
+      outputFavoriteEntity.user.id = identifierFakeMock.generateId();
+      outputFavoriteEntity.user.username = 'user1';
+      outputFavoriteEntity.user.password = 'pass1';
+      outputFavoriteEntity.user.role = UserRoleEnum.USER;
+      outputFavoriteEntity.user.isEnable = true;
+      outputFavoriteEntity.user.insertDate = new Date();
+      outputFavoriteEntity.kind = FavoritesListTypeEnum.FAVORITE;
+      outputFavoriteEntity.proxyId = identifierFakeMock.generateId();
+      outputFavoriteEntity.note = 'This is a note';
+      outputFavoriteEntity.insertDate = new Date();
+      outputFavoriteEntity.updateDate = null;
+    });
+
+    it(`Should error get favorite by id`, async () => {
+      const executeError = new Error('Error in create on database');
+      favoriteDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.getById(inputFavoriteId);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputFavoriteId});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully get favorite by id but can't find and return null`, async () => {
+      favoriteDb.findOneBy.mockResolvedValue(null);
+
+      const [error, result] = await repository.getById(inputFavoriteId);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputFavoriteId});
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get favorite by id`, async () => {
+      favoriteDb.findOneBy.mockResolvedValue(outputFavoriteEntity);
+
+      const [error, result] = await repository.getById(inputFavoriteId);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputFavoriteId});
+      expect(error).toBeNull();
+      expect(result).toEqual<Omit<FavoritesModel, 'clone'>>({
+        id: outputFavoriteEntity.id,
+        kind: FavoritesListTypeEnum.FAVORITE,
+        usersProxy: <defaultModelType<UsersProxyModel> & { _defaultProperties: Array<keyof UsersProxyModel> }>{
+          id: outputFavoriteEntity.proxyId,
+          listenAddr: expect.anything(),
+          listenPort: expect.anything(),
+          proxyDownstream: [],
+          user: {
+            id: outputFavoriteEntity.user.id,
+            username: outputFavoriteEntity.user.username,
+            password: outputFavoriteEntity.user.password,
+          },
+          insertDate: expect.anything(),
+          IS_DEFAULT_MODEL: true,
+          _defaultProperties: ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+        },
+        note: outputFavoriteEntity.note,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+    });
+  });
 });

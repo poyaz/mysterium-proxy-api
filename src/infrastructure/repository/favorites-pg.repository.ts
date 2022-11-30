@@ -64,8 +64,19 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     }
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, FavoritesModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, FavoritesModel | null>> {
+    try {
+      const row = await this._db.findOneBy({id});
+      if (!row) {
+        return [null, null];
+      }
+
+      const result = FavoritesPgRepository._fillModel(row);
+
+      return [null, result];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   add(model: FavoritesModel): Promise<AsyncReturn<Error, FavoritesModel>> {
