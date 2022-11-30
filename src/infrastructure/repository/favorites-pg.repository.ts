@@ -11,6 +11,7 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
+import {UsersEntity} from '@src-infrastructure/entity/users.entity';
 
 export class FavoritesPgRepository implements IGenericRepositoryInterface<FavoritesModel> {
   constructor(
@@ -84,8 +85,28 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     return [new UnknownException()];
   }
 
-  addBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
-    return Promise.resolve(undefined);
+  async addBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
+    const entities = models.map((v) => {
+      const entity = new FavoritesEntity();
+      entity.id = this._identifier.generateId();
+      entity.user = new UsersEntity();
+      entity.user.id = v.usersProxy.user.id;
+      entity.kind = <any>v.kind;
+      entity.proxyId = v.usersProxy.id;
+      entity.note = v.note;
+      entity.insertDate = this._date.gregorianCurrentDateWithTimezone();
+
+      return entity;
+    });
+
+    try {
+      const rows = await this._db.save(entities, {transaction: false});
+      const result = rows.map((v) => FavoritesPgRepository._fillModel(v));
+
+      return [null, result, result.length];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   update<F>(model: F): Promise<AsyncReturn<Error, null>> {

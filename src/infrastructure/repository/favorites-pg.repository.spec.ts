@@ -310,4 +310,124 @@ describe('FavoritesPgRepository', () => {
       });
     });
   });
+
+  describe(`Add bulk favorites`, () => {
+    let inputModel1: FavoritesModel;
+    let outputFavoriteEntity1: FavoritesEntity;
+
+    beforeEach(() => {
+      inputModel1 = defaultModelFactory<FavoritesModel>(
+        FavoritesModel,
+        {
+          id: 'default-id',
+          kind: FavoritesListTypeEnum.FAVORITE,
+          usersProxy: defaultModelFactory<UsersProxyModel>(
+            UsersProxyModel,
+            {
+              id: identifierFakeMock.generateId(),
+              listenAddr: 'default-listen-addr',
+              listenPort: 3128,
+              proxyDownstream: [],
+              user: {
+                id: identifierFakeMock.generateId(),
+                username: 'default-username',
+                password: 'default-password',
+              },
+              insertDate: new Date(),
+            },
+            ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+          ),
+          note: 'This is a note',
+          insertDate: new Date(),
+        },
+        ['id', 'insertDate'],
+      );
+
+      outputFavoriteEntity1 = new FavoritesEntity();
+      outputFavoriteEntity1.id = identifierFakeMock.generateId();
+      outputFavoriteEntity1.user = new UsersEntity();
+      outputFavoriteEntity1.user.id = identifierFakeMock.generateId();
+      outputFavoriteEntity1.user.username = 'user1';
+      outputFavoriteEntity1.user.password = 'pass1';
+      outputFavoriteEntity1.user.role = UserRoleEnum.USER;
+      outputFavoriteEntity1.user.isEnable = true;
+      outputFavoriteEntity1.user.insertDate = new Date();
+      outputFavoriteEntity1.kind = FavoritesListTypeEnum.FAVORITE;
+      outputFavoriteEntity1.proxyId = identifierFakeMock.generateId();
+      outputFavoriteEntity1.note = 'This is a note';
+      outputFavoriteEntity1.insertDate = new Date();
+      outputFavoriteEntity1.updateDate = null;
+    });
+
+    it(`Should error add bulk favorites`, async () => {
+      const executeError = new Error('Error in create on database');
+      favoriteDb.save.mockRejectedValue(executeError);
+
+      const [error] = await repository.addBulk([inputModel1]);
+
+      expect(identifierMock.generateId).toHaveBeenCalledTimes(1);
+      expect(favoriteDb.save).toHaveBeenCalled();
+      expect(favoriteDb.save).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          <FavoritesEntity>{
+            id: identifierMock.generateId(),
+            user: {id: inputModel1.usersProxy.user.id},
+            kind: inputModel1.kind,
+            proxyId: inputModel1.usersProxy.id,
+            note: inputModel1.note,
+            insertDate: defaultDate,
+          },
+        ]),
+        {transaction: false},
+      );
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully add bulk favorites`, async () => {
+      favoriteDb.save.mockResolvedValue(<any>[outputFavoriteEntity1]);
+
+      const [error, result, total] = await repository.addBulk([inputModel1]);
+
+      expect(identifierMock.generateId).toHaveBeenCalledTimes(1);
+      expect(favoriteDb.save).toHaveBeenCalled();
+      expect(favoriteDb.save).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          <FavoritesEntity>{
+            id: identifierMock.generateId(),
+            user: {id: inputModel1.usersProxy.user.id},
+            kind: inputModel1.kind,
+            proxyId: inputModel1.usersProxy.id,
+            note: inputModel1.note,
+            insertDate: defaultDate,
+          },
+        ]),
+        {transaction: false},
+      );
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual<Omit<FavoritesModel, 'clone'>>({
+        id: outputFavoriteEntity1.id,
+        kind: FavoritesListTypeEnum.FAVORITE,
+        usersProxy: <defaultModelType<UsersProxyModel> & { _defaultProperties: Array<keyof UsersProxyModel> }>{
+          id: outputFavoriteEntity1.proxyId,
+          listenAddr: expect.anything(),
+          listenPort: expect.anything(),
+          proxyDownstream: [],
+          user: {
+            id: outputFavoriteEntity1.user.id,
+            username: outputFavoriteEntity1.user.username,
+            password: outputFavoriteEntity1.user.password,
+          },
+          insertDate: expect.anything(),
+          IS_DEFAULT_MODEL: true,
+          _defaultProperties: ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+        },
+        note: outputFavoriteEntity1.note,
+        insertDate: defaultDate,
+        updateDate: null,
+      });
+      expect(total).toEqual(1);
+    });
+  });
 });
