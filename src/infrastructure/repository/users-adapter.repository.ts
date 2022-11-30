@@ -152,7 +152,7 @@ export class UsersAdapterRepository implements IGenericRepositoryInterface<Users
     return [null, updateResult];
   }
 
-  async updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>> {
+  async updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
     return [new UnknownException()];
   }
 

@@ -104,7 +104,7 @@ export class MystIdentityPgRepository implements IGenericRepositoryInterface<Mys
     return [null, null];
   }
 
-  async updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>> {
+  async updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
     return [new UnknownException()];
   }
 

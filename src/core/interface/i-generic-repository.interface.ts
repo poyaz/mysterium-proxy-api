@@ -11,7 +11,7 @@ export interface IGenericRepositoryInterface<T> {
 
   update<F>(model: F): Promise<AsyncReturn<Error, null>>;
 
-  updateBulk<F>(idList: Array<string>, model: F): Promise<AsyncReturn<Error, null>>;
+  updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>>;
 
   remove(id: string): Promise<AsyncReturn<Error, null>>;
 
