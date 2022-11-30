@@ -404,4 +404,43 @@ describe('FavoritesService', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe(`Update bulk favorites`, () => {
+    let inputKind: FavoritesListTypeEnum;
+    let inputProxiesList: Array<string>;
+
+    beforeEach(() => {
+      inputKind = FavoritesListTypeEnum.FAVORITE;
+      inputProxiesList = [identifierMock.generateId()];
+    });
+
+    it(`Should error update bulk favorites`, async () => {
+      favoritesRepository.updateBulk.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.updateBulkKind(inputKind, inputProxiesList);
+
+      expect(favoritesRepository.updateBulk).toHaveBeenCalled();
+      expect(favoritesRepository.updateBulk).toHaveBeenCalledWith(expect.arrayContaining([
+        new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+          kind: FavoritesListTypeEnum.FAVORITE,
+        }),
+      ]));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update bulk favorites`, async () => {
+      favoritesRepository.updateBulk.mockResolvedValue([null, null]);
+
+      const [error, result] = await service.updateBulkKind(inputKind, inputProxiesList);
+
+      expect(favoritesRepository.updateBulk).toHaveBeenCalled();
+      expect(favoritesRepository.updateBulk).toHaveBeenCalledWith(expect.arrayContaining([
+        new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+          kind: FavoritesListTypeEnum.FAVORITE,
+        }),
+      ]));
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });

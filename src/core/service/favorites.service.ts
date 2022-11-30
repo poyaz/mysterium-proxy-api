@@ -63,8 +63,10 @@ export class FavoritesService implements IFavoritesServiceInterface {
     return this._favoritesRepository.update(model);
   }
 
-  updateBulkKind(kind: FavoritesListTypeEnum, proxiesListId: Array<string>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async updateBulkKind(kind: FavoritesListTypeEnum, proxiesListId: Array<string>): Promise<AsyncReturn<Error, null>> {
+    const updateModelList = proxiesListId.map((v) => new UpdateModel<FavoritesModel>(v, {kind: kind}));
+
+    return this._favoritesRepository.updateBulk(updateModelList);
   }
 
   removeBulk(favoritesListId: Array<string>): Promise<AsyncReturn<Error, null>> {
