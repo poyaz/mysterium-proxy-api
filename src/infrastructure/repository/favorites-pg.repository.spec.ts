@@ -15,6 +15,7 @@ import {UsersEntity} from '@src-infrastructure/entity/users.entity';
 import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {RepositoryException} from '@src-core/exception/repository.exception';
+import {UpdateModel} from '@src-core/model/update.model';
 
 describe('FavoritesPgRepository', () => {
   let repository: FavoritesPgRepository;
@@ -428,6 +429,91 @@ describe('FavoritesPgRepository', () => {
         updateDate: null,
       });
       expect(total).toEqual(1);
+    });
+  });
+
+  describe(`Update favorite`, () => {
+    let inputUpdateModel: UpdateModel<FavoritesModel>;
+    let outputFavoriteEntity: FavoritesEntity;
+    let entityUpdateMock;
+
+    beforeEach(() => {
+      inputUpdateModel = new UpdateModel<FavoritesModel>(identifierFakeMock.generateId(), {
+        kind: FavoritesListTypeEnum.TODAY,
+        note: 'This is a update note',
+      });
+
+      outputFavoriteEntity = new FavoritesEntity();
+      outputFavoriteEntity.id = identifierFakeMock.generateId();
+      outputFavoriteEntity.user = new UsersEntity();
+      outputFavoriteEntity.user.id = identifierFakeMock.generateId();
+      outputFavoriteEntity.user.username = 'user1';
+      outputFavoriteEntity.user.password = 'pass1';
+      outputFavoriteEntity.user.role = UserRoleEnum.USER;
+      outputFavoriteEntity.user.isEnable = true;
+      outputFavoriteEntity.user.insertDate = new Date();
+      outputFavoriteEntity.kind = FavoritesListTypeEnum.FAVORITE;
+      outputFavoriteEntity.proxyId = identifierFakeMock.generateId();
+      outputFavoriteEntity.note = 'This is a note';
+      outputFavoriteEntity.insertDate = new Date();
+      outputFavoriteEntity.updateDate = null;
+      entityUpdateMock = outputFavoriteEntity.save = jest.fn();
+    });
+
+    it(`Should error update favorite when fetch favorite by id`, async () => {
+      const executeError = new Error('Error in create on database');
+      favoriteDb.findOneBy.mockRejectedValue(executeError);
+
+      const [error] = await repository.update<UpdateModel<FavoritesModel>>(inputUpdateModel);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputUpdateModel.id});
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully escape update by id when favorite not found`, async () => {
+      favoriteDb.findOneBy.mockResolvedValue(null);
+
+      const [error, result] = await repository.update<UpdateModel<FavoritesModel>>(inputUpdateModel);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputUpdateModel.id});
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should error update favorite by id`, async () => {
+      favoriteDb.findOneBy.mockResolvedValue(outputFavoriteEntity);
+      const executeError = new Error('Error in create on database');
+      entityUpdateMock.mockRejectedValue(executeError);
+
+      const [error] = await repository.update<UpdateModel<FavoritesModel>>(inputUpdateModel);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputUpdateModel.id});
+      expect(entityUpdateMock).toHaveBeenCalled();
+      expect(entityUpdateMock).toHaveBeenCalledWith({transaction: false});
+      expect(outputFavoriteEntity.kind).toEqual(inputUpdateModel.getModel().kind);
+      expect(outputFavoriteEntity.note).toEqual(inputUpdateModel.getModel().note);
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully update favorite by id`, async () => {
+      favoriteDb.findOneBy.mockResolvedValue(outputFavoriteEntity);
+      entityUpdateMock.mockResolvedValue();
+
+      const [error, result] = await repository.update<UpdateModel<FavoritesModel>>(inputUpdateModel);
+
+      expect(favoriteDb.findOneBy).toHaveBeenCalled();
+      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputUpdateModel.id});
+      expect(entityUpdateMock).toHaveBeenCalled();
+      expect(entityUpdateMock).toHaveBeenCalledWith({transaction: false});
+      expect(outputFavoriteEntity.kind).toEqual(inputUpdateModel.getModel().kind);
+      expect(outputFavoriteEntity.note).toEqual(inputUpdateModel.getModel().note);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });

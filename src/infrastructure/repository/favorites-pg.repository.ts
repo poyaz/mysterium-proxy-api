@@ -12,6 +12,7 @@ import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultMode
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {UsersEntity} from '@src-infrastructure/entity/users.entity';
+import {UpdateModel} from '@src-core/model/update.model';
 
 export class FavoritesPgRepository implements IGenericRepositoryInterface<FavoritesModel> {
   constructor(
@@ -109,8 +110,29 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     }
   }
 
-  update<F>(model: F): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async update<F>(model: F): Promise<AsyncReturn<Error, null>> {
+    const updateModel = <UpdateModel<FavoritesModel>><unknown>model;
+    const updateFavoriteModel = <FavoritesModel>updateModel.getModel();
+
+    try {
+      const row = await this._db.findOneBy({id: updateModel.id});
+      if (!row) {
+        return [null, null];
+      }
+
+      if (typeof updateFavoriteModel.kind !== 'undefined') {
+        row.kind = <any>updateFavoriteModel.kind;
+      }
+      if (typeof updateFavoriteModel.note !== 'undefined') {
+        row.note = updateFavoriteModel.note;
+      }
+
+      await row.save({transaction: false});
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
