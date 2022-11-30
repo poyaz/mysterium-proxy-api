@@ -31,7 +31,7 @@ export class CreateUsersFavoritesBulkInputDto extends PickType(CreateUsersFavori
   @IsDefined()
   bulk: Array<CreateUsersFavoritesProxyInputDto>;
 
-  static toModel(dto: CreateUsersFavoritesBulkInputDto): Array<FavoritesModel> {
+  static toModel(userId: string, dto: CreateUsersFavoritesBulkInputDto): Array<FavoritesModel> {
     return dto.bulk.map((v) => defaultModelFactory<FavoritesModel>(
       FavoritesModel,
       {
@@ -45,13 +45,13 @@ export class CreateUsersFavoritesBulkInputDto extends PickType(CreateUsersFavori
             listenPort: 3128,
             proxyDownstream: [],
             user: {
-              id: 'default-id',
+              id: userId,
               username: 'default-username',
               password: 'default-password',
             },
             insertDate: new Date(),
           },
-          ['listenAddr', 'listenPort', 'proxyDownstream', 'user', 'insertDate'],
+          ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
         ),
         note: v.note,
         insertDate: new Date(),
