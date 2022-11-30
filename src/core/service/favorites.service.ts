@@ -47,8 +47,8 @@ export class FavoritesService implements IFavoritesServiceInterface {
     return this._favoritesRepository.getAll<FilterModel<FavoritesModel>>(filterModel);
   }
 
-  createBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
-    return Promise.resolve(undefined);
+  async createBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
+    return this._favoritesRepository.addBulk(models);
   }
 
   update(model: UpdateModel<FavoritesModel>): Promise<AsyncReturn<Error, null>> {

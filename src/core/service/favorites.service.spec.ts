@@ -229,4 +229,90 @@ describe('FavoritesService', () => {
       expect(total).toEqual(1);
     });
   });
+
+  describe(`Create bulk favorites`, () => {
+    let inputModel1: FavoritesModel;
+    let outputFavoritesModel1: FavoritesModel;
+
+    beforeEach(() => {
+      inputModel1 = defaultModelFactory<FavoritesModel>(
+        FavoritesModel,
+        {
+          id: 'default-id',
+          kind: FavoritesListTypeEnum.FAVORITE,
+          usersProxy: defaultModelFactory<UsersProxyModel>(
+            UsersProxyModel,
+            {
+              id: identifierMock.generateId(),
+              listenAddr: 'default-listen-addr',
+              listenPort: 3128,
+              proxyDownstream: [],
+              user: {
+                id: identifierMock.generateId(),
+                username: 'default-username',
+                password: 'default-password',
+              },
+              insertDate: new Date(),
+            },
+            ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+          ),
+          note: 'This is a note',
+          insertDate: new Date(),
+        },
+        ['id', 'insertDate'],
+      );
+
+      outputFavoritesModel1 = new FavoritesModel({
+        id: identifierMock.generateId(),
+        usersProxy: {
+          user: {
+            id: identifierMock.generateId(),
+            username: 'user1',
+            password: 'pass1',
+          },
+          id: identifierMock.generateId(),
+          listenAddr: '26.110.20.6',
+          listenPort: 3128,
+          proxyDownstream: [
+            new ProxyDownstreamModel({
+              id: identifierMock.generateId(),
+              refId: identifierMock.generateId(),
+              ip: '65.23.45.12',
+              mask: 32,
+              country: 'GB',
+              type: ProxyTypeEnum.MYST,
+              status: ProxyStatusEnum.ONLINE,
+            }),
+          ],
+          insertDate: new Date(),
+        },
+        kind: FavoritesListTypeEnum.FAVORITE,
+        note: 'This is a note',
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error create bulk favorites list`, async () => {
+      favoritesRepository.addBulk.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await service.createBulk([inputModel1]);
+
+      expect(favoritesRepository.addBulk).toHaveBeenCalled();
+      expect(favoritesRepository.addBulk).toHaveBeenCalledWith(expect.arrayContaining([inputModel1]));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully create bulk favorites list`, async () => {
+      favoritesRepository.addBulk.mockResolvedValue([null, [outputFavoritesModel1], 1]);
+
+      const [error, result, total] = await service.createBulk([inputModel1]);
+
+      expect(favoritesRepository.addBulk).toHaveBeenCalled();
+      expect(favoritesRepository.addBulk).toHaveBeenCalledWith(expect.arrayContaining([inputModel1]));
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(outputFavoritesModel1);
+      expect(total).toEqual(1);
+    });
+  });
 });
