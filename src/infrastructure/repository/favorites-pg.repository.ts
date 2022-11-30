@@ -5,7 +5,7 @@ import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
 import {IIdentifier} from '@src-core/interface/i-identifier.interface';
 import {IDateTime} from '@src-core/interface/i-date-time.interface';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
-import {FavoritesModel} from '@src-core/model/favorites.model';
+import {FavoritesListTypeEnum, FavoritesModel} from '@src-core/model/favorites.model';
 import {FilterModel, SortEnum} from '@src-core/model/filter.model';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
@@ -135,8 +135,34 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     }
   }
 
-  updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
+    const updateModels = <Array<UpdateModel<FavoritesModel>>><unknown>models;
+
+    const updateIdList = [];
+    const updateKindList = updateModels.map<FavoritesListTypeEnum>((v) => {
+      updateIdList.push(v.id);
+
+      return v.getModel().kind;
+    });
+
+    if ([...new Set(updateKindList)].length > 1) {
+      return [new UnknownException()];
+    }
+
+    const updateKindField = <any>updateKindList[0];
+    const updateUniqueIdList = [...new Set(updateIdList)];
+
+    try {
+      await this._db.createQueryBuilder()
+        .update(FavoritesEntity)
+        .set({kind: updateKindField})
+        .whereInIds(updateUniqueIdList)
+        .execute();
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {

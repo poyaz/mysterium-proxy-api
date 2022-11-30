@@ -16,6 +16,9 @@ import {UserRoleEnum} from '@src-core/enum/user-role.enum';
 import {FindManyOptions} from 'typeorm/find-options/FindManyOptions';
 import {RepositoryException} from '@src-core/exception/repository.exception';
 import {UpdateModel} from '@src-core/model/update.model';
+import {UnknownException} from '@src-core/exception/unknown.exception';
+import {SelectQueryBuilder} from 'typeorm/query-builder/SelectQueryBuilder';
+import {UpdateQueryBuilder} from 'typeorm/query-builder/UpdateQueryBuilder';
 
 describe('FavoritesPgRepository', () => {
   let repository: FavoritesPgRepository;
@@ -512,6 +515,95 @@ describe('FavoritesPgRepository', () => {
       expect(entityUpdateMock).toHaveBeenCalledWith({transaction: false});
       expect(outputFavoriteEntity.kind).toEqual(inputUpdateModel.getModel().kind);
       expect(outputFavoriteEntity.note).toEqual(inputUpdateModel.getModel().note);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe(`Update bulk favorites`, () => {
+    let inputUpdateModel1: UpdateModel<FavoritesModel>;
+    let inputUpdateModel2: UpdateModel<FavoritesModel>;
+    let inputUpdateInvalidModel3: UpdateModel<FavoritesModel>;
+    let inputUpdateInvalidModel4: UpdateModel<FavoritesModel>;
+    let outputUpdateQueryBuilderMock: { update: jest.Mock, set: jest.Mock, whereInIds: jest.Mock, execute: jest.Mock };
+    let outputSelectQueryBuilderMock: jest.Mock;
+
+    beforeEach(() => {
+      inputUpdateModel1 = new UpdateModel<FavoritesModel>(identifierFakeMock.generateId(), {
+        kind: FavoritesListTypeEnum.TODAY,
+      });
+
+      inputUpdateModel2 = new UpdateModel<FavoritesModel>(identifierFakeMock.generateId(), {
+        kind: FavoritesListTypeEnum.TODAY,
+      });
+
+      inputUpdateInvalidModel3 = new UpdateModel<FavoritesModel>(identifierFakeMock.generateId(), {
+        kind: FavoritesListTypeEnum.FAVORITE,
+      });
+
+      inputUpdateInvalidModel4 = new UpdateModel<FavoritesModel>(identifierFakeMock.generateId(), {
+        note: 'This is a update note',
+      });
+
+      outputUpdateQueryBuilderMock = {
+        update: jest.fn(),
+        set: jest.fn(),
+        whereInIds: jest.fn(),
+        execute: jest.fn(),
+      };
+    });
+
+    it(`Should error update bulk favorites when update multiply kind (Under maintenance)`, async () => {
+      const [error] = await repository.updateBulk([inputUpdateModel1, inputUpdateInvalidModel3]);
+
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update bulk favorites when update empty kind (Under maintenance)`, async () => {
+      const [error] = await repository.updateBulk([inputUpdateModel1, inputUpdateInvalidModel4]);
+
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error update bulk favorites`, async () => {
+      favoriteDb.createQueryBuilder.mockReturnValue(<any>outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.update.mockReturnValue(outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.set.mockReturnValue(outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.whereInIds.mockReturnValue(outputUpdateQueryBuilderMock);
+      const executeError = new Error('Error in create on database');
+      outputUpdateQueryBuilderMock.execute.mockRejectedValue(executeError);
+
+      const [error] = await repository.updateBulk([inputUpdateModel1, inputUpdateModel2]);
+
+      expect(favoriteDb.createQueryBuilder).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.update).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.update).toHaveBeenCalledWith(FavoritesEntity);
+      expect(outputUpdateQueryBuilderMock.set).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.set).toHaveBeenCalledWith({kind: inputUpdateModel1.getModel().kind});
+      expect(outputUpdateQueryBuilderMock.whereInIds).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.whereInIds).toHaveBeenCalledWith([inputUpdateModel1.id]);
+      expect(outputUpdateQueryBuilderMock.execute).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully update bulk favorites`, async () => {
+      favoriteDb.createQueryBuilder.mockReturnValue(<any>outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.update.mockReturnValue(outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.set.mockReturnValue(outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.whereInIds.mockReturnValue(outputUpdateQueryBuilderMock);
+      outputUpdateQueryBuilderMock.execute.mockResolvedValue(null);
+
+      const [error, result] = await repository.updateBulk([inputUpdateModel1, inputUpdateModel2]);
+
+      expect(favoriteDb.createQueryBuilder).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.update).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.update).toHaveBeenCalledWith(FavoritesEntity);
+      expect(outputUpdateQueryBuilderMock.set).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.set).toHaveBeenCalledWith({kind: inputUpdateModel1.getModel().kind});
+      expect(outputUpdateQueryBuilderMock.whereInIds).toHaveBeenCalled();
+      expect(outputUpdateQueryBuilderMock.whereInIds).toHaveBeenCalledWith([inputUpdateModel1.id]);
+      expect(outputUpdateQueryBuilderMock.execute).toHaveBeenCalled();
       expect(error).toBeNull();
       expect(result).toBeNull();
     });
