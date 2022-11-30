@@ -30,6 +30,7 @@ export class OutputProxyInterceptor implements NestInterceptor {
               outgoingIp: v.proxyDownstream?.[0].ip,
               outgoingCountry: v.proxyDownstream?.[0].country,
               status: v.proxyDownstream?.[0].status,
+              insertDate: v.insertDate,
             }));
 
             return [null, result, count];
@@ -45,6 +46,7 @@ export class OutputProxyInterceptor implements NestInterceptor {
               outgoingIp: data.proxyDownstream?.[0].ip,
               outgoingCountry: data.proxyDownstream?.[0].country,
               status: data.proxyDownstream?.[0].status,
+              insertDate: data.insertDate,
             };
 
             return [null, result];

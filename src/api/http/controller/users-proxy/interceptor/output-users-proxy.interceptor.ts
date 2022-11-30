@@ -32,6 +32,7 @@ export class OutputUsersProxyInterceptor implements NestInterceptor {
                 username: v.user.username,
                 password: v.user.password,
               },
+              insertDate: v.insertDate,
             }));
 
             return [null, result, count];
@@ -50,6 +51,7 @@ export class OutputUsersProxyInterceptor implements NestInterceptor {
                 username: data.user.username,
                 password: data.user.password,
               },
+              insertDate: data.insertDate,
             };
 
             return [null, result];
