@@ -169,8 +169,20 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
     return [new UnknownException()];
   }
 
-  removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
+    const removeUniqueIdList = [...new Set(idList)];
+
+    try {
+      await this._db.createQueryBuilder()
+        .softDelete()
+        .from(FavoritesEntity)
+        .whereInIds(removeUniqueIdList)
+        .execute();
+
+      return [null, null];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
   }
 
   private static _fillModel(entity: FavoritesEntity) {

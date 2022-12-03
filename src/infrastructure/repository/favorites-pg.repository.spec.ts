@@ -526,7 +526,6 @@ describe('FavoritesPgRepository', () => {
     let inputUpdateInvalidModel3: UpdateModel<FavoritesModel>;
     let inputUpdateInvalidModel4: UpdateModel<FavoritesModel>;
     let outputUpdateQueryBuilderMock: { update: jest.Mock, set: jest.Mock, whereInIds: jest.Mock, execute: jest.Mock };
-    let outputSelectQueryBuilderMock: jest.Mock;
 
     beforeEach(() => {
       inputUpdateModel1 = new UpdateModel<FavoritesModel>(identifierFakeMock.generateId(), {
@@ -604,6 +603,65 @@ describe('FavoritesPgRepository', () => {
       expect(outputUpdateQueryBuilderMock.whereInIds).toHaveBeenCalled();
       expect(outputUpdateQueryBuilderMock.whereInIds).toHaveBeenCalledWith([inputUpdateModel1.id]);
       expect(outputUpdateQueryBuilderMock.execute).toHaveBeenCalled();
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe(`Remove bulk favorites`, () => {
+    let inputDeleteId1: string;
+    let inputDeleteId2: string;
+    let outputDeleteQueryBuilderMock: { softDelete: jest.Mock, from: jest.Mock, whereInIds: jest.Mock, execute: jest.Mock };
+
+    beforeEach(() => {
+      inputDeleteId1 = identifierFakeMock.generateId();
+      inputDeleteId2 = identifierFakeMock.generateId();
+
+      outputDeleteQueryBuilderMock = {
+        softDelete: jest.fn(),
+        from: jest.fn(),
+        whereInIds: jest.fn(),
+        execute: jest.fn(),
+      };
+    });
+
+    it(`Should error remove bulk favorites`, async () => {
+      favoriteDb.createQueryBuilder.mockReturnValue(<any>outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.softDelete.mockReturnValue(outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.from.mockReturnValue(outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.whereInIds.mockReturnValue(outputDeleteQueryBuilderMock);
+      const executeError = new Error('Error in create on database');
+      outputDeleteQueryBuilderMock.execute.mockRejectedValue(executeError);
+
+      const [error] = await repository.removeBulk([inputDeleteId1, inputDeleteId2]);
+
+      expect(favoriteDb.createQueryBuilder).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.softDelete).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.from).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.from).toHaveBeenCalledWith(FavoritesEntity);
+      expect(outputDeleteQueryBuilderMock.whereInIds).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.whereInIds).toHaveBeenCalledWith([inputDeleteId1]);
+      expect(outputDeleteQueryBuilderMock.execute).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should successfully remove bulk favorites`, async () => {
+      favoriteDb.createQueryBuilder.mockReturnValue(<any>outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.softDelete.mockReturnValue(outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.from.mockReturnValue(outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.whereInIds.mockReturnValue(outputDeleteQueryBuilderMock);
+      outputDeleteQueryBuilderMock.execute.mockResolvedValue(null);
+
+      const [error, result] = await repository.removeBulk([inputDeleteId1, inputDeleteId2]);
+
+      expect(favoriteDb.createQueryBuilder).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.softDelete).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.from).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.from).toHaveBeenCalledWith(FavoritesEntity);
+      expect(outputDeleteQueryBuilderMock.whereInIds).toHaveBeenCalled();
+      expect(outputDeleteQueryBuilderMock.whereInIds).toHaveBeenCalledWith([inputDeleteId1]);
+      expect(outputDeleteQueryBuilderMock.execute).toHaveBeenCalled();
       expect(error).toBeNull();
       expect(result).toBeNull();
     });
