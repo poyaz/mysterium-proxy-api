@@ -69,7 +69,7 @@ describe('FavoritesAggregateRepository', () => {
 
   describe(`Get all favorites list`, () => {
     let inputFilterWithoutKind: FilterModel<FavoritesModel>;
-    let inputFilterWithFavroriteKind: FilterModel<FavoritesModel>;
+    let inputFilterWithFavoriteKind: FilterModel<FavoritesModel>;
     let outputUserModel: UsersModel;
     let outputUsersProxyModel1: UsersProxyModel;
     let outputUsersProxyModel2: UsersProxyModel;
@@ -102,8 +102,8 @@ describe('FavoritesAggregateRepository', () => {
         ),
       });
 
-      inputFilterWithFavroriteKind = new FilterModel<FavoritesModel>();
-      inputFilterWithFavroriteKind.addCondition({
+      inputFilterWithFavoriteKind = new FilterModel<FavoritesModel>();
+      inputFilterWithFavoriteKind.addCondition({
         $opr: 'eq',
         usersProxy: defaultModelFactory<UsersProxyModel>(
           UsersProxyModel,
@@ -122,7 +122,7 @@ describe('FavoritesAggregateRepository', () => {
           ['id', 'listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
         ),
       });
-      inputFilterWithFavroriteKind.addCondition({$opr: 'eq', kind: FavoritesListTypeEnum.FAVORITE});
+      inputFilterWithFavoriteKind.addCondition({$opr: 'eq', kind: FavoritesListTypeEnum.FAVORITE});
 
       outputUserModel = new UsersModel({
         id: identifierMock.generateId(),
@@ -312,10 +312,10 @@ describe('FavoritesAggregateRepository', () => {
       usersProxyRepository.getByUserId.mockResolvedValue([null, [], 0]);
       favoritesDbRepository.getAll.mockResolvedValue([new UnknownException()]);
 
-      const [error] = await repository.getAll(inputFilterWithFavroriteKind);
+      const [error] = await repository.getAll(inputFilterWithFavoriteKind);
 
       expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
-      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(inputFilterWithFavroriteKind.getCondition('usersProxy').usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(inputFilterWithFavoriteKind.getCondition('usersProxy').usersProxy.user.id);
       expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
       expect(favoritesDbRepository.getAll).toHaveBeenCalled();
       expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).skipPagination).toEqual(true);
@@ -329,7 +329,7 @@ describe('FavoritesAggregateRepository', () => {
             listenAddr: 'default-listen-addr',
             listenPort: 0,
             user: {
-              id: inputFilterWithFavroriteKind.getCondition('usersProxy').usersProxy.user.id,
+              id: inputFilterWithFavoriteKind.getCondition('usersProxy').usersProxy.user.id,
               username: 'default-username',
               password: 'default-password',
             },
@@ -486,10 +486,10 @@ describe('FavoritesAggregateRepository', () => {
       ]);
       (<jest.Mock>filterAndSortFavorites).mockReturnValue([[outputFavoritesModel1], 1]);
 
-      const [error, result, total] = await repository.getAll(inputFilterWithFavroriteKind);
+      const [error, result, total] = await repository.getAll(inputFilterWithFavoriteKind);
 
       expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
-      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(inputFilterWithFavroriteKind.getCondition('usersProxy').usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(inputFilterWithFavoriteKind.getCondition('usersProxy').usersProxy.user.id);
       expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
       expect(favoritesDbRepository.getAll).toHaveBeenCalled();
       expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).skipPagination).toEqual(true);
@@ -503,7 +503,7 @@ describe('FavoritesAggregateRepository', () => {
             listenAddr: 'default-listen-addr',
             listenPort: 0,
             user: {
-              id: inputFilterWithFavroriteKind.getCondition('usersProxy').usersProxy.user.id,
+              id: inputFilterWithFavoriteKind.getCondition('usersProxy').usersProxy.user.id,
               username: 'default-username',
               password: 'default-password',
             },
@@ -525,6 +525,214 @@ describe('FavoritesAggregateRepository', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(outputFavoritesModel1);
       expect(total).toEqual(1);
+    });
+  });
+
+  describe(`Get favorite by id`, () => {
+    let inputFavoriteId: string;
+    let outputUserModel: UsersModel;
+    let outputUsersProxyModel1: UsersProxyModel;
+    let outputUsersProxyModel2: UsersProxyModel;
+    let outputUsersProxyModel3: UsersProxyModel;
+    let outputFavoritesDbModel: FavoritesModel;
+    let outputFavoritesModel: FavoritesModel;
+
+    beforeEach(() => {
+      inputFavoriteId = '22222222-2222-2222-2222-111111111111';
+
+      outputUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'user1',
+        password: 'pass1',
+        isEnable: true,
+        insertDate: new Date(),
+      });
+
+      outputUsersProxyModel1 = new UsersProxyModel({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: '11111111-1111-1111-1111-111111111111',
+        listenAddr: '26.110.20.6',
+        listenPort: 3128,
+        proxyDownstream: [
+          new ProxyDownstreamModel({
+            id: identifierMock.generateId(),
+            refId: identifierMock.generateId(),
+            ip: '65.23.45.12',
+            mask: 32,
+            country: 'GB',
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.ONLINE,
+          }),
+        ],
+        insertDate: new Date(),
+      });
+      outputUsersProxyModel2 = new UsersProxyModel({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: '11111111-1111-1111-1111-222222222222',
+        listenAddr: '26.110.20.6',
+        listenPort: 3129,
+        proxyDownstream: [
+          new ProxyDownstreamModel({
+            id: identifierMock.generateId(),
+            refId: identifierMock.generateId(),
+            ip: '65.23.45.13',
+            mask: 32,
+            country: 'GB',
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.ONLINE,
+          }),
+        ],
+        insertDate: new Date(),
+      });
+      outputUsersProxyModel3 = new UsersProxyModel({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: '11111111-1111-1111-1111-333333333333',
+        listenAddr: '26.110.20.6',
+        listenPort: 3130,
+        proxyDownstream: [
+          new ProxyDownstreamModel({
+            id: identifierMock.generateId(),
+            refId: identifierMock.generateId(),
+            ip: '65.23.45.14',
+            mask: 32,
+            country: 'GB',
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.ONLINE,
+          }),
+        ],
+        insertDate: new Date(),
+      });
+
+      outputFavoritesDbModel = new FavoritesModel({
+        id: '22222222-2222-2222-2222-111111111111',
+        kind: FavoritesListTypeEnum.FAVORITE,
+        usersProxy: defaultModelFactory<UsersProxyModel>(
+          UsersProxyModel,
+          {
+            id: outputUsersProxyModel1.id,
+            listenAddr: 'default-listen-addr',
+            listenPort: 0,
+            proxyDownstream: [],
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            insertDate: new Date(),
+          },
+          ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+        ),
+        note: 'This is a note',
+        insertDate: new Date(),
+      });
+
+      outputFavoritesModel = new FavoritesModel({
+        id: outputFavoritesDbModel.id,
+        kind: outputFavoritesDbModel.kind,
+        usersProxy: outputUsersProxyModel1,
+        note: outputFavoritesDbModel.note,
+        insertDate: outputFavoritesDbModel.insertDate,
+      });
+    });
+
+    it(`Should error get favorite by id when fetch from database`, async () => {
+      favoritesDbRepository.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getById(inputFavoriteId);
+
+      expect(favoritesDbRepository.getById).toHaveBeenCalled();
+      expect(favoritesDbRepository.getById).toHaveBeenCalledWith(inputFavoriteId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get favorite by id and return empty data if not found any records`, async () => {
+      favoritesDbRepository.getById.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.getById(inputFavoriteId);
+
+      expect(favoritesDbRepository.getById).toHaveBeenCalled();
+      expect(favoritesDbRepository.getById).toHaveBeenCalledWith(inputFavoriteId);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should error get favorite by id when get users proxy list`, async () => {
+      favoritesDbRepository.getById.mockResolvedValue([null, outputFavoritesDbModel]);
+      usersProxyRepository.getByUserId.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.getById(inputFavoriteId);
+
+      expect(favoritesDbRepository.getById).toHaveBeenCalled();
+      expect(favoritesDbRepository.getById).toHaveBeenCalledWith(inputFavoriteId);
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get favorite by id and return empty data if not found any users proxy records`, async () => {
+      favoritesDbRepository.getById.mockResolvedValue([null, outputFavoritesDbModel]);
+      usersProxyRepository.getByUserId.mockResolvedValue([null, [], 0]);
+
+      const [error, result] = await repository.getById(inputFavoriteId);
+
+      expect(favoritesDbRepository.getById).toHaveBeenCalled();
+      expect(favoritesDbRepository.getById).toHaveBeenCalledWith(inputFavoriteId);
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get favorite by id and return empty data if not match any users proxy records`, async () => {
+      favoritesDbRepository.getById.mockResolvedValue([null, outputFavoritesDbModel]);
+      usersProxyRepository.getByUserId.mockResolvedValue([
+        null,
+        [outputUsersProxyModel2, outputUsersProxyModel3],
+        2,
+      ]);
+
+      const [error, result] = await repository.getById(inputFavoriteId);
+
+      expect(favoritesDbRepository.getById).toHaveBeenCalled();
+      expect(favoritesDbRepository.getById).toHaveBeenCalledWith(inputFavoriteId);
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+
+    it(`Should successfully get favorite by id`, async () => {
+      favoritesDbRepository.getById.mockResolvedValue([null, outputFavoritesDbModel]);
+      usersProxyRepository.getByUserId.mockResolvedValue([
+        null,
+        [outputUsersProxyModel1, outputUsersProxyModel2, outputUsersProxyModel3],
+        3,
+      ]);
+
+      const [error, result] = await repository.getById(inputFavoriteId);
+
+      expect(favoritesDbRepository.getById).toHaveBeenCalled();
+      expect(favoritesDbRepository.getById).toHaveBeenCalledWith(inputFavoriteId);
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeNull();
+      expect(result).toEqual(outputFavoritesModel);
     });
   });
 });

@@ -44,15 +44,39 @@ export class FavoritesAggregateRepository implements IGenericRepositoryInterface
     }
 
     const dataList = usersProxyList.map((v) => FavoritesAggregateRepository._mergeData(v, favoritesList));
-    console.log(dataList);
 
     const [result, totalCount] = filterAndSortFavorites(dataList, filterModel);
 
     return [null, result, totalCount];
   }
 
-  getById(id: string): Promise<AsyncReturn<Error, FavoritesModel | null>> {
-    return Promise.resolve(undefined);
+  async getById(id: string): Promise<AsyncReturn<Error, FavoritesModel | null>> {
+    const [favoriteError, favoriteData] = await this._favoritesDbRepository.getById(id);
+    if (favoriteError) {
+      return [favoriteError];
+    }
+    if (!favoriteData) {
+      return [null, null];
+    }
+
+    const userId = favoriteData.usersProxy.user.id;
+    const usersProxyFilterModel = new FilterModel({skipPagination: true});
+    const [usersProxyError, usersProxyList, usersProxyTotal] = await this._usersProxyRepository.getByUserId(userId, usersProxyFilterModel);
+    if (usersProxyError) {
+      return [usersProxyError];
+    }
+    if (usersProxyTotal === 0) {
+      return [null, null];
+    }
+
+    const find = usersProxyList.find((v) => v.id === favoriteData.usersProxy.id);
+    if (!find) {
+      return [null, null];
+    }
+
+    favoriteData.usersProxy = find;
+
+    return [null, favoriteData];
   }
 
   async add(model: FavoritesModel): Promise<AsyncReturn<Error, FavoritesModel>> {
