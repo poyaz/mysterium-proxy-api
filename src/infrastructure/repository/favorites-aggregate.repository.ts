@@ -129,8 +129,8 @@ export class FavoritesAggregateRepository implements IGenericRepositoryInterface
     return [new UnknownException()];
   }
 
-  removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async removeBulk(idList: Array<string>): Promise<AsyncReturn<Error, null>> {
+    return this._favoritesDbRepository.removeBulk(idList);
   }
 
   private static _mergeData(usersProxyData: UsersProxyModel, favoritesList: Array<FavoritesModel>): FavoritesModel {
