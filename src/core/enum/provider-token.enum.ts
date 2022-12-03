@@ -167,6 +167,18 @@ export enum ProviderTokenEnum {
   DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY = 'DOCKER_RUNNER_CREATE_STRATEGY_REPOSITORY',
   /**
    *
+   * {@link FavoritesAggregateRepository}
+   * @implements IGenericRepositoryInterface<FavoritesModel>
+   */
+  FAVORITES_AGGREGATE_REPOSITORY = 'FAVORITES_AGGREGATE_REPOSITORY',
+  /**
+   *
+   * {@link FavoritesPgRepository}
+   * @implements IGenericRepositoryInterface<FavoritesModel>
+   */
+  FAVORITES_PG_REPOSITORY = 'FAVORITES_PG_REPOSITORY',
+  /**
+   *
    * {@link MystIdentityAggregateRepository}
    * @implements IGenericRepositoryInterface<MystIdentityModel>
    */

@@ -80,6 +80,10 @@ import {UsersProxyService} from '@src-core/service/users-proxy.service';
 import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-repository.interface';
 import {ProxyAclService} from '@src-core/service/proxy-acl.service';
 import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
+import {FavoritesPgRepository} from '@src-infrastructure/repository/favorites-pg.repository';
+import {FavoritesModel} from '@src-core/model/favorites.model';
+import {FavoritesAggregateRepository} from '@src-infrastructure/repository/favorites-aggregate.repository';
+import {FavoritesService} from '@src-core/service/favorites.service';
 
 @Module({
   imports: [
@@ -175,8 +179,11 @@ import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
     },
     {
       provide: ProviderTokenEnum.FAVORITES_SERVICE,
-      inject: [],
-      useFactory: () => ({}),
+      inject: [ProviderTokenEnum.FAVORITES_AGGREGATE_REPOSITORY, ProviderTokenEnum.USER_SERVICE],
+      useFactory: (
+        favoritesRepository: IGenericRepositoryInterface<FavoritesModel>,
+        usersService: IUsersServiceInterface,
+      ) => new FavoritesService(favoritesRepository, usersService),
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_SERVICE,
@@ -402,6 +409,24 @@ import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
       ],
       useFactory: (...dockerRunnerCreateList: Array<ICreateRunnerRepositoryInterface>) =>
         new DockerRunnerCreateStrategyRepository(dockerRunnerCreateList),
+    },
+    {
+      provide: ProviderTokenEnum.FAVORITES_AGGREGATE_REPOSITORY,
+      inject: [ProviderTokenEnum.FAVORITES_PG_REPOSITORY, ProviderTokenEnum.USERS_PROXY_AGGREGATE_REPOSITORY],
+      useFactory: (
+        favoritesDbRepository: IGenericRepositoryInterface<FavoritesModel>,
+        usersProxyRepository: IUsersProxyRepositoryInterface,
+      ) => new FavoritesAggregateRepository(favoritesDbRepository, usersProxyRepository),
+    },
+    {
+      provide: ProviderTokenEnum.FAVORITES_PG_REPOSITORY,
+      inject: [
+        getRepositoryToken(FavoritesEntity),
+        ProviderTokenEnum.IDENTIFIER_UUID,
+        ProviderTokenEnum.DATE_TIME,
+      ],
+      useFactory: (db: Repository<FavoritesEntity>, identifier: IIdentifier, dateTime: IDateTime) =>
+        new FavoritesPgRepository(db, identifier, dateTime),
     },
     {
       provide: ProviderTokenEnum.MYST_IDENTITY_AGGREGATE_REPOSITORY,
