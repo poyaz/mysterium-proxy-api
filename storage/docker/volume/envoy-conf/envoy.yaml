@@ -65,23 +65,6 @@ static_resources:
                                   authorization: "%REQ(Proxy-Authorization)%"
                                   x-node-proxy-port: "%ENVIRONMENT(NODE_PROXY_PORT)%"
                 http_filters:
-                  - name: envoy.filters.http.lua
-                    typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
-                      default_source_code:
-                        inline_string: |
-                          function envoy_on_request(request_handle)
-                            local proxy_authorization = request_handle:headers():get("proxy-authorization")
-                            if proxy_authorization == nil or proxy_authorization == '' then
-                              request_handle:respond(
-                                {
-                                  [":status"] = "407",
-                                  ["Proxy-Authenticate"] = "Basic realm=\"Proxy authorization web server\""
-                                },
-                                ""
-                              )
-                            end
-                          end
                   - name: envoy.filters.http.dynamic_forward_proxy
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
