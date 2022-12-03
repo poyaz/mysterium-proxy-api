@@ -13,6 +13,9 @@ import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum} from '@src-core/mo
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {filterAndSortFavorites} from '@src-infrastructure/utility/filterAndSortFavorites';
 import {NotFoundException} from '@nestjs/common';
+import {UpdateModel} from '@src-core/model/update.model';
+import {FavoritesEntity} from '@src-infrastructure/entity/favorites.entity';
+import {RepositoryException} from '@src-core/exception/repository.exception';
 
 jest.mock('@src-infrastructure/utility/filterAndSortFavorites');
 
@@ -955,6 +958,38 @@ describe('FavoritesAggregateRepository', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(outputFavoritesModel1);
       expect(total).toEqual(1);
+    });
+  });
+
+  describe(`Update favorite`, () => {
+    let inputUpdateModel: UpdateModel<FavoritesModel>;
+
+    beforeEach(() => {
+      inputUpdateModel = new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+        kind: FavoritesListTypeEnum.FAVORITE,
+        note: 'This is a note',
+      });
+    });
+
+    it(`Should error update one favorite with id`, async () => {
+      favoritesDbRepository.update.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.update(inputUpdateModel);
+
+      expect(favoritesDbRepository.update).toHaveBeenCalled();
+      expect(favoritesDbRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update one favorite with id`, async () => {
+      favoritesDbRepository.update.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.update(inputUpdateModel);
+
+      expect(favoritesDbRepository.update).toHaveBeenCalled();
+      expect(favoritesDbRepository.update).toBeCalledWith(inputUpdateModel);
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });
