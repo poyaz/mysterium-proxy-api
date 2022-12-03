@@ -390,7 +390,7 @@ describe('FavoritesService', () => {
       expect(error).toBeInstanceOf(UnknownException);
     });
 
-    it(`Should error update one favorite with id`, async () => {
+    it(`Should successfully update one favorite with id`, async () => {
       favoritesRepository.getById.mockResolvedValue([null, outputFavoriteModel]);
       favoritesRepository.update.mockResolvedValue([null, null]);
 
