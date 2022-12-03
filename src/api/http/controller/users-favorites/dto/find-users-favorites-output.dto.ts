@@ -1,10 +1,6 @@
 import {ApiProperty, PickType} from '@nestjs/swagger';
 import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
-import {FindProviderOutputDto} from '@src-api/http/controller/provider/dto/find-provider-output.dto';
 import {FindUsersProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-output.dto';
-
-class ProviderInfoDto extends PickType(FindProviderOutputDto, ['id', 'providerIdentity']) {
-}
 
 export class FindUsersFavoritesOutputDto {
   @ApiProperty({
