@@ -64,6 +64,8 @@ static_resources:
                                 context_extensions:
                                   authorization: "%REQ(Proxy-Authorization)%"
                                   x-node-proxy-port: "%ENVIRONMENT(NODE_PROXY_PORT)%"
+                      response_headers_to_remove:
+                        - "x-envoy-upstream-service-time"
                 http_filters:
                   - name: envoy.filters.http.dynamic_forward_proxy
                     typed_config:
