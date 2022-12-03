@@ -66,8 +66,8 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
                             Headers: []*core.HeaderValueOption{
                                 {
                                     Header: &core.HeaderValue{
-                                        Key:   "x-custom-header-from-authz",
-                                        Value: "some value",
+                                        Key: "x-verify-authz",
+                                        Value: "true",
                                     },
                                 },
                             },
@@ -82,9 +82,17 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
                     HttpResponse: &auth.CheckResponse_DeniedResponse{
                         DeniedResponse: &auth.DeniedHttpResponse{
                             Status: &envoy_type.HttpStatus{
-                                Code: envoy_type.StatusCode_Unauthorized,
+                                Code: envoy_type.StatusCode_ProxyAuthenticationRequired,
                             },
-                            Body: "Authorization Header malformed or not provided",
+                            Headers: []*core.HeaderValueOption{
+                                {
+                                    Header: &core.HeaderValue{
+                                        Key: "Proxy-Authenticate",
+                                        Value: "Basic realm=\"Proxy authorization Header is not provided or corrected\"",
+                                    },
+                                },
+                            },
+                            Body: "Proxy authorization Header is not provided or corrected",
                         },
                     },
                 }, nil
@@ -96,9 +104,17 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
                     HttpResponse: &auth.CheckResponse_DeniedResponse{
                         DeniedResponse: &auth.DeniedHttpResponse{
                             Status: &envoy_type.HttpStatus{
-                                Code: envoy_type.StatusCode_Forbidden,
+                                Code: envoy_type.StatusCode_ProxyAuthenticationRequired,
                             },
-                            Body: "PERMISSION_DENIED",
+                            Headers: []*core.HeaderValueOption{
+                                {
+                                    Header: &core.HeaderValue{
+                                        Key: "Proxy-Authenticate",
+                                        Value: "Basic realm=\"Proxy authorization permission denied\"",
+                                    },
+                                },
+                            },
+                            Body: "Proxy authorization permission denied",
                         },
                     },
                 }, nil
