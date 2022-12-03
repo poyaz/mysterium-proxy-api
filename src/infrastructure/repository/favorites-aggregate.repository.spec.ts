@@ -12,6 +12,7 @@ import {defaultModelFactory} from '@src-core/model/defaultModel';
 import {ProxyDownstreamModel, ProxyStatusEnum, ProxyTypeEnum} from '@src-core/model/proxy.model';
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {filterAndSortFavorites} from '@src-infrastructure/utility/filterAndSortFavorites';
+import {NotFoundException} from '@nestjs/common';
 
 jest.mock('@src-infrastructure/utility/filterAndSortFavorites');
 
@@ -733,6 +734,227 @@ describe('FavoritesAggregateRepository', () => {
       expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
       expect(error).toBeNull();
       expect(result).toEqual(outputFavoritesModel);
+    });
+  });
+
+  describe(`Add bulk favorites`, () => {
+    let inputModel1: FavoritesModel;
+    let outputUserModel: UsersModel;
+    let outputUsersProxyModel1: UsersProxyModel;
+    let outputUsersProxyModel2: UsersProxyModel;
+    let outputUsersProxyModel3: UsersProxyModel;
+    let outputFavoritesDbModel1: FavoritesModel;
+    let outputFavoritesModel1: FavoritesModel;
+
+    beforeEach(() => {
+      inputModel1 = defaultModelFactory<FavoritesModel>(
+        FavoritesModel,
+        {
+          id: 'default-id',
+          kind: FavoritesListTypeEnum.FAVORITE,
+          usersProxy: defaultModelFactory<UsersProxyModel>(
+            UsersProxyModel,
+            {
+              id: '11111111-1111-1111-1111-111111111111',
+              listenAddr: 'default-listen-addr',
+              listenPort: 3128,
+              proxyDownstream: [],
+              user: {
+                id: identifierMock.generateId(),
+                username: 'default-username',
+                password: 'default-password',
+              },
+              insertDate: new Date(),
+            },
+            ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+          ),
+          note: 'This is a note',
+          insertDate: new Date(),
+        },
+        ['id', 'insertDate'],
+      );
+
+      outputUserModel = new UsersModel({
+        id: identifierMock.generateId(),
+        username: 'user1',
+        password: 'pass1',
+        isEnable: true,
+        insertDate: new Date(),
+      });
+
+      outputUsersProxyModel1 = new UsersProxyModel({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: '11111111-1111-1111-1111-111111111111',
+        listenAddr: '26.110.20.6',
+        listenPort: 3128,
+        proxyDownstream: [
+          new ProxyDownstreamModel({
+            id: identifierMock.generateId(),
+            refId: identifierMock.generateId(),
+            ip: '65.23.45.12',
+            mask: 32,
+            country: 'GB',
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.ONLINE,
+          }),
+        ],
+        insertDate: new Date(),
+      });
+      outputUsersProxyModel2 = new UsersProxyModel({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: '11111111-1111-1111-1111-222222222222',
+        listenAddr: '26.110.20.6',
+        listenPort: 3129,
+        proxyDownstream: [
+          new ProxyDownstreamModel({
+            id: identifierMock.generateId(),
+            refId: identifierMock.generateId(),
+            ip: '65.23.45.13',
+            mask: 32,
+            country: 'GB',
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.ONLINE,
+          }),
+        ],
+        insertDate: new Date(),
+      });
+      outputUsersProxyModel3 = new UsersProxyModel({
+        user: {
+          id: outputUserModel.id,
+          username: outputUserModel.username,
+          password: outputUserModel.password,
+        },
+        id: '11111111-1111-1111-1111-333333333333',
+        listenAddr: '26.110.20.6',
+        listenPort: 3130,
+        proxyDownstream: [
+          new ProxyDownstreamModel({
+            id: identifierMock.generateId(),
+            refId: identifierMock.generateId(),
+            ip: '65.23.45.14',
+            mask: 32,
+            country: 'GB',
+            type: ProxyTypeEnum.MYST,
+            status: ProxyStatusEnum.ONLINE,
+          }),
+        ],
+        insertDate: new Date(),
+      });
+
+      outputFavoritesDbModel1 = new FavoritesModel({
+        id: '22222222-2222-2222-2222-111111111111',
+        kind: FavoritesListTypeEnum.FAVORITE,
+        usersProxy: defaultModelFactory<UsersProxyModel>(
+          UsersProxyModel,
+          {
+            id: outputUsersProxyModel1.id,
+            listenAddr: 'default-listen-addr',
+            listenPort: 0,
+            proxyDownstream: [],
+            user: {
+              id: outputUserModel.id,
+              username: outputUserModel.username,
+              password: outputUserModel.password,
+            },
+            insertDate: new Date(),
+          },
+          ['listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+        ),
+        note: 'This is a note',
+        insertDate: new Date(),
+      });
+
+      outputFavoritesModel1 = new FavoritesModel({
+        id: outputFavoritesDbModel1.id,
+        kind: outputFavoritesDbModel1.kind,
+        usersProxy: outputUsersProxyModel1,
+        note: outputFavoritesDbModel1.note,
+        insertDate: outputFavoritesDbModel1.insertDate,
+      });
+    });
+
+    it(`Should error add bulk favorites when fetch users proxy list`, async () => {
+      usersProxyRepository.getByUserId.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.addBulk([inputModel1]);
+
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel1.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should error add bulk favorites when not found any users proxy list`, async () => {
+      usersProxyRepository.getByUserId.mockResolvedValue([null, [], 0]);
+
+      const [error] = await repository.addBulk([inputModel1]);
+
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel1.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error add bulk favorites when not found match users proxy list`, async () => {
+      usersProxyRepository.getByUserId.mockResolvedValue([
+        null,
+        [outputUsersProxyModel2, outputUsersProxyModel3],
+        2,
+      ]);
+
+      const [error] = await repository.addBulk([inputModel1]);
+
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel1.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(error).toBeInstanceOf(NotFoundException);
+    });
+
+    it(`Should error add bulk favorites`, async () => {
+      usersProxyRepository.getByUserId.mockResolvedValue([
+        null,
+        [outputUsersProxyModel1, outputUsersProxyModel2, outputUsersProxyModel3],
+        3,
+      ]);
+      favoritesDbRepository.addBulk.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.addBulk([inputModel1]);
+
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel1.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(favoritesDbRepository.addBulk).toHaveBeenCalled();
+      expect(favoritesDbRepository.addBulk).toHaveBeenCalledWith(expect.arrayContaining([inputModel1]));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully add bulk favorites`, async () => {
+      usersProxyRepository.getByUserId.mockResolvedValue([
+        null,
+        [outputUsersProxyModel1, outputUsersProxyModel2, outputUsersProxyModel3],
+        3,
+      ]);
+      favoritesDbRepository.addBulk.mockResolvedValue([null, [outputFavoritesDbModel1], 1]);
+
+      const [error, result, total] = await repository.addBulk([inputModel1]);
+
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(outputFavoritesDbModel1.usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(favoritesDbRepository.addBulk).toHaveBeenCalled();
+      expect(favoritesDbRepository.addBulk).toHaveBeenCalledWith(expect.arrayContaining([inputModel1]));
+      expect(error).toBeNull();
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(outputFavoritesModel1);
+      expect(total).toEqual(1);
     });
   });
 });

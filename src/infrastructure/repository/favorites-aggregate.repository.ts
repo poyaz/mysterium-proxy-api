@@ -6,6 +6,7 @@ import {IUsersProxyRepositoryInterface} from '@src-core/interface/i-users-proxy-
 import {FilterModel} from '@src-core/model/filter.model';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {filterAndSortFavorites} from '@src-infrastructure/utility/filterAndSortFavorites';
+import {NotFoundException} from '@nestjs/common';
 
 export class FavoritesAggregateRepository implements IGenericRepositoryInterface<FavoritesModel> {
   constructor(
@@ -83,8 +84,37 @@ export class FavoritesAggregateRepository implements IGenericRepositoryInterface
     return [new UnknownException()];
   }
 
-  addBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
-    return Promise.resolve(undefined);
+  async addBulk(models: Array<FavoritesModel>): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
+    const addUserIdList = models.map<string>((v) => v.usersProxy.user.id);
+    if ([...new Set(addUserIdList)].length > 1) {
+      return [new UnknownException()];
+    }
+
+    const userId = addUserIdList[0];
+    const usersProxyFilterModel = new FilterModel({skipPagination: true});
+    const [usersProxyError, usersProxyList, usersProxyTotal] = await this._usersProxyRepository.getByUserId(userId, usersProxyFilterModel);
+    if (usersProxyError) {
+      return [usersProxyError];
+    }
+    if (usersProxyTotal === 0) {
+      return [new NotFoundException()];
+    }
+
+    const usersProxyMatchList = usersProxyList.filter((userProxy) => models.findIndex((favorite) => favorite.usersProxy.id === userProxy.id) > -1);
+    if (usersProxyMatchList.length !== models.length) {
+      return [new NotFoundException()];
+    }
+
+    const [addError, addDataList, addTotal] = await this._favoritesDbRepository.addBulk(models);
+    if (addError) {
+      return [addError];
+    }
+
+    const dataList = usersProxyMatchList
+      .map((v) => FavoritesAggregateRepository._mergeData(v, addDataList))
+      .filter((v) => v.kind !== FavoritesListTypeEnum.OTHER);
+
+    return [null, dataList, addTotal];
   }
 
   update<F>(model: F): Promise<AsyncReturn<Error, null>> {
