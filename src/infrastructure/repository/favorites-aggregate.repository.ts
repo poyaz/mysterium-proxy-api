@@ -121,8 +121,8 @@ export class FavoritesAggregateRepository implements IGenericRepositoryInterface
     return this._favoritesDbRepository.update(model);
   }
 
-  updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
-    return Promise.resolve(undefined);
+  async updateBulk<F>(models: Array<F>): Promise<AsyncReturn<Error, null>> {
+    return this._favoritesDbRepository.updateBulk(models);
   }
 
   async remove(id: string): Promise<AsyncReturn<Error, null>> {

@@ -992,4 +992,43 @@ describe('FavoritesAggregateRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe(`Update bulk favorites`, () => {
+    let inputUpdateModel1: UpdateModel<FavoritesModel>;
+
+    beforeEach(() => {
+      inputUpdateModel1 = new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+        kind: FavoritesListTypeEnum.FAVORITE,
+      });
+    });
+
+    it(`Should error update bulk favorites`, async () => {
+      favoritesDbRepository.updateBulk.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await repository.updateBulk([inputUpdateModel1]);
+
+      expect(favoritesDbRepository.updateBulk).toHaveBeenCalled();
+      expect(favoritesDbRepository.updateBulk).toHaveBeenCalledWith(expect.arrayContaining([
+        new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+          kind: FavoritesListTypeEnum.FAVORITE,
+        }),
+      ]));
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully update bulk favorites`, async () => {
+      favoritesDbRepository.updateBulk.mockResolvedValue([null, null]);
+
+      const [error, result] = await repository.updateBulk([inputUpdateModel1]);
+
+      expect(favoritesDbRepository.updateBulk).toHaveBeenCalled();
+      expect(favoritesDbRepository.updateBulk).toHaveBeenCalledWith(expect.arrayContaining([
+        new UpdateModel<FavoritesModel>(identifierMock.generateId(), {
+          kind: FavoritesListTypeEnum.FAVORITE,
+        }),
+      ]));
+      expect(error).toBeNull();
+      expect(result).toBeNull();
+    });
+  });
 });
