@@ -1,8 +1,9 @@
-import {ApiProperty, PickType} from '@nestjs/swagger';
+import {ApiProperty, PartialType, PickType} from '@nestjs/swagger';
 import {FavoritesListTypeEnum} from '@src-core/model/favorites.model';
 import {FindUsersProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-output.dto';
+import {DateOutputDto} from '@src-api/http/dto/date-output.dto';
 
-export class FindUsersFavoritesOutputDto {
+export class FindUsersFavoritesOutputDto extends PartialType(DateOutputDto) {
   @ApiProperty({
     description: 'The identity of favorite',
     type: String,

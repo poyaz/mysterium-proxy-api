@@ -10,7 +10,7 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import {RoleGuard} from '@src-api/http/guard/role.guard';
 import {Roles} from '@src-api/http/decorator/roles.decorator';
@@ -51,6 +51,7 @@ import {UpdateUsersFavoritesBulkKindInputDto} from '@src-api/http/controller/use
 import {DeleteUsersFavoritesBulkInputDto} from '@src-api/http/controller/users-favorites/dto/delete-users-favorites-bulk-input.dto';
 import {IFavoritesServiceInterface} from '@src-core/interface/i-favorites-service.interface';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {OutputUsersFavoritesInterceptor} from '@src-api/http/controller/users-favorites/interceptor/output-users-favorites.interceptor';
 
 @Controller({
   path: 'users',
@@ -79,6 +80,7 @@ export class UsersFavoritesHttpController {
   }
 
   @Get(':userId/favorites')
+  @UseInterceptors(OutputUsersFavoritesInterceptor)
   @ApiOperation({
     description: 'The list of favorites user has created by own user',
     operationId: 'Get user favorites provider',
@@ -218,6 +220,7 @@ export class UsersFavoritesHttpController {
   }
 
   @Post(':userId/favorites')
+  @UseInterceptors(OutputUsersFavoritesInterceptor)
   @ApiOperation({description: 'Register new bulk group of favorites', operationId: 'Add new bulk favorite'})
   @ApiParam({name: 'userId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiBody({
