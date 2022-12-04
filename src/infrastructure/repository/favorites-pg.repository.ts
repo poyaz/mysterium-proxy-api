@@ -23,7 +23,10 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
   }
 
   async getAll<F>(filter?: F): Promise<AsyncReturn<Error, Array<FavoritesModel>>> {
-    const findOptions: FindManyOptions<FavoritesEntity> = {order: {insertDate: SortEnum.DESC}};
+    const findOptions: FindManyOptions<FavoritesEntity> = {
+      order: {insertDate: SortEnum.DESC},
+      relations: ['user'],
+    };
 
     if (filter) {
       const filterModel = <FilterModel<FavoritesModel>><unknown>filter;
@@ -69,7 +72,7 @@ export class FavoritesPgRepository implements IGenericRepositoryInterface<Favori
 
   async getById(id: string): Promise<AsyncReturn<Error, FavoritesModel | null>> {
     try {
-      const row = await this._db.findOneBy({id});
+      const row = await this._db.findOne({where: {id}, relations: ['user']});
       if (!row) {
         return [null, null];
       }

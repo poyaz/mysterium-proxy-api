@@ -262,34 +262,34 @@ describe('FavoritesPgRepository', () => {
 
     it(`Should error get favorite by id`, async () => {
       const executeError = new Error('Error in create on database');
-      favoriteDb.findOneBy.mockRejectedValue(executeError);
+      favoriteDb.findOne.mockRejectedValue(executeError);
 
       const [error] = await repository.getById(inputFavoriteId);
 
-      expect(favoriteDb.findOneBy).toHaveBeenCalled();
-      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputFavoriteId});
+      expect(favoriteDb.findOne).toHaveBeenCalled();
+      expect(favoriteDb.findOne).toBeCalledWith({where: {id: inputFavoriteId}, relations: ['user']});
       expect(error).toBeInstanceOf(RepositoryException);
       expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
     });
 
     it(`Should successfully get favorite by id but can't find and return null`, async () => {
-      favoriteDb.findOneBy.mockResolvedValue(null);
+      favoriteDb.findOne.mockResolvedValue(null);
 
       const [error, result] = await repository.getById(inputFavoriteId);
 
-      expect(favoriteDb.findOneBy).toHaveBeenCalled();
-      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputFavoriteId});
+      expect(favoriteDb.findOne).toHaveBeenCalled();
+      expect(favoriteDb.findOne).toBeCalledWith({where: {id: inputFavoriteId}, relations: ['user']});
       expect(error).toBeNull();
       expect(result).toBeNull();
     });
 
     it(`Should successfully get favorite by id`, async () => {
-      favoriteDb.findOneBy.mockResolvedValue(outputFavoriteEntity);
+      favoriteDb.findOne.mockResolvedValue(outputFavoriteEntity);
 
       const [error, result] = await repository.getById(inputFavoriteId);
 
-      expect(favoriteDb.findOneBy).toHaveBeenCalled();
-      expect(favoriteDb.findOneBy).toBeCalledWith({id: inputFavoriteId});
+      expect(favoriteDb.findOne).toHaveBeenCalled();
+      expect(favoriteDb.findOne).toBeCalledWith({where: {id: inputFavoriteId}, relations: ['user']});
       expect(error).toBeNull();
       expect(result).toEqual<Omit<FavoritesModel, 'clone'>>({
         id: outputFavoriteEntity.id,
