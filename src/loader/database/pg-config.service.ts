@@ -1,5 +1,5 @@
 import {TypeOrmModuleOptions, TypeOrmOptionsFactory} from '@nestjs/typeorm';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject, Injectable, Optional} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
 import {DatabaseConfigInterface} from '@src-loader/configure/interface/database-config.interface';
 import {EnvironmentEnv} from '@src-loader/configure/enum/environment.env';
@@ -7,7 +7,13 @@ import {PostgresConnectionOptions} from 'typeorm/driver/postgres/PostgresConnect
 
 @Injectable()
 export class PgConfigService implements TypeOrmOptionsFactory {
-  constructor(@Inject(ConfigService) private readonly _configService: ConfigService) {
+  constructor(
+    @Inject(ConfigService)
+    private readonly _configService: ConfigService,
+    @Optional()
+    @Inject('USE_CLI')
+    private readonly _useCli?: boolean,
+  ) {
   }
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
@@ -36,7 +42,7 @@ export class PgConfigService implements TypeOrmOptionsFactory {
       synchronize: false,
       migrations: [`dist/infrastructure/migrations/*{.ts,.js}`],
       migrationsTableName: 'migrations_history',
-      migrationsRun: NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP,
+      migrationsRun: this._useCli ? false : NODE_ENV === '' || NODE_ENV === EnvironmentEnv.DEVELOP,
       retryAttempts: 0,
     };
   }
