@@ -31,7 +31,7 @@ export class FavoritesAggregateRepository implements IGenericRepositoryInterface
 
     const [
       [usersProxyError, usersProxyList, usersProxyTotal],
-      [favoritesError, favoritesList, favoritesTotal],
+      [favoritesError, favoritesList],
     ] = await Promise.all([
       this._usersProxyRepository.getByUserId(userId, usersProxyFilterModel),
       this._favoritesDbRepository.getAll(favoritesFilterModel),
@@ -40,7 +40,7 @@ export class FavoritesAggregateRepository implements IGenericRepositoryInterface
     if (multiplyExecuteError) {
       return [multiplyExecuteError];
     }
-    if (usersProxyTotal === 0 || favoritesTotal === 0) {
+    if (usersProxyTotal === 0) {
       return [null, [], 0];
     }
 

@@ -80,9 +80,11 @@ describe('FavoritesAggregateRepository', () => {
     let outputUsersProxyModel3: UsersProxyModel;
     let outputFavoritesDbModel1: FavoritesModel;
     let outputFavoritesDbModel2: FavoritesModel;
-    let outputFavoritesModel1: FavoritesModel;
-    let outputFavoritesModel2: FavoritesModel;
-    let outputFavoritesModel3: FavoritesModel;
+    let outputFavoritesKindFavorite1Model1: FavoritesModel;
+    let outputFavoritesKindToday2Model2: FavoritesModel;
+    let outputFavoritesOther1Model3: FavoritesModel;
+    let outputFavoritesOther2Model4: FavoritesModel;
+    let outputFavoritesOther3Model5: FavoritesModel;
 
     beforeEach(() => {
       inputFilterWithoutKind = new FilterModel<FavoritesModel>();
@@ -248,21 +250,33 @@ describe('FavoritesAggregateRepository', () => {
         insertDate: new Date(),
       });
 
-      outputFavoritesModel1 = new FavoritesModel({
+      outputFavoritesKindFavorite1Model1 = new FavoritesModel({
         id: outputFavoritesDbModel1.id,
         kind: outputFavoritesDbModel1.kind,
         usersProxy: outputUsersProxyModel1,
         note: outputFavoritesDbModel1.note,
         insertDate: outputFavoritesDbModel1.insertDate,
       });
-      outputFavoritesModel2 = new FavoritesModel({
+      outputFavoritesKindToday2Model2 = new FavoritesModel({
         id: outputFavoritesDbModel2.id,
         kind: outputFavoritesDbModel2.kind,
         usersProxy: outputUsersProxyModel2,
         note: outputFavoritesDbModel2.note,
         insertDate: outputFavoritesDbModel2.insertDate,
       });
-      outputFavoritesModel3 = new FavoritesModel({
+      outputFavoritesOther1Model3= new FavoritesModel({
+        id: outputUsersProxyModel1.id,
+        usersProxy: outputUsersProxyModel1,
+        kind: FavoritesListTypeEnum.OTHER,
+        insertDate: outputUsersProxyModel1.insertDate,
+      });
+      outputFavoritesOther2Model4= new FavoritesModel({
+        id: outputUsersProxyModel2.id,
+        usersProxy: outputUsersProxyModel2,
+        kind: FavoritesListTypeEnum.OTHER,
+        insertDate: outputUsersProxyModel2.insertDate,
+      });
+      outputFavoritesOther3Model5 = new FavoritesModel({
         id: outputUsersProxyModel3.id,
         usersProxy: outputUsersProxyModel3,
         kind: FavoritesListTypeEnum.OTHER,
@@ -382,55 +396,15 @@ describe('FavoritesAggregateRepository', () => {
       expect(total).toEqual(0);
     });
 
-    it(`Should successfully get all favorites list and return empty records when not found any favorites (Without kind)`, async () => {
-      usersProxyRepository.getByUserId.mockResolvedValue([null, [outputUsersProxyModel1], 1]);
-      favoritesDbRepository.getAll.mockResolvedValue([null, [], 0]);
-
-      const [error, result, total] = await repository.getAll(inputFilterWithoutKind);
-
-      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
-      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(inputFilterWithoutKind.getCondition('usersProxy').usersProxy.user.id);
-      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
-      expect(favoritesDbRepository.getAll).toHaveBeenCalled();
-      expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).skipPagination).toEqual(true);
-      expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
-      expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).getCondition('usersProxy')).toEqual({
-        $opr: 'eq',
-        usersProxy: defaultModelFactory<UsersProxyModel>(
-          UsersProxyModel,
-          {
-            id: 'default-id',
-            listenAddr: 'default-listen-addr',
-            listenPort: 0,
-            user: {
-              id: inputFilterWithoutKind.getCondition('usersProxy').usersProxy.user.id,
-              username: 'default-username',
-              password: 'default-password',
-            },
-            proxyDownstream: [],
-            insertDate: new Date(),
-          },
-          ['id', 'listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
-        ),
-      });
-      expect(error).toBeNull();
-      expect(result).toHaveLength(0);
-      expect(total).toEqual(0);
-    });
-
-    it(`Should successfully get all favorites list (Without kind)`, async () => {
+    it(`Should successfully get all favorites list and return with other kind if not found any favorites (Without kind)`, async () => {
       usersProxyRepository.getByUserId.mockResolvedValue([
         null,
         [outputUsersProxyModel1, outputUsersProxyModel2, outputUsersProxyModel3],
-        3,
+        3
       ]);
-      favoritesDbRepository.getAll.mockResolvedValue([
-        null,
-        [outputFavoritesDbModel1, outputFavoritesDbModel2],
-        2,
-      ]);
+      favoritesDbRepository.getAll.mockResolvedValue([null, [], 0]);
       (<jest.Mock>filterAndSortFavorites).mockReturnValue([
-        [outputFavoritesModel1, outputFavoritesModel2, outputFavoritesModel3],
+        [outputFavoritesOther1Model3, outputFavoritesOther2Model4, outputFavoritesOther3Model5],
         3,
       ]);
 
@@ -463,17 +437,76 @@ describe('FavoritesAggregateRepository', () => {
       });
       expect(filterAndSortFavorites).toHaveBeenCalledWith(
         expect.arrayContaining([
-          outputFavoritesModel1,
-          outputFavoritesModel2,
-          outputFavoritesModel3,
+          outputFavoritesOther1Model3,
+          outputFavoritesOther2Model4,
+          outputFavoritesOther3Model5,
         ]),
         expect.anything(),
       );
       expect(error).toBeNull();
       expect(result).toHaveLength(3);
-      expect(result[0]).toEqual(outputFavoritesModel1);
-      expect(result[1]).toEqual(outputFavoritesModel2);
-      expect(result[2]).toEqual(outputFavoritesModel3);
+      expect(result[0]).toEqual(outputFavoritesOther1Model3);
+      expect(result[1]).toEqual(outputFavoritesOther2Model4);
+      expect(result[2]).toEqual(outputFavoritesOther3Model5);
+      expect(total).toEqual(3);
+    });
+
+    it(`Should successfully get all favorites list (Without kind)`, async () => {
+      usersProxyRepository.getByUserId.mockResolvedValue([
+        null,
+        [outputUsersProxyModel1, outputUsersProxyModel2, outputUsersProxyModel3],
+        3,
+      ]);
+      favoritesDbRepository.getAll.mockResolvedValue([
+        null,
+        [outputFavoritesDbModel1, outputFavoritesDbModel2],
+        2,
+      ]);
+      (<jest.Mock>filterAndSortFavorites).mockReturnValue([
+        [outputFavoritesKindFavorite1Model1, outputFavoritesKindToday2Model2, outputFavoritesOther3Model5],
+        3,
+      ]);
+
+      const [error, result, total] = await repository.getAll(inputFilterWithoutKind);
+
+      expect(usersProxyRepository.getByUserId).toHaveBeenCalled();
+      expect(usersProxyRepository.getByUserId.mock.calls[0][0]).toEqual(inputFilterWithoutKind.getCondition('usersProxy').usersProxy.user.id);
+      expect(usersProxyRepository.getByUserId.mock.calls[0][1].skipPagination).toEqual(true);
+      expect(favoritesDbRepository.getAll).toHaveBeenCalled();
+      expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).skipPagination).toEqual(true);
+      expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).getConditionList()).toHaveLength(1);
+      expect((<FilterModel<FavoritesModel>>favoritesDbRepository.getAll.mock.calls[0][0]).getCondition('usersProxy')).toEqual({
+        $opr: 'eq',
+        usersProxy: defaultModelFactory<UsersProxyModel>(
+          UsersProxyModel,
+          {
+            id: 'default-id',
+            listenAddr: 'default-listen-addr',
+            listenPort: 0,
+            user: {
+              id: inputFilterWithoutKind.getCondition('usersProxy').usersProxy.user.id,
+              username: 'default-username',
+              password: 'default-password',
+            },
+            proxyDownstream: [],
+            insertDate: new Date(),
+          },
+          ['id', 'listenAddr', 'listenPort', 'proxyDownstream', 'insertDate'],
+        ),
+      });
+      expect(filterAndSortFavorites).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          outputFavoritesKindFavorite1Model1,
+          outputFavoritesKindToday2Model2,
+          outputFavoritesOther3Model5,
+        ]),
+        expect.anything(),
+      );
+      expect(error).toBeNull();
+      expect(result).toHaveLength(3);
+      expect(result[0]).toEqual(outputFavoritesKindFavorite1Model1);
+      expect(result[1]).toEqual(outputFavoritesKindToday2Model2);
+      expect(result[2]).toEqual(outputFavoritesOther3Model5);
       expect(total).toEqual(3);
     });
 
@@ -488,7 +521,7 @@ describe('FavoritesAggregateRepository', () => {
         [outputFavoritesDbModel1, outputFavoritesDbModel2],
         2,
       ]);
-      (<jest.Mock>filterAndSortFavorites).mockReturnValue([[outputFavoritesModel1], 1]);
+      (<jest.Mock>filterAndSortFavorites).mockReturnValue([[outputFavoritesKindFavorite1Model1], 1]);
 
       const [error, result, total] = await repository.getAll(inputFilterWithFavoriteKind);
 
@@ -519,15 +552,15 @@ describe('FavoritesAggregateRepository', () => {
       });
       expect(filterAndSortFavorites).toHaveBeenCalledWith(
         expect.arrayContaining([
-          outputFavoritesModel1,
-          outputFavoritesModel2,
-          outputFavoritesModel3,
+          outputFavoritesKindFavorite1Model1,
+          outputFavoritesKindToday2Model2,
+          outputFavoritesOther3Model5,
         ]),
         expect.anything(),
       );
       expect(error).toBeNull();
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(outputFavoritesModel1);
+      expect(result[0]).toEqual(outputFavoritesKindFavorite1Model1);
       expect(total).toEqual(1);
     });
   });
