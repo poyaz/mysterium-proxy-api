@@ -1,5 +1,6 @@
 import {FavoritesListTypeEnum, FavoritesModel} from '@src-core/model/favorites.model';
 import {
+  ArrayMaxSize, ArrayMinSize,
   ArrayNotEmpty,
   IsArray,
   IsDefined,
@@ -27,7 +28,7 @@ export class CreateUsersFavoritesBulkInputDto extends PickType(CreateUsersFavori
   @ValidateNested({each: true})
   @IsArray()
   @ArrayNotEmpty()
-  @Max(100)
+  @ArrayMaxSize(100)
   @IsDefined()
   bulk: Array<CreateUsersFavoritesProxyInputDto>;
 

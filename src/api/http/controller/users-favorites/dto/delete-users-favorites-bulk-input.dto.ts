@@ -1,5 +1,5 @@
 import {ApiProperty} from '@nestjs/swagger';
-import {ArrayNotEmpty, IsArray, IsDefined, IsUUID, Max} from 'class-validator';
+import {ArrayMaxSize, ArrayNotEmpty, IsArray, IsDefined, IsUUID, Max} from 'class-validator';
 
 export class DeleteUsersFavoritesBulkInputDto {
   @ApiProperty({
@@ -13,8 +13,8 @@ export class DeleteUsersFavoritesBulkInputDto {
   })
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayMaxSize(100)
   @IsUUID('all', {each: true})
-  @Max(100)
   @IsDefined()
   proxiesList: Array<string>;
 }

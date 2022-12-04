@@ -1,6 +1,6 @@
 import {ApiProperty, PickType} from '@nestjs/swagger';
 import {UpdateUsersFavoritesInputDto} from '@src-api/http/controller/users-favorites/dto/update-users-favorites-input.dto';
-import {ArrayNotEmpty, IsArray, IsDefined, IsUUID, Max} from 'class-validator';
+import {ArrayMaxSize, ArrayNotEmpty, IsArray, IsDefined, IsUUID, Max} from 'class-validator';
 
 export class UpdateUsersFavoritesBulkKindInputDto extends PickType(UpdateUsersFavoritesInputDto, ['kind']) {
   @ApiProperty({
@@ -14,8 +14,8 @@ export class UpdateUsersFavoritesBulkKindInputDto extends PickType(UpdateUsersFa
   })
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayMaxSize(100)
   @IsUUID('all', {each: true})
-  @Max(100)
   @IsDefined()
   proxiesList: Array<string>;
 }
