@@ -348,6 +348,10 @@ init_service() {
 
   TIMEZONE_DATA=$(cat /etc/timezone | sed 's/\//\\\//g')
 
+  MYST_HELP=$(docker run --rm --network none mysteriumnetwork/myst:1.10.0-alpine --help)
+  MYST_API_USERNAME=$(echo "$MYST_HELP" | grep "tequilapi.auth.username" | sed -nr 's/.+\(default:\s+"(.+)".*\)/\1/p')
+  MYST_API_PASSWORD=$(echo "$MYST_HELP" | grep "tequilapi.auth.password" | sed -nr 's/.+\(default:\s+"(.+)".*\)/\1/p')
+
   sed -i \
     -e "s/TZ=/TZ=$TIMEZONE_DATA/g" \
     -e "s/NODE_ENV=/NODE_ENV=product/g" \
@@ -359,8 +363,8 @@ init_service() {
     -e "s/DB_REDIS_HOST=/DB_REDIS_HOST=$DEFAULT_REDIS_IP/g" \
     -e "s/JWT_SECRET_KEY=/JWT_SECRET_KEY=$GENERATE_JWT_TOKEN/g" \
     -e "s/DOCKER_CONTROLLER_HOST=/DOCKER_CONTROLLER_HOST=$DEFAULT_DOCKER_PROXY_IP/g" \
-    -e "s/MYST_NODE_AUTH_USERNAME=/MYST_NODE_AUTH_USERNAME=myst/g" \
-    -e "s/MYST_NODE_AUTH_PASSWORD=/MYST_NODE_AUTH_PASSWORD=mystberry/g" \
+    -e "s/MYST_NODE_AUTH_USERNAME=/MYST_NODE_AUTH_USERNAME=$MYST_API_USERNAME/g" \
+    -e "s/MYST_NODE_AUTH_PASSWORD=/MYST_NODE_AUTH_PASSWORD=$MYST_API_PASSWORD/g" \
     -e "s/PROXY_START_UPSTREAM_PORT=/PROXY_START_UPSTREAM_PORT=5000/g" \
     "$DEFAULT_APP_ENV_FILE"
 
