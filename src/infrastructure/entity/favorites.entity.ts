@@ -52,7 +52,7 @@ export class FavoritesEntity extends BaseEntity {
   })
   kind: Exclude<FavoritesListTypeEnum, FavoritesListTypeEnum.OTHER>;
 
-  @Column({type: 'uuid', name: 'proxy_identity'})
+  @Column({type: 'uuid', name: 'proxy_id'})
   @Index(FAVORITES_ENTITY_OPTIONS.uniqueName.proxyId, {unique: true, where: 'delete_date ISNULL'})
   proxyId: string;
 
