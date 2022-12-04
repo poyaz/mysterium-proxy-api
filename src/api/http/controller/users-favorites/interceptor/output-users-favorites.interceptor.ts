@@ -40,7 +40,7 @@ export class OutputUsersFavoritesInterceptor implements NestInterceptor {
       id: data.id,
       kind: data.kind,
       proxy: {
-        id: data.id,
+        id: data.usersProxy.id,
         listenAddr: data.usersProxy.listenAddr,
         listenPort: data.usersProxy.listenPort || 0,
         outgoingIp: data.usersProxy.proxyDownstream?.[0].ip,
