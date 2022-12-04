@@ -16,43 +16,15 @@ export class OutputUsersProxyInterceptor implements NestInterceptor {
           return [err];
         }
 
-        let result: FindUsersProxyOutputDto | Array<FindUsersProxyOutputDto>;
-
         if (typeof data !== undefined && data !== undefined && data !== null) {
           if (Array.isArray(data)) {
-            result = data.map<FindUsersProxyOutputDto>((v: UsersProxyModel) => ({
-              id: v.id,
-              listenAddr: v.listenAddr,
-              listenPort: v.listenPort || 0,
-              outgoingIp: v.proxyDownstream?.[0].ip,
-              outgoingCountry: v.proxyDownstream?.[0].country,
-              status: v.proxyDownstream?.[0].status,
-              auth: {
-                id: v.user.id,
-                username: v.user.username,
-                password: v.user.password,
-              },
-              insertDate: v.insertDate,
-            }));
+            const result = data.map((v) => OutputUsersProxyInterceptor._toObj(v));
 
             return [null, result, count];
           }
 
           if (typeof data === 'object') {
-            result = {
-              id: data.id,
-              listenAddr: data.listenAddr,
-              listenPort: data.listenPort || 0,
-              outgoingIp: data.proxyDownstream?.[0].ip,
-              outgoingCountry: data.proxyDownstream?.[0].country,
-              status: data.proxyDownstream?.[0].status,
-              auth: {
-                id: data.user.id,
-                username: data.user.username,
-                password: data.user.password,
-              },
-              insertDate: data.insertDate,
-            };
+            const result = OutputUsersProxyInterceptor._toObj(data);
 
             return [null, result];
           }
@@ -61,5 +33,22 @@ export class OutputUsersProxyInterceptor implements NestInterceptor {
         return [null];
       }),
     );
+  }
+
+  private static _toObj(data: UsersProxyModel): FindUsersProxyOutputDto {
+    return {
+      id: data.id,
+      listenAddr: data.listenAddr,
+      listenPort: data.listenPort || 0,
+      outgoingIp: data.proxyDownstream?.[0].ip,
+      outgoingCountry: data.proxyDownstream?.[0].country,
+      status: data.proxyDownstream?.[0].status,
+      auth: {
+        id: data.user.id,
+        username: data.user.username,
+        password: data.user.password,
+      },
+      insertDate: data.insertDate,
+    };
   }
 }

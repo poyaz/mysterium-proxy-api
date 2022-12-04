@@ -17,37 +17,15 @@ export class OutputProxyInterceptor implements NestInterceptor {
           return [err];
         }
 
-        let result: FindProxyOutputDto | Array<FindProxyOutputDto>;
-
         if (typeof data !== undefined && data !== undefined && data !== null) {
           if (Array.isArray(data)) {
-            result = data.map<FindProxyOutputDto>((v: ProxyUpstreamModel) => ({
-              id: v.id,
-              identityId: (<any>v.proxyDownstream?.[0].runner?.label || []).find((v) => v.$namespace === MystIdentityModel.name)?.id,
-              providerId: v.proxyDownstream?.[0].refId,
-              listenAddr: v.listenAddr,
-              listenPort: v.listenPort || 0,
-              outgoingIp: v.proxyDownstream?.[0].ip,
-              outgoingCountry: v.proxyDownstream?.[0].country,
-              status: v.proxyDownstream?.[0].status,
-              insertDate: v.insertDate,
-            }));
+            const result = data.map((v) => OutputProxyInterceptor._toObj(v));
 
             return [null, result, count];
           }
 
           if (typeof data === 'object') {
-            result = {
-              id: data.id,
-              identityId: (<any>data.proxyDownstream?.[0].runner?.label)?.id,
-              providerId: data.proxyDownstream?.[0].refId,
-              listenAddr: data.listenAddr,
-              listenPort: data.listenPort || 0,
-              outgoingIp: data.proxyDownstream?.[0].ip,
-              outgoingCountry: data.proxyDownstream?.[0].country,
-              status: data.proxyDownstream?.[0].status,
-              insertDate: data.insertDate,
-            };
+            const result = OutputProxyInterceptor._toObj(data);
 
             return [null, result];
           }
@@ -56,5 +34,19 @@ export class OutputProxyInterceptor implements NestInterceptor {
         return [null];
       }),
     );
+  }
+
+  private static _toObj(data: ProxyUpstreamModel): FindProxyOutputDto {
+    return {
+      id: data.id,
+      identityId: (<any>data.proxyDownstream?.[0].runner?.label)?.id,
+      providerId: data.proxyDownstream?.[0].refId,
+      listenAddr: data.listenAddr,
+      listenPort: data.listenPort || 0,
+      outgoingIp: data.proxyDownstream?.[0].ip,
+      outgoingCountry: data.proxyDownstream?.[0].country,
+      status: data.proxyDownstream?.[0].status,
+      insertDate: data.insertDate,
+    };
   }
 }

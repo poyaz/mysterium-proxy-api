@@ -16,29 +16,15 @@ export class OutputAclInterceptor implements NestInterceptor {
           return [err];
         }
 
-        let result: FindAclOutputDto | Array<FindAclOutputDto>;
-
         if (typeof data !== undefined && data !== undefined && data !== null) {
           if (Array.isArray(data)) {
-            result = data.map<FindAclOutputDto>((v: ProxyAclModel) => ({
-              id: v.id,
-              mode: v.mode,
-              type: v.type,
-             ...(v.user && {user: {id: v.user.id, username: v.user.username}}),
-              proxies: v.proxies.map((d) => ({port: d.listenPort})).filter((d) => d && 'port' in d),
-            }));
+            const result = data.map((v) => OutputAclInterceptor._toObj(v));
 
             return [null, result, count];
           }
 
           if (typeof data === 'object') {
-            result = {
-              id: data.id,
-              mode: data.mode,
-              type: data.type,
-              ...(data.user && {user: {id: data.user.id, username: data.user.username}}),
-              proxies: data.proxies.map((d) => ({port: d.listenPort})).filter((d) => d && 'port' in d),
-            };
+            const result = OutputAclInterceptor._toObj(data);
 
             return [null, result];
           }
@@ -47,5 +33,16 @@ export class OutputAclInterceptor implements NestInterceptor {
         return [null];
       }),
     );
+  }
+
+  private static _toObj(data: ProxyAclModel): FindAclOutputDto {
+    return {
+      id: data.id,
+      mode: data.mode,
+      type: data.type,
+      ...(data.user && {user: {id: data.user.id, username: data.user.username}}),
+      proxies: data.proxies.map((proxy) => ({port: proxy.listenPort})).filter((proxy) => proxy && 'port' in proxy),
+      insertDate: data.insertDate,
+    };
   }
 }
