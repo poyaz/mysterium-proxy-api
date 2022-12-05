@@ -152,6 +152,58 @@ describe('MystProviderHttpController', () => {
     });
   });
 
+  describe(`Find one myst vpn provider`, () => {
+    let inputProviderId: string;
+    let outputMystProviderModel: VpnProviderModel;
+
+    beforeEach(() => {
+      inputProviderId = identifierMock.generateId()
+
+      outputMystProviderModel = new VpnProviderModel({
+        id: identifierMock.generateId(),
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'providerIdentity1',
+        providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
+        country: 'GB',
+        isRegister: false,
+        proxyCount: 0,
+        insertDate: new Date(),
+      });
+    });
+
+    it(`Should error find one myst vpn provider`, async () => {
+      mystProviderService.getById.mockResolvedValue([new UnknownException()]);
+
+      const [error] = await controller.findOne(inputProviderId);
+
+      expect(mystProviderService.getById).toHaveBeenCalled();
+      expect(mystProviderService.getById).toBeCalledWith(inputProviderId);
+      expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully find one myst vpn provider`, async () => {
+      mystProviderService.getById.mockResolvedValue([null, outputMystProviderModel]);
+
+      const [error, result] = await controller.findOne(inputProviderId);
+
+      expect(mystProviderService.getById).toHaveBeenCalled();
+      expect(mystProviderService.getById).toBeCalledWith(inputProviderId);
+      expect(error).toBeNull();
+      expect(result).toMatchObject<Omit<VpnProviderModel, 'clone'>>({
+        id: outputMystProviderModel.id,
+        serviceType: outputMystProviderModel.serviceType,
+        providerName: outputMystProviderModel.providerName,
+        providerIdentity: outputMystProviderModel.providerIdentity,
+        providerIpType: outputMystProviderModel.providerIpType,
+        country: outputMystProviderModel.country,
+        isRegister: outputMystProviderModel.isRegister,
+        proxyCount: outputMystProviderModel.proxyCount,
+        insertDate: outputMystProviderModel.insertDate,
+      });
+    });
+  });
+
   describe(`Connect myst vpn provider`, () => {
     let inputProviderId: string;
     let outputMystProviderModel: VpnProviderModel;

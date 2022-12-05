@@ -35,6 +35,8 @@ import {FindProviderQueryDto} from '@src-api/http/controller/provider/dto/find-p
 import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {NoBodySuccessDto} from '@src-api/http/dto/no-body-success.dto';
+import {DefaultSuccessDto} from '@src-api/http/dto/default-success.dto';
+import {FindIdentityOutputDto} from '@src-api/http/controller/identity/dto/find-identity-output.dto';
 
 @Controller({
   path: 'provider/myst',
@@ -168,6 +170,82 @@ export class MystProviderHttpController {
   })
   async findAll(@Query() queryFilterDto: FindProviderQueryDto) {
     return this._providerService.getAll(FindProviderQueryDto.toModel(queryFilterDto));
+  }
+
+  @Get(':providerId')
+  @ApiOperation({description: 'Get info of one provider with ID', operationId: 'Get provider'})
+  @ApiParam({name: 'identityId', type: String, example: '00000000-0000-0000-0000-000000000000'})
+  @ApiOkResponse({
+    description: 'Get provider data',
+    schema: {
+      allOf: [
+        {$ref: getSchemaPath(DefaultSuccessDto)},
+        {
+          properties: {
+            data: {
+              type: 'object',
+              $ref: getSchemaPath(FindIdentityOutputDto),
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'The provider id not found.',
+    schema: {
+      allOf: [
+        {
+          $ref: getSchemaPath(NotFoundExceptionDto),
+        },
+        {
+          properties: {
+            action: {
+              example: ExceptionEnum.NOT_FOUND_MYST_IDENTITY_ERROR,
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+    schema: {
+      anyOf: [
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.UNKNOWN_ERROR,
+              description: 'Unknown error happened',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              title: ExceptionEnum.REPOSITORY_ERROR,
+              description: 'Fail to read data from downstream resource',
+            },
+            {
+              $ref: getSchemaPath(DefaultExceptionDto),
+            },
+            {
+              properties: {
+                action: {
+                  example: ExceptionEnum.REPOSITORY_ERROR,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  })
+  async findOne(@Param('providerId') providerId: string) {
+    return this._providerService.getById(providerId);
   }
 
   @Put(':providerId')
