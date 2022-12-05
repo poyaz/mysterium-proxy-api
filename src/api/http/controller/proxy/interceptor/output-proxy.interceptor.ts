@@ -39,7 +39,7 @@ export class OutputProxyInterceptor implements NestInterceptor {
   private static _toObj(data: ProxyUpstreamModel): FindProxyOutputDto {
     return {
       id: data.id,
-      identityId: (<any>data.proxyDownstream?.[0].runner?.label)?.id,
+      identityId: ((<any>data.proxyDownstream?.[0].runner?.label).find((v) => v.$namespace === MystIdentityModel.name))?.id,
       providerId: data.proxyDownstream?.[0].refId,
       listenAddr: data.listenAddr,
       listenPort: data.listenPort || 0,
