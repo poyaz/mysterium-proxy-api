@@ -174,7 +174,7 @@ export class MystProviderHttpController {
 
   @Get(':providerId')
   @ApiOperation({description: 'Get info of one provider with ID', operationId: 'Get provider'})
-  @ApiParam({name: 'identityId', type: String, example: '00000000-0000-0000-0000-000000000000'})
+  @ApiParam({name: 'providerId', type: String, example: '00000000-0000-0000-0000-000000000000'})
   @ApiOkResponse({
     description: 'Get provider data',
     schema: {
