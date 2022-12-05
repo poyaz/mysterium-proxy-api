@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Inject, Param,
-  Post,
   Put,
   Query,
   UseGuards,
@@ -36,7 +35,6 @@ import {NotFoundExceptionDto} from '@src-api/http/dto/not-found-exception.dto';
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {NoBodySuccessDto} from '@src-api/http/dto/no-body-success.dto';
 import {DefaultSuccessDto} from '@src-api/http/dto/default-success.dto';
-import {FindIdentityOutputDto} from '@src-api/http/controller/identity/dto/find-identity-output.dto';
 
 @Controller({
   path: 'provider/myst',
@@ -184,7 +182,7 @@ export class MystProviderHttpController {
           properties: {
             data: {
               type: 'object',
-              $ref: getSchemaPath(FindIdentityOutputDto),
+              $ref: getSchemaPath(FindProviderOutputDto),
             },
           },
         },
