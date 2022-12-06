@@ -260,6 +260,8 @@ _main() {
     IS_CONNECTED=$(check_vpn_connected)
     IS_CONNECTED_RC=$?
     if [ $IS_CONNECTED_RC -ne 0 ]; then
+      sleep 10
+
       exit $IS_CONNECTED_RC
     fi
 
@@ -271,6 +273,8 @@ _main() {
       IS_DISCONNECTED_RC=$?
 
       if [ $IS_DISCONNECTED_RC -ne 0 ]; then
+        sleep 10
+
         exit $IS_DISCONNECTED_RC
       fi
 
