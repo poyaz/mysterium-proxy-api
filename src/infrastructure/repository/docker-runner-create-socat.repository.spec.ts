@@ -141,6 +141,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
             {
               $namespace: VpnProviderModel.name,
               id: '11111111-1111-1111-1111-333333333333',
+              userIdentity: 'userIdentity',
+              providerIdentity: 'providerIdentity',
             },
             {
               $namespace: ProxyUpstreamModel.name,
@@ -170,6 +172,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
             {
               $namespace: VpnProviderModel.name,
               id: '11111111-1111-1111-1111-333333333333',
+              userIdentity: 'userIdentity',
+              providerIdentity: 'providerIdentity',
             },
             {
               $namespace: ProxyUpstreamModel.name,
@@ -229,17 +233,17 @@ describe('DockerRunnerCreateSocatRepository', () => {
         VpnProviderModel,
         {
           id: inputRunnerWithPort.label.find((v) => v.$namespace === VpnProviderModel.name).id,
-          userIdentity: 'default-user-identity',
+          userIdentity: 'userIdentity',
           serviceType: VpnServiceTypeEnum.WIREGUARD,
           providerName: VpnProviderName.MYSTERIUM,
-          providerIdentity: 'default-provider-identity',
+          providerIdentity: 'providerIdentity',
           providerIpType: VpnProviderIpTypeEnum.RESIDENTIAL,
           country: 'default-country',
           isRegister: false,
           proxyCount: 0,
           insertDate: new Date(),
         },
-        ['userIdentity', 'providerIdentity', 'serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
+        ['serviceType', 'providerName', 'providerIpType', 'country', 'isRegister', 'proxyCount', 'insertDate'],
       );
 
       outputProxyUpstreamInvalid = defaultModelFactory<ProxyUpstreamModel>(
@@ -706,6 +710,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -770,6 +776,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -837,6 +845,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -906,6 +916,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -978,6 +990,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1048,6 +1062,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1094,6 +1110,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1156,6 +1174,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1202,6 +1222,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1264,6 +1286,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1310,6 +1334,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1377,6 +1403,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1428,6 +1456,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1493,6 +1523,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1545,6 +1577,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1607,6 +1641,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: inputRunnerWithPort.socketPort.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1678,6 +1714,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1740,6 +1778,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1812,6 +1852,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: startPortBinding.toString(),
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -1882,6 +1924,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -1954,6 +1998,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort3.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -2024,6 +2070,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -2112,6 +2160,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort2.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -2175,6 +2225,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort2.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -2238,6 +2290,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort2.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -2284,6 +2338,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const convertLabelToObjectMock = jest.fn().mockReturnValue({
         [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
         [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
         [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
       });
       (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
@@ -2376,6 +2432,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort2.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -2439,6 +2497,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort2.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {
@@ -2502,6 +2562,8 @@ describe('DockerRunnerCreateSocatRepository', () => {
           [`${namespace}.publish-port`]: outputContainerBindPort2.Labels[`${namespace}.publish-port`],
           [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
           [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+          [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+          [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
           [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
         },
         ExposedPorts: {

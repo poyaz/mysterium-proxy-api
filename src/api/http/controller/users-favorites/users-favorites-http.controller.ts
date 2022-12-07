@@ -130,6 +130,8 @@ export class UsersFavoritesHttpController {
                   kind: FavoritesListTypeEnum.FAVORITE,
                   proxy: {
                     id: '00000000-0000-0000-0000-000000000000',
+                    userIdentity: '0xfeb1c4e48515ba12f60c5a912c329ec8b8a1cb56',
+                    providerIdentity: '0x21a31c48968d1f3700dcfeeeaf20962f96e7a9d9',
                     listenAddr: 'proxy.example.com',
                     listenPort: 3128,
                     outgoingIp: '55.12.60.0',
@@ -148,6 +150,8 @@ export class UsersFavoritesHttpController {
                   kind: FavoritesListTypeEnum.TODAY,
                   proxy: {
                     id: '00000000-0000-0000-0000-000000000000',
+                    userIdentity: '0x57daba353514f004c86edf2e3892740ec4d98c4d',
+                    providerIdentity: '0xfe261fe85193124ca4358be24f32ab95a4b1d452',
                     listenAddr: 'proxy.example.com',
                     listenPort: 3129,
                     outgoingIp: '20.112.0.10',

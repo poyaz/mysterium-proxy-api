@@ -3,6 +3,7 @@ import {map, Observable} from 'rxjs';
 import {Return} from '@src-core/utility';
 import {UsersProxyModel} from '@src-core/model/users-proxy.model';
 import {FindUsersProxyOutputDto} from '@src-api/http/controller/users-proxy/dto/find-users-proxy-output.dto';
+import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 
 type InputMapData = Return<Error, UsersProxyModel | Array<UsersProxyModel>>;
 type OutputMapData = Return<Error, FindUsersProxyOutputDto | Array<FindUsersProxyOutputDto>>;
@@ -36,8 +37,12 @@ export class OutputUsersProxyInterceptor implements NestInterceptor {
   }
 
   private static _toObj(data: UsersProxyModel): FindUsersProxyOutputDto {
+    const providerInfo = (<any>data.runner?.label).find((v) => v.$namespace === VpnProviderModel.name);
+
     return {
       id: data.id,
+      userIdentity: providerInfo.userIdentity,
+      providerIdentity: providerInfo.providerIdentity,
       listenAddr: data.listenAddr,
       listenPort: data.listenPort || 0,
       outgoingIp: data.proxyDownstream?.[0].ip,

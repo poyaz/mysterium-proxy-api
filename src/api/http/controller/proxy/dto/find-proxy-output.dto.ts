@@ -32,7 +32,7 @@ export class FindProxyOutputDto extends PartialType(DateOutputDto) {
   listenPort: number;
 
   @ApiProperty({
-    description: 'The identity of VPN account',
+    description: 'The ID of VPN account identity',
     type: String,
     required: false,
     readOnly: true,
@@ -43,15 +43,36 @@ export class FindProxyOutputDto extends PartialType(DateOutputDto) {
   identityId?: string;
 
   @ApiProperty({
-    description: 'The identity of VPN provider',
+    description: 'The identity of VPN account',
+    type: String,
+    maxLength: 50,
+    pattern: '^0x.+',
+    required: false,
+    readOnly: true,
+    example: '0xfeb1c4e48515ba12f60c5a912c329ec8b8a1cb56',
+  })
+  userIdentity: string;
+
+  @ApiProperty({
+    description: 'The ID of VPN provider',
     type: String,
     required: false,
     readOnly: true,
-    nullable: true,
     format: 'uuid',
     example: '00000000-0000-0000-0000-000000000000',
   })
-  providerId?: string;
+  providerId: string;
+
+  @ApiProperty({
+    description: 'The identity serial of vpn provider',
+    type: String,
+    maxLength: 50,
+    pattern: '^0x.+',
+    required: false,
+    readOnly: true,
+    example: '0x21a31c48968d1f3700dcfeeeaf20962f96e7a9d9'
+  })
+  providerIdentity: string;
 
   @ApiProperty({
     description: 'The outgoing ip address of VPN',

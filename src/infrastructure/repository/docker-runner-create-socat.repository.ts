@@ -156,6 +156,12 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     if (vpnProviderModel.isDefaultProperty('id')) {
       return [new FillDataRepositoryException<VpnProviderModel>(['id'])];
     }
+    if (vpnProviderModel.isDefaultProperty('userIdentity')) {
+      return [new FillDataRepositoryException<VpnProviderModel>(['userIdentity'])];
+    }
+    if (vpnProviderModel.isDefaultProperty('providerIdentity')) {
+      return [new FillDataRepositoryException<VpnProviderModel>(['providerIdentity'])];
+    }
 
     return [null, vpnModelData];
   }

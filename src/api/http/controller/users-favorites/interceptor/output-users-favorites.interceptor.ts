@@ -3,6 +3,7 @@ import {map, Observable} from 'rxjs';
 import {Return} from '@src-core/utility';
 import {FavoritesModel} from '@src-core/model/favorites.model';
 import {FindUsersFavoritesOutputDto} from '@src-api/http/controller/users-favorites/dto/find-users-favorites-output.dto';
+import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 
 type InputMapData = Return<Error, FavoritesModel | Array<FavoritesModel>>;
 type OutputMapData = Return<Error, FindUsersFavoritesOutputDto | Array<FindUsersFavoritesOutputDto>>;
@@ -36,11 +37,15 @@ export class OutputUsersFavoritesInterceptor implements NestInterceptor {
   }
 
   private static _toObj(data: FavoritesModel): FindUsersFavoritesOutputDto {
+    const providerInfo = (<any>data.usersProxy.runner?.label).find((v) => v.$namespace === VpnProviderModel.name);
+
     return {
       id: data.id,
       kind: data.kind,
       proxy: {
         id: data.usersProxy.id,
+        userIdentity: providerInfo.userIdentity,
+        providerIdentity: providerInfo.providerIdentity,
         listenAddr: data.usersProxy.listenAddr,
         listenPort: data.usersProxy.listenPort || 0,
         outgoingIp: data.usersProxy.proxyDownstream?.[0].ip,

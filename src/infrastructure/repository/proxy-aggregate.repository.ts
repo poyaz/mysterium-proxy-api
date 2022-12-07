@@ -193,6 +193,8 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
           {
             $namespace: VpnProviderModel.name,
             id: vpnProviderId,
+            userIdentity: vpnProviderData.userIdentity,
+            providerIdentity: vpnProviderData.providerIdentity,
           },
           {
             $namespace: ProxyUpstreamModel.name,

@@ -1767,6 +1767,8 @@ describe('ProxyAggregateRepository', () => {
           {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
+            userIdentity: outputVpnProvider.userIdentity,
+            providerIdentity: outputVpnProvider.providerIdentity,
           },
           {
             $namespace: ProxyUpstreamModel.name,
@@ -1823,6 +1825,8 @@ describe('ProxyAggregateRepository', () => {
           {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
+            userIdentity: outputVpnProvider.userIdentity,
+            providerIdentity: outputVpnProvider.providerIdentity,
           },
           {
             $namespace: ProxyUpstreamModel.name,
@@ -1884,6 +1888,8 @@ describe('ProxyAggregateRepository', () => {
           {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
+            userIdentity: outputVpnProvider.userIdentity,
+            providerIdentity: outputVpnProvider.providerIdentity,
           },
           {
             $namespace: ProxyUpstreamModel.name,
@@ -1972,6 +1978,8 @@ describe('ProxyAggregateRepository', () => {
           {
             $namespace: VpnProviderModel.name,
             id: outputVpnProvider.id,
+            userIdentity: outputVpnProvider.userIdentity,
+            providerIdentity: outputVpnProvider.providerIdentity,
           },
           {
             $namespace: ProxyUpstreamModel.name,

@@ -4,6 +4,7 @@ import {ProxyDownstreamModel, ProxyUpstreamModel} from '@src-core/model/proxy.mo
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {FindProxyOutputDto} from '@src-api/http/controller/proxy/dto/find-proxy-output.dto';
 import {Return} from '@src-core/utility';
+import {VpnProviderModel} from '@src-core/model/vpn-provider.model';
 
 type InputMapData = Return<Error, ProxyUpstreamModel | Array<ProxyUpstreamModel>>;
 type OutputMapData = Return<Error, FindProxyOutputDto | Array<FindProxyOutputDto>>;
@@ -37,10 +38,14 @@ export class OutputProxyInterceptor implements NestInterceptor {
   }
 
   private static _toObj(data: ProxyUpstreamModel): FindProxyOutputDto {
+    const providerInfo = (<any>data.runner?.label).find((v) => v.$namespace === VpnProviderModel.name);
+
     return {
       id: data.id,
-      identityId: ((<any>data.proxyDownstream?.[0].runner?.label).find((v) => v.$namespace === MystIdentityModel.name))?.id,
-      providerId: data.proxyDownstream?.[0].refId,
+      identityId: (<any>data.runner?.label).find((v) => v.$namespace === MystIdentityModel.name)?.id,
+      userIdentity: providerInfo.userIdentity,
+      providerId: providerInfo.id,
+      providerIdentity: providerInfo.providerIdentity,
       listenAddr: data.listenAddr,
       listenPort: data.listenPort || 0,
       outgoingIp: data.proxyDownstream?.[0].ip,
