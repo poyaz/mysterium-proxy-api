@@ -122,6 +122,8 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
       {
         $namespace: VpnProviderModel.name,
         id: vpnModelData.id,
+        userIdentity: vpnModelData.userIdentity,
+        providerIdentity: vpnModelData.providerIdentity,
       },
       {
         $namespace: ProxyUpstreamModel.name,
