@@ -63,13 +63,13 @@ export class FindProviderOutputDto {
   providerIpType: string;
 
   @ApiProperty({
-    description: 'The ip address of vpn provider',
+    description: 'The ip address of vpn provider (When provider is connected this field is filled)',
     type: String,
     format: 'ipv4',
     required: false,
     readOnly: true,
     nullable: true,
-    example: '1.1.1.1',
+    example: '56.10.75.3',
   })
   ip?: string;
 
@@ -93,16 +93,6 @@ export class FindProviderOutputDto {
     example: 'GB',
   })
   country: string;
-
-  @ApiProperty({
-    description: 'The ip address of vpn provider (When provider is connected this field is filled)',
-    type: String,
-    required: false,
-    readOnly: true,
-    nullable: true,
-    example: '56.10.75.3',
-  })
-  serverOutgoingIp?: string;
 
   @ApiProperty({
     description: 'The quality of downstream proxy',
