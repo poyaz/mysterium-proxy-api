@@ -35,7 +35,6 @@ export class VpnProviderModel {
   ip?: string;
   mask?: number;
   country: string;
-  serverOutgoingIp?: string;
   runner?: RunnerModel;
   quality?: number;
   bandwidth?: number;
