@@ -13,15 +13,11 @@ export class RemoveSpecialFieldOfProviderInterceptor implements NestInterceptor 
         if (typeof result !== undefined && result !== undefined && result !== null) {
           if (Array.isArray(result)) {
             result.map((v) => {
-              delete v.userIdentity;
               delete v.providerName;
-              delete v.serverOutgoingIp;
               delete v.runner;
             });
           } else if (typeof result === 'object') {
-            delete result.userIdentity;
             delete result.providerName;
-            delete result.serverOutgoingIp;
             delete result.runner;
           }
         }

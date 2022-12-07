@@ -13,6 +13,17 @@ export class FindProviderOutputDto {
   id: string;
 
   @ApiProperty({
+    description: 'The identity of VPN account (When provider is connected this field is filled)',
+    type: String,
+    maxLength: 50,
+    pattern: '^0x.+',
+    required: false,
+    nullable: true,
+    example: '0xfeb1c4e48515ba12f60c5a912c329ec8b8a1cb56',
+  })
+  userIdentity?: string;
+
+  @ApiProperty({
     description: 'The type of service use on vpn provider',
     type: String,
     enum: VpnServiceTypeEnum,
@@ -82,6 +93,16 @@ export class FindProviderOutputDto {
     example: 'GB',
   })
   country: string;
+
+  @ApiProperty({
+    description: 'The ip address of vpn provider (When provider is connected this field is filled)',
+    type: String,
+    required: false,
+    readOnly: true,
+    nullable: true,
+    example: '56.10.75.3',
+  })
+  serverOutgoingIp?: string;
 
   @ApiProperty({
     description: 'The quality of downstream proxy',
