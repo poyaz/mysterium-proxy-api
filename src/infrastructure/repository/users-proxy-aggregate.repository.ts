@@ -83,6 +83,7 @@ export class UsersProxyAggregateRepository implements IUsersProxyRepositoryInter
         username: user.username,
         password: user.password,
       },
+      runner: proxy.runner,
     });
   }
 
@@ -105,6 +106,7 @@ export class UsersProxyAggregateRepository implements IUsersProxyRepositoryInter
             username: proxyAcl.user.username,
             password: proxyAcl.user.password,
           },
+          runner: find.runner,
         });
       })
       .filter((v) => v);
