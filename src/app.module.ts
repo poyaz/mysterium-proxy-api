@@ -84,6 +84,7 @@ import {FavoritesPgRepository} from '@src-infrastructure/repository/favorites-pg
 import {FavoritesModel} from '@src-core/model/favorites.model';
 import {FavoritesAggregateRepository} from '@src-infrastructure/repository/favorites-aggregate.repository';
 import {FavoritesService} from '@src-core/service/favorites.service';
+import {ExecuteDurationInterceptor} from '@src-api/http/interceptor/execute-duration.interceptor';
 
 @Module({
   imports: [
@@ -139,6 +140,10 @@ import {FavoritesService} from '@src-core/service/favorites.service';
     {
       provide: APP_INTERCEPTOR,
       useClass: OutputTransferInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ExecuteDurationInterceptor,
     },
     {
       provide: APP_GUARD,
