@@ -263,7 +263,7 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
         continue;
       }
 
-      runnerObj[providerId].socat.push(<RunnerModel<[MystIdentityModel, VpnProviderModel]>><unknown>runner);
+      runnerObj[providerId]?.socat?.push(<RunnerModel<[MystIdentityModel, VpnProviderModel]>><unknown>runner);
     }
 
     return runnerObj;
