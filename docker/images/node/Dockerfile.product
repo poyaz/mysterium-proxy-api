@@ -1,8 +1,7 @@
 FROM node:16.16.0-alpine3.16 AS build
 
 RUN mkdir -p /data /data/src; \
-    chown -R node:node /data; \
-    npm install -g @nestjs/cli@8.2.8
+    chown -R node:node /data
 
 WORKDIR /data
 
@@ -18,7 +17,7 @@ COPY --chown=node:node \
 
 USER node
 
-RUN npm install --only=prod; npm run build
+RUN npm install; npm run build
 
 USER root
 
@@ -37,6 +36,8 @@ COPY --chown=node:node \
 COPY --from=build --chown=node:node \
         /data/dist \
         ./dist
+
+RUN npm install --omit=dev; chown -R node:node /data
 
 VOLUME /data/storage/tmp
 
