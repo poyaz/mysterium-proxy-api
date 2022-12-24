@@ -251,8 +251,6 @@ _install() {
     systemctl enable docker
   fi
 
-  build_image
-
   exit
 }
 
