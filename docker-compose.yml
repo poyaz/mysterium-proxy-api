@@ -21,10 +21,10 @@ services:
   redoc:
     image: redocly/redoc:latest
     volumes:
-      - $PWD/storage/tmp/swagger:/tmp/swagger
+      - $PWD/storage/tmp/swagger:/usr/share/nginx/html/swagger
     environment:
       - PAGE_TITLE=mysterium-proxy-api
-      - SPEC_URL=/tmp/swagger/swagger.json
+      - SPEC_URL=swagger/swagger.json
     ports:
       - 4000:80
     networks:
