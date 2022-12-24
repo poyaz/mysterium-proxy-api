@@ -371,6 +371,7 @@ init_service() {
     -e "s/POSTGRES_PASSWORD=/POSTGRES_PASSWORD=$GENERATE_PG_PASSWORD/g" \
     "$DEFAULT_PG_ENV_FILE"
 
+  echo "[INFO] Init all services"
   docker-compose \
     -f docker-compose.yml \
     -f docker/docker-compose.env.yml \
@@ -380,8 +381,10 @@ init_service() {
 
   sleep 1
 
+  echo "[INFO] Upgrade database"
   docker-compose exec -u node app sh -c "node dist/cli.js migration:run"
 
+  echo "[INFO] Upgrade api document"
   docker-compose exec -u node app sh -c "node dist/cli.js swagger"
 
   docker-compose restart redoc
@@ -390,20 +393,23 @@ init_service() {
 upgrade_service() {
   echo "[INFO] Please wait for upgrade service ..."
 
-  docker-compose exec -u node app sh -c "node dist/cli.js migration:run"
-
-  docker-compose exec -u node app sh -c "node dist/cli.js swagger"
-
-  docker-compose restart redoc
-
-  sleep 1
-
+  echo "[INFO] Upgrade all services"
   docker-compose \
     -f docker-compose.yml \
     -f docker/docker-compose.env.yml \
     -f docker/docker-compose.log.yml \
     -f docker/docker-compose.product.yml \
     up -d --build
+
+  sleep 1
+
+  echo "[INFO] Upgrade database"
+  docker-compose exec -u node app sh -c "node dist/cli.js migration:run"
+
+  echo "[INFO] Upgrade api document"
+  docker-compose exec -u node app sh -c "node dist/cli.js swagger"
+
+  docker-compose restart redoc
 }
 
 create_admin() {
