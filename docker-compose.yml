@@ -21,16 +21,15 @@ services:
   redoc:
     image: redocly/redoc:latest
     volumes:
-      - $PWD/storage/tmp/swagger.json:/usr/share/nginx/html/swagger.json
+      - $PWD/storage/tmp/swagger:/tmp/swagger
     environment:
-      - SPEC_URL=swagger.json
+      - PAGE_TITLE=mysterium-proxy-api
+      - SPEC_URL=/tmp/swagger/swagger.json
     ports:
       - 4000:80
     networks:
       main:
         ipv4_address: 10.110.0.3
-    depends_on:
-      - app
     restart: "always"
 
   postgres:

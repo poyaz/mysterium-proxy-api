@@ -2,7 +2,6 @@ FROM node:16.16.0-alpine3.16 AS build
 
 RUN apk add --no-cache apache2-utils curl su-exec bash; \
     mkdir -p /data /data/src /data/storage/tmp; \
-    echo "{}" > /data/storage/tmp/swagger.json; \
     chown -R node:node /data
 
 WORKDIR /data

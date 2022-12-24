@@ -8,7 +8,7 @@ import {VersioningType} from '@nestjs/common';
 import {CommandModule} from '../../../command.module';
 import {generateSwagger} from '../../../swagger';
 
-const DEFAULT_STORE_PATH = resolve('storage', 'tmp');
+const DEFAULT_STORE_PATH = resolve('storage', 'tmp', 'swagger');
 
 @Command({name: 'swagger', description: 'A swagger command'})
 export class SwaggerCommand implements CommandRunner {
