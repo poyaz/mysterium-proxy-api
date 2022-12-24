@@ -377,6 +377,14 @@ init_service() {
     -f docker/docker-compose.log.yml \
     -f docker/docker-compose.product.yml \
     up -d --build
+
+  sleep 1
+
+  docker-compose exec -it app sh -c "node dist/cli.js migration:run"
+
+  docker-compose exec -it app sh -c "node dist/cli.js swagger"
+
+  docker-compose restart redoc
 }
 
 upgrade_service() {
