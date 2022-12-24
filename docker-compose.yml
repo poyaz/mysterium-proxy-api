@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/images/node/Dockerfile
+    image: myst-app:latest
     expose:
       - 3000
     volumes:
