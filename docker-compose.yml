@@ -29,6 +29,8 @@ services:
     networks:
       main:
         ipv4_address: 10.110.0.3
+    depends_on:
+      - app
     restart: "always"
 
   postgres:
