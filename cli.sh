@@ -380,9 +380,9 @@ init_service() {
 
   sleep 1
 
-  docker-compose exec -it app sh -c "node dist/cli.js migration:run"
+  docker-compose exec -u node app sh -c "node dist/cli.js migration:run"
 
-  docker-compose exec -it app sh -c "node dist/cli.js swagger"
+  docker-compose exec -u node app sh -c "node dist/cli.js swagger"
 
   docker-compose restart redoc
 }
@@ -390,9 +390,9 @@ init_service() {
 upgrade_service() {
   echo "[INFO] Please wait for upgrade service ..."
 
-  docker-compose exec -it app sh -c "node dist/cli.js migration:run"
+  docker-compose exec -u node app sh -c "node dist/cli.js migration:run"
 
-  docker-compose exec -it app sh -c "node dist/cli.js swagger"
+  docker-compose exec -u node app sh -c "node dist/cli.js swagger"
 
   docker-compose restart redoc
 
@@ -409,7 +409,7 @@ upgrade_service() {
 create_admin() {
   local username="$1"
 
-  docker-compose exec -it app sh -c "node dist/cli.js add:admin "'"'"$1"'"'""
+  docker-compose exec -u node app sh -c "node dist/cli.js add:admin "'"'"$1"'"'""
 }
 
 case $execute_mode in
