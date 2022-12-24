@@ -17,7 +17,7 @@ COPY --chown=node:node \
 
 USER node
 
-RUN npm install --only=prod; npm run build
+RUN npm install -g @nestjs/cli@8.2.8 npm install --only=prod; npm run build
 
 USER root
 
