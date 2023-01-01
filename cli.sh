@@ -372,6 +372,7 @@ init_service() {
     "$DEFAULT_PG_ENV_FILE"
 
   echo "[INFO] Init all services"
+  docker pull alpine/socat:latest
   docker-compose \
     -f docker-compose.yml \
     -f docker/docker-compose.env.yml \
