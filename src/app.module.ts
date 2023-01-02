@@ -85,10 +85,19 @@ import {FavoritesModel} from '@src-core/model/favorites.model';
 import {FavoritesAggregateRepository} from '@src-infrastructure/repository/favorites-aggregate.repository';
 import {FavoritesService} from '@src-core/service/favorites.service';
 import {ExecuteDurationInterceptor} from '@src-api/http/interceptor/execute-duration.interceptor';
+import {LoggerModule} from 'nestjs-pino';
 
 @Module({
   imports: [
     ConfigureModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: false,
+        genReqId: () => null,
+        quietReqLogger: true,
+        transport: {target: 'pino-pretty'},
+      },
+    }),
     PgModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

@@ -4,18 +4,21 @@ import {
   HttpException,
   HttpStatus,
   Inject,
-  Injectable,
+  Injectable, Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import {map, Observable} from 'rxjs';
 import {ExceptionEnum} from '@src-core/enum/exception.enum';
 import {ProviderTokenEnum} from '@src-core/enum/provider-token.enum';
+import {PinoLogger} from 'nestjs-pino';
 
 @Injectable()
 export class OutputTransferInterceptor implements NestInterceptor {
   constructor(
     @Inject(ProviderTokenEnum.DATE_TIME_DEFAULT)
     private readonly _dateTime,
+    @Inject(PinoLogger)
+    private readonly _logger: PinoLogger,
   ) {
   }
 
@@ -49,7 +52,7 @@ export class OutputTransferInterceptor implements NestInterceptor {
           }
 
           if (!err.isOperation) {
-            console.error(err);
+            this._logger.error(err);
           }
 
           throw new HttpException({
