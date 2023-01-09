@@ -4,6 +4,6 @@ import {UsersConfigInterface} from '@src-loader/configure/interface/users-config
 
 export default registerAs('users', (): UsersConfigInterface => {
   return {
-    canAnonymousRegister: convertStringToBoolean(process.env.ENABLE_ANONYMOUS_LOGIN || 'true'),
+    canAnonymousRegister: convertStringToBoolean(process.env.ENABLE_ANONYMOUS_REGISTER || 'true'),
   };
 });
