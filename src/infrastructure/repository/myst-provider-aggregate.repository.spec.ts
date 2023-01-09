@@ -657,24 +657,22 @@ describe('MystProviderAggregateRepository', () => {
 
     it(`Should error get vpn info by id for aggregation when fail on get by id data from vpn repository`, async () => {
       mystProviderApiRepository.getById.mockResolvedValue([new UnknownException()]);
+      dockerRunnerRepository.getAll.mockResolvedValueOnce([null, [], 0]);
 
       const [error] = await repository.getById(inputRunnerModel, inputId);
 
       expect(mystProviderApiRepository.getById).toHaveBeenCalled();
       expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
+        $opr: 'eq',
+        label: {
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProviderData.id,
+        },
+      });
       expect(error).toBeInstanceOf(UnknownException);
-    });
-
-    it(`Should successfully get vpn info by id for aggregation and return empty data because not found any vpn by id`, async () => {
-      mystProviderApiRepository.getById.mockResolvedValue([null, null]);
-
-      const [error, result] = await repository.getById(inputRunnerModel, inputId);
-
-      expect(mystProviderApiRepository.getById).toHaveBeenCalled();
-      expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
-      expect(dockerRunnerRepository.getAll).toBeCalledTimes(0);
-      expect(error).toBeNull();
-      expect(result).toBeNull();
     });
 
     it(`Should error get vpn info by id for aggregation when fail on on get myst-connect data from runner`, async () => {
@@ -695,6 +693,27 @@ describe('MystProviderAggregateRepository', () => {
         },
       });
       expect(error).toBeInstanceOf(UnknownException);
+    });
+
+    it(`Should successfully get vpn info by id for aggregation and return empty data because not found any vpn by id any myst-connect`, async () => {
+      mystProviderApiRepository.getById.mockResolvedValue([null, null]);
+      dockerRunnerRepository.getAll.mockResolvedValueOnce([null, [], 0]);
+
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(mystProviderApiRepository.getById).toHaveBeenCalled();
+      expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
+        $opr: 'eq',
+        label: {
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProviderData.id,
+        },
+      });
+      expect(error).toBeNull();
+      expect(result).toBeNull();
     });
 
     it(`Should successfully get vpn info by id for aggregation and 'isRegister' false because not found any myst-connect`, async () => {
@@ -788,6 +807,48 @@ describe('MystProviderAggregateRepository', () => {
         id: outputVpnProviderData.id,
         userIdentity: outputRunnerMystData1.label.identity,
         providerStatus: VpnProviderStatusEnum.ONLINE,
+        runner: outputRunnerMystData1,
+        isRegister: true,
+        proxyCount: 1,
+      });
+    });
+
+    it(`Should successfully get vpn info by id for aggregation and provider id not found and 'isRegister' true`, async () => {
+      mystProviderApiRepository.getById.mockResolvedValue([null, null]);
+      dockerRunnerRepository.getAll
+        .mockResolvedValueOnce([null, [outputRunnerMystConnectData1, outputRunnerSocatData1], 2])
+        .mockResolvedValueOnce([null, [outputRunnerMystData1], 1]);
+
+      const [error, result] = await repository.getById(inputRunnerModel, inputId);
+
+      expect(mystProviderApiRepository.getById).toHaveBeenCalled();
+      expect(mystProviderApiRepository.getById).toBeCalledWith(inputRunnerModel, inputId);
+      expect(dockerRunnerRepository.getAll).toHaveBeenCalledTimes(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getLengthOfCondition()).toEqual(1);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[0][0]).getCondition('label')).toEqual({
+        $opr: 'eq',
+        label: {
+          $namespace: VpnProviderModel.name,
+          id: outputVpnProviderData.id,
+        },
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getLengthOfCondition()).toEqual(2);
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getCondition('service')).toEqual({
+        $opr: 'eq',
+        service: RunnerServiceEnum.MYST,
+      });
+      expect((<FilterModel<RunnerModel>>dockerRunnerRepository.getAll.mock.calls[1][0]).getCondition('label')).toEqual({
+        $opr: 'eq',
+        label: {
+          $namespace: MystIdentityModel.name,
+          id: (<MystIdentityModel><any>outputRunnerMystConnectData1.label.find((v) => v.$namespace === MystIdentityModel.name)).id,
+        },
+      });
+      expect(error).toBeNull();
+      expect(result).toMatchObject(<VpnProviderModel>{
+        id: outputVpnProviderData.id,
+        userIdentity: outputRunnerMystData1.label.identity,
+        providerStatus: VpnProviderStatusEnum.OFFLINE,
         runner: outputRunnerMystData1,
         isRegister: true,
         proxyCount: 1,

@@ -1,5 +1,11 @@
 import {AsyncReturn} from '@src-core/utility';
-import {VpnProviderModel, VpnProviderStatusEnum} from '@src-core/model/vpn-provider.model';
+import {
+  VpnProviderIpTypeEnum,
+  VpnProviderModel,
+  VpnProviderName,
+  VpnProviderStatusEnum,
+  VpnServiceTypeEnum,
+} from '@src-core/model/vpn-provider.model';
 import {IRunnerRepositoryInterface} from '@src-core/interface/i-runner-repository.interface';
 import {FilterModel} from '@src-core/model/filter.model';
 import {
@@ -13,7 +19,7 @@ import {
 import {IMystApiRepositoryInterface} from '@src-core/interface/i-myst-api-repository.interface';
 import {MystIdentityModel} from '@src-core/model/myst-identity.model';
 import {filterAndSortVpnProvider} from '@src-infrastructure/utility/filterAndSortVpnProvider';
-import {defaultModelFactory} from '@src-core/model/defaultModel';
+import {DefaultModel, defaultModelFactory} from '@src-core/model/defaultModel';
 
 type mergeRunnerObjType = {
   [key: string]: {
@@ -65,14 +71,6 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
   }
 
   async getById(runnerModel: RunnerModel, id: string): Promise<AsyncReturn<Error, VpnProviderModel | null>> {
-    const [apiError, apiData] = await this._mystApiRepository.getById(runnerModel, id);
-    if (apiError) {
-      return [apiError];
-    }
-    if (!apiData) {
-      return [null, null];
-    }
-
     const providerRunnerFilter = new FilterModel<RunnerModel<VpnProviderModel>>();
     providerRunnerFilter.addCondition({
       $opr: 'eq',
@@ -81,15 +79,23 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
         id,
       },
     });
+
     const [
-      providerRunnerError,
-      providerRunnerDataList,
-      providerRunnerTotalCount,
-    ] = await this._dockerRunnerRepository.getAll<VpnProviderModel>(providerRunnerFilter);
-    if (providerRunnerError) {
-      return [providerRunnerError];
+      [apiError, apiData],
+      [providerRunnerError, providerRunnerDataList, providerRunnerTotalCount],
+    ] = await Promise.all([
+      this._mystApiRepository.getById(runnerModel, id),
+      this._dockerRunnerRepository.getAll<VpnProviderModel>(providerRunnerFilter),
+    ]);
+    const error = apiError || providerRunnerError;
+    if (error) {
+      return [error];
     }
     if (providerRunnerTotalCount === 0) {
+      if (!apiData) {
+        return [null, null];
+      }
+
       return [null, apiData];
     }
 
@@ -114,9 +120,24 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       return [null, apiData];
     }
 
+    const apiDataDefault = defaultModelFactory<VpnProviderModel>(
+      VpnProviderModel,
+      {
+        id,
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'default-provider',
+        providerIpType: VpnProviderIpTypeEnum.HOSTING,
+        country: 'GB',
+        isRegister: true,
+        proxyCount: 0,
+        insertDate: new Date(),
+      },
+      ['serviceType', 'providerName', 'providerIdentity', 'providerIpType', 'country'],
+    );
 
     const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData([...providerRunnerDataList, ...mystRunnerDataList]);
-    const result = MystProviderAggregateRepository._mergeData(apiData, runnerObj);
+    const result = MystProviderAggregateRepository._mergeData(apiData || apiDataDefault, runnerObj);
 
     return [null, result];
   }
@@ -296,6 +317,11 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
     }
 
     if (runnerInfo.myst.status !== RunnerStatusEnum.RUNNING) {
+      vpnData.providerStatus = VpnProviderStatusEnum.OFFLINE;
+    }
+
+    const vpnDataDefaultModel = <DefaultModel<VpnProviderModel>><unknown>vpnData;
+    if (vpnDataDefaultModel.IS_DEFAULT_MODEL && vpnDataDefaultModel.isDefaultProperty('providerIdentity')) {
       vpnData.providerStatus = VpnProviderStatusEnum.OFFLINE;
     }
 
