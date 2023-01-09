@@ -21,6 +21,23 @@ file_env() {
 
 docker_setup_env() {
   file_env 'VPN_INTERFACE_NAME' 'myst0'
+  file_env 'ENABLE_HEALTHCHECK'
+}
+
+convert_string_to_boolean() {
+  local data="${1,,}"
+
+  if [ -z "$data" ]; then
+    echo 0
+    return 0
+  fi
+
+  if [ "$data" = 'true' ] || [ "$data" = 't' ] || [ "$data" = 'yes' ] || [ "$data" = 'y' ] || [ "$data" = '1' ]; then
+    echo 1
+    return 0
+  fi
+
+  echo 0
 }
 
 check_total_interface_count() {
@@ -46,6 +63,13 @@ check_vpn_interface_exist() {
 
 _main() {
   docker_setup_env
+
+  local check_enable_wait_startup
+  check_enable_wait_startup=$(convert_string_to_boolean "${ENABLE_HEALTHCHECK}")
+
+  if [ "${check_enable_wait_startup}" -eq 0 ]; then
+    exit
+  fi
 
   check_total_interface_count
 

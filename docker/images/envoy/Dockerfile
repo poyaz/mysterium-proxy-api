@@ -19,9 +19,11 @@ RUN set -eux; \
     \
     ln -s /usr/local/bin/wait4x /usr/bin/
 
-CMD ["wait4x", "-i", "5s", "-t", "60s", "http", "http://127.0.0.1:4050/connection", "--expect-body-json", "proposal.provider_id", "--", "envoy", "-c", "/etc/envoy/envoy.yaml"]
+COPY docker-entrypoint.sh docker-healcheck.sh /usr/local/bin/
 
-COPY docker-healcheck.sh /usr/local/bin/
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+CMD ["envoy"]
 
 EXPOSE 10001/tcp
 
