@@ -1,6 +1,6 @@
 FROM node:16.16.0-alpine3.16 AS build
 
-RUN apk add --no-cache apache2-utils curl /sbin/su-exec bash; \
+RUN apk add --no-cache apache2-utils curl su-exec bash; \
     mkdir -p /data /data/src /data/storage/tmp; \
     chown -R node:node /data
 
@@ -12,7 +12,7 @@ COPY --chown=node:node \
         nest-cli.json \
         ./
 
-RUN /sbin/su-exec node bash -c "npm install"
+RUN su-exec node bash -c "npm install"
 
 COPY --chown=node:node \
         src/ \
