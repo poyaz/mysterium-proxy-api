@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -Eeo pipefail
 
-trap "echo The script is terminated with SIGINT; exit" SIGINT
-trap "echo The script is terminated with SIGKILL; exit" SIGKILL
-
 print_stderr() {
   echo "$1" >/dev/stderr
 }
@@ -239,7 +236,7 @@ _main() {
       exit 1
     fi
 
-    if [ -z API_PROVIDER_ID ]; then
+    if [ -z $API_PROVIDER_ID ]; then
       echo "[ERR] Please fill variable \"API_PROVIDER_ID\"!"
       exit 1
     fi
