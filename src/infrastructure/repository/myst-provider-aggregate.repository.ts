@@ -99,6 +99,22 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       return [null, apiData];
     }
 
+    const apiDataDefault = defaultModelFactory<VpnProviderModel>(
+      VpnProviderModel,
+      {
+        id,
+        serviceType: VpnServiceTypeEnum.WIREGUARD,
+        providerName: VpnProviderName.MYSTERIUM,
+        providerIdentity: 'default-provider',
+        providerIpType: VpnProviderIpTypeEnum.HOSTING,
+        country: 'GB',
+        isRegister: true,
+        proxyCount: 0,
+        insertDate: new Date(),
+      },
+      ['serviceType', 'providerName', 'providerIdentity', 'providerIpType', 'country'],
+    );
+
     const mystRunnerFilter = new FilterModel<RunnerModel<MystIdentityModel>>();
     mystRunnerFilter.addCondition({$opr: 'eq', service: RunnerServiceEnum.MYST});
     mystRunnerFilter.addCondition({
@@ -117,24 +133,8 @@ export class MystProviderAggregateRepository implements IMystApiRepositoryInterf
       return [mystRunnerError];
     }
     if (mystRunnerTotalCount === 0) {
-      return [null, apiData];
+      return [null, apiData || apiDataDefault];
     }
-
-    const apiDataDefault = defaultModelFactory<VpnProviderModel>(
-      VpnProviderModel,
-      {
-        id,
-        serviceType: VpnServiceTypeEnum.WIREGUARD,
-        providerName: VpnProviderName.MYSTERIUM,
-        providerIdentity: 'default-provider',
-        providerIpType: VpnProviderIpTypeEnum.HOSTING,
-        country: 'GB',
-        isRegister: true,
-        proxyCount: 0,
-        insertDate: new Date(),
-      },
-      ['serviceType', 'providerName', 'providerIdentity', 'providerIpType', 'country'],
-    );
 
     const runnerObj = MystProviderAggregateRepository._mergeRunnerObjData([...providerRunnerDataList, ...mystRunnerDataList]);
     const result = MystProviderAggregateRepository._mergeData(apiData || apiDataDefault, runnerObj);
