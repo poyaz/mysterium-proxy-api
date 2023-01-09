@@ -23,6 +23,8 @@ type EnvoyDockerContainerOption = {
   hostVolumeConfigName: string,
   defaultPort: number,
   networkName: string,
+  isEnableWaitStartup: boolean,
+  isEnableWaitHealthcheck: boolean,
 }
 
 export class DockerRunnerCreateEnvoyRepository implements ICreateRunnerRepositoryInterface {
@@ -80,6 +82,8 @@ export class DockerRunnerCreateEnvoyRepository implements ICreateRunnerRepositor
         },
         Env: [
           `NODE_PROXY_PORT=${model.socketPort}`,
+          `ENABLE_WAIT_STARTUP=${this._envoyContainerOption.isEnableWaitStartup ? 'true' : 'false'}`,
+          `ENABLE_WAIT_STARTUP=${this._envoyContainerOption.isEnableWaitHealthcheck ? 'true' : 'false'}`,
         ],
         HostConfig: {
           Binds: [

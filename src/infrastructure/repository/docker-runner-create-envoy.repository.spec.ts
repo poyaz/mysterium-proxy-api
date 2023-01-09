@@ -36,6 +36,8 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
   let hostVolumeConfigName: string;
   let defaultPort: number;
   let networkName: string;
+  let isEnableWaitStartup: boolean;
+  let isEnableWaitHealthcheck: boolean;
   let namespace: string;
 
   beforeEach(async () => {
@@ -48,6 +50,8 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
     hostVolumeConfigName = 'host-envoy-config-volume-name';
     defaultPort = 10001;
     networkName = 'mysterium-proxy-api_main';
+    isEnableWaitStartup = true;
+    isEnableWaitHealthcheck = true;
     namespace = 'com.mysterium-proxy';
 
     const dockerProvider = 'docker-runner-repository';
@@ -70,7 +74,14 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
             new DockerRunnerCreateEnvoyRepository(
               docker,
               identifierMock,
-              {imageName, hostVolumeConfigName: hostVolumeConfigName, defaultPort, networkName},
+              {
+                imageName,
+                hostVolumeConfigName: hostVolumeConfigName,
+                defaultPort,
+                networkName,
+                isEnableWaitStartup,
+                isEnableWaitHealthcheck,
+              },
               namespace,
             ),
         },
@@ -564,6 +575,8 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
         },
         Env: expect.arrayContaining([
           `NODE_PROXY_PORT=${inputRunner.socketPort}`,
+          `ENABLE_WAIT_STARTUP=${isEnableWaitStartup ? 'true' : 'false'}`,
+          `ENABLE_WAIT_STARTUP=${isEnableWaitHealthcheck ? 'true' : 'false'}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -652,6 +665,8 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
         },
         Env: expect.arrayContaining([
           `NODE_PROXY_PORT=${inputRunner.socketPort}`,
+          `ENABLE_WAIT_STARTUP=${isEnableWaitStartup ? 'true' : 'false'}`,
+          `ENABLE_WAIT_STARTUP=${isEnableWaitHealthcheck ? 'true' : 'false'}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([
@@ -740,6 +755,8 @@ describe('DockerRunnerCreateEnvoyRepository', () => {
         },
         Env: expect.arrayContaining([
           `NODE_PROXY_PORT=${inputRunner.socketPort}`,
+          `ENABLE_WAIT_STARTUP=${isEnableWaitStartup ? 'true' : 'false'}`,
+          `ENABLE_WAIT_STARTUP=${isEnableWaitHealthcheck ? 'true' : 'false'}`,
         ]),
         HostConfig: {
           Binds: expect.arrayContaining([

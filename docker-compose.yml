@@ -128,7 +128,7 @@ services:
     build:
       context: ./docker/images/envoy
       dockerfile: Dockerfile
-    image: envoy-service:v1.0
+    image: envoy-service:v2.0
     network_mode: "bridge"
     restart: "no"
     entrypoint: ""

@@ -19,6 +19,8 @@ export interface DockerConfigInterface {
       readonly volumes: {
         readonly config: string;
       }
+      isEnableWaitStartup: boolean;
+      isEnableHealthcheck: boolean;
     },
     readonly socat: {
       readonly image: string,

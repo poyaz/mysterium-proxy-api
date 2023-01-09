@@ -101,6 +101,7 @@ export class EnvConfigDto {
   @IsString()
   DB_REDIS_PASSWORD?: string;
 
+  @IsDefined()
   @IsString()
   JWT_SECRET_KEY: string;
 
@@ -111,35 +112,61 @@ export class EnvConfigDto {
   @IsOptional()
   @IsString()
   @IsIn(['http', 'https'])
-  DOCKER_CONTROLLER_PROTOCOL: string;
+  DOCKER_CONTROLLER_PROTOCOL?: string;
 
   @IsOptional()
   @IsString()
-  DOCKER_CONTROLLER_HOST: string;
+  DOCKER_CONTROLLER_HOST?: string;
 
   @IsOptional()
   @IsNumber()
-  DOCKER_CONTROLLER_PORT: number;
+  DOCKER_CONTROLLER_PORT?: number;
 
   @IsOptional()
   @IsString()
-  DOCKER_MYST_IMAGE: string;
+  DOCKER_MYST_IMAGE?: string;
 
   @IsOptional()
   @IsNumber()
-  DOCKER_MYST_HTTP_PORT: number;
+  DOCKER_MYST_HTTP_PORT?: number;
 
   @IsOptional()
   @IsString()
-  DOCKER_MYST_VOLUME_KEYSTORE_PATH: string;
+  DOCKER_MYST_VOLUME_KEYSTORE_PATH?: string;
 
   @IsOptional()
   @IsString()
-  DOCKER_MYST_CONNECT_IMAGE: string;
+  DOCKER_MYST_CONNECT_IMAGE?: string;
 
   @IsOptional()
   @IsString()
-  DOCKER_LABEL_NAMESPACE: string;
+  DOCKER_ENVOY_IMAGE?: string;
+
+  @IsOptional()
+  @IsNumber()
+  DOCKER_ENVOY_TCP_PORT?: number;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_ENVOY_HOST_VOLUME_CONFIG_NAME?: string;
+
+  @IsOptional()
+  @IsEnum(BooleanEnv)
+  @Transform(param => param.value.toLowerCase())
+  DOCKER_ENVOY_ENABLE_WAIT_STARTUP?: BooleanEnv;
+
+  @IsOptional()
+  @IsEnum(BooleanEnv)
+  @Transform(param => param.value.toLowerCase())
+  DOCKER_ENVOY_ENABLE_HEALTHCHECK?: BooleanEnv;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_SOCAT_IMAGE?: string;
+
+  @IsOptional()
+  @IsString()
+  DOCKER_LABEL_NAMESPACE?: string;
 
   @IsDefined()
   @IsString()
@@ -148,7 +175,7 @@ export class EnvConfigDto {
   @IsOptional()
   @IsString()
   @IsUrl()
-  MYST_DISCOVER_API_ADDR: string;
+  MYST_DISCOVER_API_ADDR?: string;
 
   @IsDefined()
   @IsString()
@@ -160,20 +187,24 @@ export class EnvConfigDto {
 
   @IsOptional()
   @IsString()
-  MYST_HOST_BASE_PATH_STORE: string;
+  MYST_HOST_BASE_PATH_STORE?: string;
 
   @IsOptional()
   @IsString()
-  PROXY_GLOBAL_UPSTREAM_ADDR: string;
+  PROXY_GLOBAL_UPSTREAM_ADDR?: string;
 
   @IsOptional()
   @IsNumber()
-  PROXY_START_UPSTREAM_PORT: number;
+  PROXY_START_UPSTREAM_PORT?: number;
+
+  @IsOptional()
+  @IsString()
+  NGINX_ACL_FILE?: string;
 
   @IsOptional()
   @IsEnum(BooleanEnv)
   @Transform(param => param.value.toLowerCase())
-  ENABLE_ANONYMOUS_LOGIN?: BooleanEnv;
+  ENABLE_ANONYMOUS_REGISTER?: BooleanEnv;
 }
 
 
