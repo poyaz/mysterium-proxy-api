@@ -21,7 +21,7 @@ file_env() {
 
 docker_setup_env() {
   file_env 'VPN_INTERFACE_NAME' 'myst0'
-  file_env 'MYST_API_BASE_ADDRESS' 'https://127.0.0.1:4050'
+  file_env 'MYST_API_BASE_ADDRESS' 'http://127.0.0.1:4050'
   file_env 'OUTGOING_IP_ADDRESS'
   file_env 'CONNECTED_LOCK_FILE' '/tmp/connected.lock'
 }
