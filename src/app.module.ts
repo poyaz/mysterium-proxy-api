@@ -318,6 +318,8 @@ import {LoggerModule} from 'nestjs-pino';
             hostVolumeConfigName: ENVOY_CONFIG.volumes.config,
             defaultPort: ENVOY_CONFIG.tcpPort,
             networkName: DOCKER_CONFIG.networkName,
+            isEnableWaitStartup: ENVOY_CONFIG.isEnableWaitStartup,
+            isEnableWaitHealthcheck: ENVOY_CONFIG.isEnableHealthcheck,
           },
           DOCKER_CONFIG.labelNamespace,
         );
