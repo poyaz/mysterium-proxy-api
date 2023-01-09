@@ -12,11 +12,7 @@ COPY --chown=node:node \
         nest-cli.json \
         ./
 
-USER node
-
-RUN npm install
-
-USER root
+RUN su-exec node bash -c "npm install"
 
 COPY --chown=node:node \
         src/ \
