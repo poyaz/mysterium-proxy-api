@@ -132,6 +132,6 @@ export class MystProviderService implements IProviderServiceInterface {
       return [new NotRunningServiceException()];
     }
 
-    return this._mystApiRepository.disconnect(providerData.runner);
+    return this._mystApiRepository.disconnect(providerData.runner, true);
   }
 }
