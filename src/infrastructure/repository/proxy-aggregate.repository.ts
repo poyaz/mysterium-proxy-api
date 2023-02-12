@@ -126,7 +126,7 @@ export class ProxyAggregateRepository implements IProxyRepositoryInterface {
 
     const {dependencyRunnerList, vpnProviderData, proxyAddrData} = infoData;
     const vpnProviderList = vpnProviderData ? [vpnProviderData] : [];
-    const runnerList = [...dependencyRunnerList, vpnProviderData.runner];
+    const runnerList = [...dependencyRunnerList, vpnProviderData.runner].filter((v) => v);
 
     const runnerMap = ProxyAggregateRepository._runnerMapObject(runnerList, vpnProviderList);
     const proxyUpstreamCombineList = [proxyUpstreamData].map((v) => ProxyAggregateRepository._mergeData(
