@@ -19,7 +19,7 @@ import {
   VpnServiceTypeEnum,
 } from '@src-core/model/vpn-provider.model';
 import {defaultModelFactory, defaultModelType} from '@src-core/model/defaultModel';
-import Dockerode, {ContainerInspectInfo} from 'dockerode';
+import Dockerode, {ContainerInspectInfo, EndpointSettings} from 'dockerode';
 import {FillDataRepositoryException} from '@src-core/exception/fill-data-repository.exception';
 import {DockerLabelParser} from '@src-infrastructure/utility/docker-label-parser';
 import {RepositoryException} from '@src-core/exception/repository.exception';
@@ -114,6 +114,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
     let outputProxyUpstreamValid: defaultModelType<ProxyUpstreamModel>;
     let outputEmptyContainerList: Array<Dockerode.ContainerInfo>;
     let outputExistContainerList: Array<Dockerode.ContainerInfo>;
+    let outputNetwork: { inspect: any };
+    let outputLimitedNetworkInspect: Object;
+    let outputNetworkInspect: Object;
     let outputCreatedContainer1: Dockerode.ContainerInfo;
     let outputFailedWithPortUsingContainer: { inspect: any, remove: any };
     let outputInspectFailedWithPortUsingContainer: Pick<ContainerInspectInfo, 'State'>;
@@ -304,6 +307,88 @@ describe('DockerRunnerCreateSocatRepository', () => {
           Mounts: [],
         },
       ];
+
+      outputNetwork = {inspect: jest.fn()};
+      outputLimitedNetworkInspect = {
+        'Name': networkName,
+        'Id': '7d86d31b1478e7cca9ebed7e73aa0fdeec46c5ca29497431d3007d2d9e15ed99',
+        'Created': '2016-10-19T04:33:30.360899459Z',
+        'Scope': 'local',
+        'Driver': 'bridge',
+        'EnableIPv6': false,
+        'IPAM': {
+          'Driver': 'default',
+          'Config': [
+            {
+              'Subnet': '172.19.0.0/31',
+              'Gateway': '172.19.0.1',
+            },
+          ],
+          'Options': {
+            'foo': 'bar',
+          },
+        },
+        'Internal': false,
+        'Attachable': false,
+        'Ingress': false,
+        'Containers': {},
+        'Options': {
+          'com.docker.network.bridge.default_bridge': 'true',
+          'com.docker.network.bridge.enable_icc': 'true',
+          'com.docker.network.bridge.enable_ip_masquerade': 'true',
+          'com.docker.network.bridge.host_binding_ipv4': '0.0.0.0',
+          'com.docker.network.bridge.name': 'docker0',
+          'com.docker.network.driver.mtu': '1500',
+        },
+        'Labels': {
+          'com.example.some-label': 'some-value',
+          'com.example.some-other-label': 'some-other-value',
+        },
+      };
+      outputNetworkInspect = {
+        'Name': networkName,
+        'Id': '7d86d31b1478e7cca9ebed7e73aa0fdeec46c5ca29497431d3007d2d9e15ed99',
+        'Created': '2016-10-19T04:33:30.360899459Z',
+        'Scope': 'local',
+        'Driver': 'bridge',
+        'EnableIPv6': false,
+        'IPAM': {
+          'Driver': 'default',
+          'Config': [
+            {
+              'Subnet': '172.19.0.0/28',
+              'Gateway': '172.19.0.1',
+            },
+          ],
+          'Options': {
+            'foo': 'bar',
+          },
+        },
+        'Internal': false,
+        'Attachable': false,
+        'Ingress': false,
+        'Containers': {
+          '19a4d5d687db25203351ed79d478946f861258f018fe384f229f2efa4b23513c': {
+            'Name': 'test',
+            'EndpointID': '628cadb8bcb92de107b2a1e516cbffe463e321f548feb37697cce00ad694f21a',
+            'MacAddress': '02:42:ac:13:00:02',
+            'IPv4Address': '172.19.0.2/28',
+            'IPv6Address': '',
+          },
+        },
+        'Options': {
+          'com.docker.network.bridge.default_bridge': 'true',
+          'com.docker.network.bridge.enable_icc': 'true',
+          'com.docker.network.bridge.enable_ip_masquerade': 'true',
+          'com.docker.network.bridge.host_binding_ipv4': '0.0.0.0',
+          'com.docker.network.bridge.name': 'docker0',
+          'com.docker.network.driver.mtu': '1500',
+        },
+        'Labels': {
+          'com.example.some-label': 'some-value',
+          'com.example.some-other-label': 'some-other-value',
+        },
+      };
 
       outputCreatedContainer1 = {
         Id: 'container-id2',
@@ -698,6 +783,186 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(error).toBeInstanceOf(NotRunningServiceException);
     });
 
+    it(`Should error create container when get network info`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+      const executeError = new Error('Error in get list of ip');
+      docker.getNetwork.mockRejectedValueOnce(<never>executeError);
+
+      const [error] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalledTimes(1);
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should error create container when inspect network data`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      const executeError = new Error('Error on inspect network');
+      outputNetwork.inspect.mockRejectedValue(<never>executeError);
+
+      const [error] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(RepositoryException);
+      expect((<RepositoryException>error).additionalInfo).toEqual(executeError);
+    });
+
+    it(`Should error create container when can't found any ip in pool`, async () => {
+      const parseLabelMock = jest.fn().mockReturnValue([null]);
+      const getClassInstanceMock = jest.fn()
+        .mockReturnValueOnce([null, outputMystIdentityValid])
+        .mockReturnValueOnce([null, outputVpnProviderValid])
+        .mockReturnValueOnce([null, outputProxyUpstreamValid]);
+      const convertLabelToObjectAndPickMock = jest.fn().mockReturnValueOnce({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+      });
+      const convertLabelToObjectMock = jest.fn().mockReturnValue({
+        [`${namespace}.myst-identity-model.id`]: outputMystIdentityValid.id,
+        [`${namespace}.vpn-provider-model.id`]: outputVpnProviderValid.id,
+        [`${namespace}.vpn-provider-model.user-identity`]: outputVpnProviderValid.userIdentity,
+        [`${namespace}.vpn-provider-model.provider-identity`]: outputVpnProviderValid.providerIdentity,
+        [`${namespace}.proxy-upstream-model.id`]: outputProxyUpstreamValid.id,
+      });
+      (<jest.Mock><unknown>DockerLabelParser).mockImplementation(() => {
+        return {
+          parseLabel: parseLabelMock,
+          getClassInstance: getClassInstanceMock,
+          convertLabelToObject: convertLabelToObjectMock,
+          convertLabelToObjectAndPick: convertLabelToObjectAndPickMock,
+        };
+      });
+      docker.listContainers
+        .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputLimitedNetworkInspect);
+
+      const [error] = await repository.create(inputRunnerWithPort);
+
+      expect(DockerLabelParser).toHaveBeenCalled();
+      expect(parseLabelMock).toHaveBeenCalled();
+      expect(getClassInstanceMock).toHaveBeenCalledTimes(3);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(1, MystIdentityModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(2, VpnProviderModel);
+      expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
+      expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        all: false,
+        filters: JSON.stringify({
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.MYST}`,
+            `${namespace}.myst-identity-model.id=${outputMystIdentityValid.id}`,
+          ],
+        }),
+      }));
+      expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
+      expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
+      expect(error).toBeInstanceOf(FillDataRepositoryException);
+      expect((<FillDataRepositoryException<EndpointSettings>>error).fillProperties).toEqual(expect.arrayContaining(<Array<keyof EndpointSettings>>['IPAddress']));
+    });
+
     it(`Should error create container when get failed containers list has been created before (Create socat with initiated port)`, async () => {
       const parseLabelMock = jest.fn().mockReturnValue([null]);
       const getClassInstanceMock = jest.fn()
@@ -1004,7 +1269,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([outputCreatedContainer1]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.getContainer.mockResolvedValueOnce(<never>outputFailedWithPortUsingContainer);
       outputFailedWithPortUsingContainer.inspect.mockResolvedValueOnce(outputInspectFailedWithPortUsingContainer);
       outputFailedWithPortUsingContainer.remove.mockResolvedValueOnce();
@@ -1021,7 +1289,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1033,7 +1301,21 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        all: true,
+        filters: JSON.stringify({
+          name: [inputRunnerWithPort.name],
+          status: ['created'],
+          label: [
+            `${namespace}.project=${RunnerServiceEnum.SOCAT}`,
+            `${namespace}.publish-port`,
+          ],
+        }),
+      }));
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -1090,7 +1372,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1124,7 +1410,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       const executeError = new Error('Error on create container');
       docker.createContainer.mockRejectedValue(executeError);
 
@@ -1138,7 +1427,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1150,6 +1439,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
@@ -1202,7 +1494,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1236,7 +1532,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       const executeError = new Error('Error on create container');
       docker.createContainer.mockRejectedValue(executeError);
 
@@ -1250,7 +1549,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1262,6 +1561,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
@@ -1314,7 +1616,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1348,7 +1654,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.createContainer.mockResolvedValueOnce(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       executeError['statusCode'] = 500;
@@ -1367,7 +1676,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1379,6 +1688,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
@@ -1431,7 +1743,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1470,7 +1786,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on start container');
       outputCreateContainer.start.mockRejectedValue(executeError);
@@ -1487,7 +1806,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1499,6 +1818,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
@@ -1551,7 +1873,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1591,7 +1917,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       outputCreateContainer.start.mockResolvedValue();
 
@@ -1605,7 +1934,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1617,6 +1946,9 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
@@ -1669,7 +2001,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1729,6 +2065,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       const executeError = new Error('Error in get list of container');
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockRejectedValueOnce(executeError);
 
       const [error] = await repository.create(inputRunnerWithoutPort);
@@ -1741,7 +2078,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(2);
+      expect(docker.listContainers).toHaveBeenCalledTimes(3);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1753,7 +2090,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -1793,7 +2130,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
         .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       outputCreateContainer.start.mockResolvedValue();
 
@@ -1807,7 +2147,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(4);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1819,7 +2159,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -1828,7 +2171,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -1880,7 +2223,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -1938,8 +2285,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([outputContainerBindPort1, outputContainerBindPort2])
         .mockResolvedValueOnce([]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       outputCreateContainer.start.mockResolvedValue();
 
@@ -1953,7 +2303,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(3);
+      expect(docker.listContainers).toHaveBeenCalledTimes(4);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -1965,7 +2315,10 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -1974,7 +2327,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2026,7 +2379,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -2084,12 +2441,15 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([outputContainerBindPort1])
         .mockResolvedValueOnce([outputCreatedContainer1])
         .mockResolvedValueOnce([outputContainerBindPort1])
         .mockResolvedValueOnce([outputCreatedContainer1])
         .mockResolvedValueOnce([outputContainerBindPort1])
         .mockResolvedValueOnce([outputCreatedContainer1]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       docker.createContainer.mockResolvedValue(<never>outputCreateContainer);
       const executeError = new Error('Error on create container');
       executeError['statusCode'] = 500;
@@ -2110,7 +2470,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(7);
+      expect(docker.listContainers).toHaveBeenCalledTimes(8);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -2122,13 +2482,16 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledTimes(3);
       expect(outputCreateContainer.start).toHaveBeenCalledTimes(3);
       expect(setTimeout).toHaveBeenCalledTimes(3);
       expect(docker.getContainer).toHaveBeenCalledTimes(4);
       expect(outputFailedWithPortUsingContainer.inspect).toHaveBeenCalledTimes(3);
       expect(outputFailedWithPortUsingContainer.remove).toHaveBeenCalledTimes(4);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -2137,7 +2500,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2188,12 +2551,16 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
       expect((<jest.Mock>setTimeout).mock.calls[0][0]).toEqual(expect.any(Number));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(5, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -2202,7 +2569,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(5, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(6, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2253,12 +2620,16 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
       expect((<jest.Mock>setTimeout).mock.calls[1][0]).toEqual(expect.any(Number));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(6, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(7, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -2267,7 +2638,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(7, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(8, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2318,7 +2689,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
@@ -2352,12 +2727,15 @@ describe('DockerRunnerCreateSocatRepository', () => {
       });
       docker.listContainers
         .mockResolvedValueOnce(outputExistContainerList)
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([outputContainerBindPort1])
         .mockResolvedValueOnce([outputCreatedContainer1])
         .mockResolvedValueOnce([outputContainerBindPort1])
         .mockResolvedValueOnce([outputCreatedContainer1])
         .mockResolvedValueOnce([outputContainerBindPort1])
         .mockResolvedValueOnce([outputCreatedContainer1]);
+      docker.getNetwork.mockResolvedValue(<never>outputNetwork);
+      outputNetwork.inspect.mockResolvedValue(outputNetworkInspect);
       const executeBindError = new Error('Error on create container');
       executeBindError['statusCode'] = 500;
       executeBindError['json'] = {message: `driver failed programming external connectivity on endpoint test (container-serial): Bind for 0.0.0.0:${inputRunnerWithPort.socketPort} failed: port is already allocated`};
@@ -2382,7 +2760,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
       expect(getClassInstanceMock).toHaveBeenNthCalledWith(3, ProxyUpstreamModel);
       expect(convertLabelToObjectAndPickMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectAndPickMock.mock.calls[0][2]).toEqual(expect.arrayContaining<keyof MystIdentityModel>(['identity', 'passphrase']));
-      expect(docker.listContainers).toHaveBeenCalledTimes(7);
+      expect(docker.listContainers).toHaveBeenCalledTimes(8);
       expect(docker.listContainers).toHaveBeenNthCalledWith(1, expect.objectContaining({
         all: false,
         filters: JSON.stringify({
@@ -2394,13 +2772,16 @@ describe('DockerRunnerCreateSocatRepository', () => {
       }));
       expect(convertLabelToObjectMock).toHaveBeenCalledTimes(1);
       expect(convertLabelToObjectMock.mock.calls[0][1]).toHaveLength(0);
+      expect(docker.getNetwork).toHaveBeenCalled();
+      expect(docker.getNetwork).toHaveBeenCalledWith(networkName);
+      expect(outputNetwork.inspect).toHaveBeenCalled();
       expect(docker.createContainer).toHaveBeenCalledTimes(3);
       expect(outputCreateContainer.start).toHaveBeenCalledTimes(2);
       expect(setTimeout).toHaveBeenCalledTimes(2);
       expect(docker.getContainer).toHaveBeenCalledTimes(4);
       expect(outputFailedWithPortUsingContainer.inspect).toHaveBeenCalledTimes(3);
       expect(outputFailedWithPortUsingContainer.remove).toHaveBeenCalledTimes(4);
-      expect(docker.listContainers).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -2409,7 +2790,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2460,12 +2841,16 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
       expect((<jest.Mock>setTimeout).mock.calls[0][0]).toEqual(expect.any(Number));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(4, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(5, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -2474,7 +2859,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(5, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(6, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2525,12 +2910,16 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
       expect((<jest.Mock>setTimeout).mock.calls[1][0]).toEqual(expect.any(Number));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(6, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(7, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           label: [
@@ -2539,7 +2928,7 @@ describe('DockerRunnerCreateSocatRepository', () => {
           ],
         }),
       }));
-      expect(docker.listContainers).toHaveBeenNthCalledWith(7, expect.objectContaining({
+      expect(docker.listContainers).toHaveBeenNthCalledWith(8, expect.objectContaining({
         all: true,
         filters: JSON.stringify({
           name: [inputRunnerWithPort.name],
@@ -2590,7 +2979,11 @@ describe('DockerRunnerCreateSocatRepository', () => {
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [networkName]: {},
+            [networkName]: {
+              IPAMConfig: {
+                IPv4Address: '172.19.0.3',
+              },
+            },
           },
         },
       }));
