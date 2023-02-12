@@ -20,6 +20,8 @@ import {RepositoryException} from '@src-core/exception/repository.exception';
 import {setTimeout} from 'timers/promises';
 import {UnknownException} from '@src-core/exception/unknown.exception';
 import {PortInUseException} from '@src-core/exception/port-in-use.exception';
+import {IPv4CidrRange} from 'ip-num';
+import {EndpointSettings} from 'dockerode';
 
 type SocatDockerContainerOption = {
   imageName: string,
@@ -80,10 +82,13 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
 
     const containerLabel = dockerLabelParser.convertLabelToObject(this._namespace, []);
     const createModel = <RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>><unknown>model;
-    const [createError, createData] = await (model.socketPort
-        ? this._createContainer(createModel, containerLabel, mystContainerIpData, model.socketPort)
-        : this._createContainerWithoutPort(createModel, containerLabel, mystContainerIpData)
+    const [createError, createData] = await this._createContainer(
+      createModel,
+      containerLabel,
+      mystContainerIpData,
+      model.socketPort,
     );
+
     if (createError) {
       if (
         createError instanceof RepositoryException
@@ -213,35 +218,57 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     }
   }
 
-  private async _createContainerWithoutPort(
-    model: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>,
-    containerLabel,
-    mystContainerIp,
-  ): Promise<AsyncReturn<Error, CreateContainerOutput>> {
-    const totalTryList = new Array(this._maxRetry).fill(null);
-    const portInUseList = [];
-    let lastPortInUseContainerId;
-    let result;
-    let error;
+  private async _getNextNetworkIp(): Promise<AsyncReturn<Error, string>> {
+    try {
+      const network = await this._docker.getNetwork(this._socatContainerOption.networkName);
+      const data = await network.inspect();
 
-    for await (const tryCount of totalTryList) {
-      const [bindPortError, bindPortData] = await this._getNextBindPort(portInUseList);
-      if (bindPortError) {
-        error = bindPortError;
-        break;
+      const networkContainerList = data.Containers;
+      const bindIpObj: Record<string, null> = {
+        [data.IPAM.Config[0].Subnet.split('/')[0]]: null,
+        [data.IPAM.Config[0].Gateway]: null,
+      };
+
+      Object.keys(networkContainerList).map((v) => (bindIpObj[networkContainerList[v].IPv4Address.split('/')[0]] = null));
+
+      const ipv4Range = IPv4CidrRange.fromCidr(data.IPAM.Config[0].Subnet);
+      const nextIpAddress = ipv4Range
+        .take(ipv4Range.getSize())
+        .map((v) => v.toString())
+        .find((v) => !(v in bindIpObj));
+
+      if (!nextIpAddress) {
+        return [new FillDataRepositoryException<EndpointSettings>(['IPAddress'])];
       }
 
-      const [createError, createModel] = await this._createContainer(model, containerLabel, mystContainerIp, bindPortData);
+      return [null, nextIpAddress];
+    } catch (error) {
+      return [new RepositoryException(error)];
+    }
+  }
+
+  private async _createContainer(createModel, containerLabel, mystContainerIpData, socketPort): Promise<AsyncReturn<Error, CreateContainerOutput>> {
+    let error;
+    let result;
+
+    const totalTryList = new Array(this._maxRetry).fill(null);
+    for await (const tryCount of totalTryList) {
+      const [removeCreatedContainerError] = await this._removeFailedContainerByName(createModel.name);
+      if (removeCreatedContainerError) {
+        return [removeCreatedContainerError];
+      }
+
+      const [createError, createData] = await (socketPort
+          ? this._createContainerWithPort(createModel, containerLabel, mystContainerIpData, socketPort)
+          : this._createContainerWithoutPort(createModel, containerLabel, mystContainerIpData)
+      );
+
       if (createError) {
         if (
           createError instanceof RepositoryException
           && 'json' in createError.additionalInfo
-          && createError.additionalInfo['json']['message'].match(/port is already allocated/)
+          && createError.additionalInfo['json']['message'] === 'Address already in use'
         ) {
-          if ('containerId' in createError.additionalInfo) {
-            lastPortInUseContainerId = createError.additionalInfo['containerId'];
-          }
-
           const wait = Math.floor(Math.random() * 4) + 1;
           await setTimeout(wait * 1000, 'resolved');
 
@@ -252,23 +279,15 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
         break;
       }
 
-      result = createModel;
+      result = createData;
       break;
-    }
-
-    if (result) {
-      return [null, result];
-    }
-
-    if (lastPortInUseContainerId) {
-      await this._removeCreatedContainerById(lastPortInUseContainerId);
     }
 
     if (error) {
       return [error];
     }
 
-    return [new UnknownException()];
+    return [null, result];
   }
 
   private async _getNextBindPort(portInUseList: Array<number>): Promise<AsyncReturn<Error, number>> {
@@ -329,7 +348,65 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     }
   }
 
-  private async _createContainer(
+  private async _createContainerWithoutPort(
+    model: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>,
+    containerLabel,
+    mystContainerIp,
+  ): Promise<AsyncReturn<Error, CreateContainerOutput>> {
+    const totalTryList = new Array(this._maxRetry).fill(null);
+    const portInUseList = [];
+    let lastPortInUseContainerId;
+    let result;
+    let error;
+
+    for await (const tryCount of totalTryList) {
+      const [bindPortError, bindPortData] = await this._getNextBindPort(portInUseList);
+      if (bindPortError) {
+        error = bindPortError;
+        break;
+      }
+
+      const [createError, createModel] = await this._createContainerWithPort(model, containerLabel, mystContainerIp, bindPortData);
+      if (createError) {
+        if (
+          createError instanceof RepositoryException
+          && 'json' in createError.additionalInfo
+          && createError.additionalInfo['json']['message'].match(/port is already allocated/)
+        ) {
+          if ('containerId' in createError.additionalInfo) {
+            lastPortInUseContainerId = createError.additionalInfo['containerId'];
+          }
+
+          const wait = Math.floor(Math.random() * 4) + 1;
+          await setTimeout(wait * 1000, 'resolved');
+
+          continue;
+        }
+
+        error = createError;
+        break;
+      }
+
+      result = createModel;
+      break;
+    }
+
+    if (result) {
+      return [null, result];
+    }
+
+    if (lastPortInUseContainerId) {
+      await this._removeCreatedContainerById(lastPortInUseContainerId);
+    }
+
+    if (error) {
+      return [error];
+    }
+
+    return [new UnknownException()];
+  }
+
+  private async _createContainerWithPort(
     model: RunnerModel<[MystIdentityModel, VpnProviderModel, ProxyUpstreamModel]>,
     containerLabel,
     mystContainerIp,
@@ -341,6 +418,11 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
     const [removeFailedContainerError] = await this._removeFailedContainerByName(name);
     if (removeFailedContainerError) {
       return [removeFailedContainerError];
+    }
+
+    const [networkError, networkIp] = await this._getNextNetworkIp();
+    if (networkError) {
+      return [networkError];
     }
 
     const containerInfo = {isCreated: false, containerId: null};
@@ -381,7 +463,11 @@ export class DockerRunnerCreateSocatRepository implements ICreateRunnerRepositor
         },
         NetworkingConfig: {
           EndpointsConfig: {
-            [this._socatContainerOption.networkName]: {},
+            [this._socatContainerOption.networkName]: {
+              IPAMConfig: {
+                IPv4Address: networkIp,
+              },
+            },
           },
         },
       });
